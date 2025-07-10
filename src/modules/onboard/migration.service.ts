@@ -11,7 +11,7 @@ export class MigrationService {
     console.log(`Running migrations for tenant database: ${url}`);
     try {
       const result = await execAsync(
-        `npx prisma migrate deploy --schema=./src/prisma/schema.prisma`,
+        `npx prisma migrate deploy --schema=./dist/prisma/schema.prisma`,
         {
           cwd: process.cwd(),
           env: {
