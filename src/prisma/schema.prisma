@@ -1,6 +1,5 @@
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["prismaSchemaFolder"]
 }
 
 datasource db {
@@ -9,35 +8,56 @@ datasource db {
 }
 
 model Tenant {
-    tenantId String @id @unique @map("tenant_id")
-    dbName String? @unique @map("db_name")
-    companyName String? @map("company_name")
+  tenantId    String  @id @unique @map("tenant_id")
+  dbName      String? @unique @map("db_name")
+  companyName String? @map("company_name")
 
-    @@map("tenants")
+  @@map("tenants")
 }
 
 model User {
-    id Int @id @default(autoincrement())
-    email String @unique
-    password String
-    name String
-    phone String
+  id       Int    @id @default(autoincrement())
+  email    String @unique
+  password String
+  name     String
+  phone    String
+  role     Role?  @relation(fields: [roleId], references: [id])
+  roleId   Int? @map("role_id")
 
-    @@map("users")
+  @@map("users")
 }
 
 model Secret {
-    id Int @id @default(autoincrement())
-    key String @unique
-    value String
+  id    Int    @id @default(autoincrement())
+  key   String @unique
+  value String
 
-    @@map("secrets")
+  @@map("secrets")
+}
+
+model Role {
+  id          Int          @id @default(autoincrement())
+  name        String       @unique
+  permissions Permission[]
+  User        User[]
+
+  @@map("roles")
+}
+
+model Permission {
+  id       Int      @id @default(autoincrement())
+  resource String
+  actions  String[]
+  Role     Role     @relation(fields: [roleId], references: [id])
+  roleId   Int @map("role_id")
+
+  @@map("permissions")
 }
 
 model Product {
-    id Int @id @default(autoincrement())
-    name String
-    price Int
+  id    Int    @id @default(autoincrement())
+  name  String
+  price Int
 
-    @@map("products")
+  @@map("products")
 }

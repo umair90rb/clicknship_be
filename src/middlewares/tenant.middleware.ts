@@ -4,7 +4,6 @@ import {
   NestMiddleware,
   NotFoundException,
 } from '@nestjs/common';
-import { stat } from 'fs';
 import { TenantService } from 'src/modules/onboard/tenant.service';
 
 @Injectable()
@@ -24,12 +23,7 @@ export class TenantMiddleware implements NestMiddleware {
       req.tenant = tenant;
       next();
     } catch (error) {
-      console.error('Tenant Middleware Error:', error);
-      return res.status(500).json({
-        message: 'Something went wrong',
-        statusCode: 500,
-        success: false,
-      });
+      throw error;
     }
   }
 }

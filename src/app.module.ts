@@ -6,6 +6,7 @@ import { TenantMiddleware } from './middlewares/tenant.middleware';
 import { ProductModule } from './modules/product/product.module';
 import { OnboardModule } from './modules/onboard/onboard.module';
 import { JwtModule } from '@nestjs/jwt';
+import { RoleModule } from './modules/role/role.module';
 
 @Module({
   imports: [
@@ -14,6 +15,7 @@ import { JwtModule } from '@nestjs/jwt';
     AuthModule,
     ProductModule,
     OnboardModule,
+    RoleModule,
   ],
   controllers: [AppController],
   providers: [],
