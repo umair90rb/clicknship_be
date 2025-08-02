@@ -1,13 +1,15 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
+import { PrismaClient, Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { TenantService } from './tenant.service';
+import { nanoid } from 'nanoid';
+import { SUPER_ADMIN_ROLE } from 'src/constants/common';
 import { PrismaService } from 'src/services/prisma.service';
+import encrypt from 'src/utils/encrypt';
+import { RESOURCES_PERMISSIONS_LIST } from '../role/constant/permission-list';
 import { OnboardTenantDto } from './dtos/onboard.dto';
-import { PrismaClient } from '@prisma/client';
 import { MigrationService } from './migration.service';
 import { User } from './onboard.types';
-import { nanoid } from 'nanoid';
-import encrypt from 'src/utils/encrypt';
+import { TenantService } from './tenant.service';
 
 @Injectable()
 export class OnboardService {
@@ -17,7 +19,7 @@ export class OnboardService {
     private migrationService: MigrationService,
   ) {}
   async onboard(registrationData: OnboardTenantDto) {
-    const { companyName, ...user } = registrationData;
+    const { companyName, ...userData } = registrationData;
     //make tenant id from company name
     const tenantId = companyName.toLowerCase().replace(/\s+/g, '-');
     const dbName = `tenant_${tenantId.replace(/-/g, '_')}`;
@@ -42,9 +44,15 @@ export class OnboardService {
       await this.prisma.$executeRawUnsafe(`CREATE DATABASE ${dbName}`);
       //run migrations for tenant database
       await this.migrationService.migrateTenant(dbName);
-      await this.dropTablesForTenant(tenantId, dbName);
+      // await this.dropTablesForTenant(tenantId, dbName); cause issue for future migrations, need other way to drop tables like tenant
       //create user in tenant database
-      await this.addUserToTenant(tenantId, dbName, user);
+      const superAdminRole = await this.createSuperAdminRole(tenantId, dbName);
+      await this.addSuperUserToTenant(
+        tenantId,
+        dbName,
+        userData,
+        superAdminRole,
+      );
       await this.generateTenantJWTSecret(tenantId, dbName);
       //return the tenantId on which user will redirect to login.
       return { tenantId };
@@ -64,15 +72,16 @@ export class OnboardService {
     }
   }
 
-  async addUserToTenant(
+  async addSuperUserToTenant(
     tenantId: string,
     dbName: string,
     data: User,
+    role: Role,
   ): Promise<void> {
     const prisma = await this.getTenantPrismaClient(tenantId, dbName);
     const hashedPassword = await bcrypt.hash(data.password, 10);
     await prisma.user.create({
-      data: { ...data, password: hashedPassword },
+      data: { ...data, password: hashedPassword, roleId: role.id },
     });
     await prisma.$disconnect();
   }
@@ -88,6 +97,24 @@ export class OnboardService {
       data: { key: 'jwt_secret', value: encryptedJwtSecret },
     });
     await prisma.$disconnect();
+  }
+
+  async createSuperAdminRole(tenantId: string, dbName: string): Promise<Role> {
+    const prisma = await this.getTenantPrismaClient(tenantId, dbName);
+    console.log('created super admin role...');
+    const role = await prisma.role.create({
+      data: {
+        name: SUPER_ADMIN_ROLE,
+        permissions: {
+          createMany: {
+            data: RESOURCES_PERMISSIONS_LIST,
+          },
+        },
+      },
+    });
+    console.log('super admin role created.');
+    await prisma.$disconnect();
+    return role;
   }
 
   async dropTablesForTenant(tenantId: string, dbName: string): Promise<void> {

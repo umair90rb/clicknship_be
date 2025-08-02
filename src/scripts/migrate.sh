@@ -27,7 +27,7 @@ IFS=","
 
 SCHEMA_PATH=$(pwd)/src/prisma/schema.prisma
 MIGRATE_TYPE=dev
-if [[$ENV == "prod" ]]; then
+if [[ "$ENV" == "prod" ]]; then
     SCHEMA_PATH=$(pwd)/dist/prisma/schema.prisma
     MIGRATE_TYPE="deploy"
 fi
@@ -36,7 +36,9 @@ for DB_NAME in $DB_LIST; do
   DB=$DATABASE_SERVER_URI/$DB_NAME
   echo "Processing: $DB"
   export DATABASE_URI=$DB
-  npx prisma migrate $MIGRATE_TYPE --schema=$SCHEMA_PATH
+  echo "running migration..."
+  npx prisma migrate $MIGRATE_TYPE --schema=$SCHEMA_PATH --skip-generate
+  echo "migrated"
 done
 
 # Reset IFS to its default value (important to avoid unexpected behavior later)
