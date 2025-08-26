@@ -5,7 +5,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { AuthService } from 'src/modules/auth/auth.service';
-import { AuthPayload } from 'src/types/auth';
+import { JwtTokenPayload } from 'src/types/auth';
 
 @Injectable()
 export class AuthenticationGuard implements CanActivate {
@@ -21,7 +21,7 @@ export class AuthenticationGuard implements CanActivate {
       throw new UnauthorizedException('Invalid token');
     }
 
-    const payload: AuthPayload = await this.authService.verifyToken(token);
+    const payload: JwtTokenPayload = await this.authService.verifyToken(token);
     req.user = payload;
     return true;
   }

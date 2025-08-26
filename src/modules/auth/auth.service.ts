@@ -7,7 +7,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { AuthPayload } from 'src/types/auth';
+import { JwtTokenPayload } from 'src/types/auth';
 import decrypt from 'src/utils/dcrypt';
 import { RoleService } from '../role/role.service';
 import { LoginDto } from './dtos/auth.dto';
@@ -35,7 +35,9 @@ export class AuthService {
     return this.generateToken({ email: user.email, id: user.id });
   }
 
-  async generateToken(payload: AuthPayload): Promise<{ access_token: string }> {
+  async generateToken(
+    payload: JwtTokenPayload,
+  ): Promise<{ access_token: string }> {
     const secret = await this.getTenantJwtSecret();
     const access_token = this.jwtService.sign(payload, {
       expiresIn: '12h',
@@ -44,9 +46,9 @@ export class AuthService {
     return { access_token };
   }
 
-  async verifyToken(token: string): Promise<AuthPayload> {
+  async verifyToken(token: string): Promise<JwtTokenPayload> {
     const secret = await this.getTenantJwtSecret();
-    return this.jwtService.verify<AuthPayload>(token, { secret });
+    return this.jwtService.verify<JwtTokenPayload>(token, { secret });
   }
 
   async getTenantJwtSecret(): Promise<string> {
@@ -71,5 +73,9 @@ export class AuthService {
     }
 
     return this.roleService.getRolePermissions(userRoleId);
+  }
+
+  async profile(user: JwtTokenPayload) {
+    return user;
   }
 }

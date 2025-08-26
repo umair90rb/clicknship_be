@@ -10,6 +10,7 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ forbidNonWhitelisted: true }));
   app.useGlobalInterceptors(new DbConnectionCleanupInterceptor());
   app.useGlobalFilters(new AllExceptionFilter());
+  app.enableCors();
   await app.listen(process.env.PORT);
 }
 bootstrap();
