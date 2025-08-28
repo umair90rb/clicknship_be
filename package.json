@@ -10,7 +10,7 @@
     "deploy": "npm run build && ./src/scripts/migrate.sh",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start": "nest start",
-    "start:dev": "nest start --watch ",
+    "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "cp:migration": "mkdir -p ./dist/prisma && cp -r ./src/prisma/* ./dist/prisma",
