@@ -1,0 +1,17 @@
+generator client {
+  provider = "prisma-client-js"
+  output = "client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("MASTER_DATABASE_URL")
+}
+
+model Tenant {
+  tenantId    String  @id @unique @map("tenant_id")
+  dbName      String? @unique @map("db_name")
+  companyName String? @map("company_name")
+
+  @@map("tenants")
+}

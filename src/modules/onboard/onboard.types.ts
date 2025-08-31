@@ -4,9 +4,3 @@ export class User {
   name: string;
   phone: string;
 }
-
-export class Tenant {
-  tenantId: string;
-  companyName: string;
-  dbName: string;
-}

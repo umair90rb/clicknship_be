@@ -1,18 +1,18 @@
+import { PrismaMasterClient } from '@/src/services/master-connection.server';
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from 'src/services/prisma.service';
-import { Tenant } from './onboard.types';
+import { Tenant } from 'src/types/tenant';
 
 @Injectable()
 export class TenantService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prismaMaster: PrismaMasterClient) {}
 
   getTenantById(tenantId: string) {
-    return this.prisma.tenant.findFirst({
+    return this.prismaMaster.tenant.findFirst({
       where: { tenantId },
     });
   }
 
   createTenant(data: Tenant) {
-    return this.prisma.tenant.create({ data });
+    return this.prismaMaster.tenant.create({ data });
   }
 }

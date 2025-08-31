@@ -1,6 +1,6 @@
 import { InternalServerErrorException } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient as PrismaTenantClient } from 'prisma/tenant/client';
 
 export const tenantConnectionProvider = {
   provide: 'TENANT_CONNECTION',
@@ -11,8 +11,8 @@ export const tenantConnectionProvider = {
         'Make sure to apply tenant middleware',
       );
     }
-    const prisma = new PrismaClient({
-      datasourceUrl: `${process.env.DATABASE_SERVER_URI}/${tenant.dbName}`,
+    const prisma = new PrismaTenantClient({
+      datasourceUrl: `${process.env.TENANT_DATABASE_SERVER_URL}/${tenant.dbName}`,
     });
     request.prismaClient = prisma;
     return prisma;

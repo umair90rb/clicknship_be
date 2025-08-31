@@ -3,6 +3,10 @@
 /node_modules
 /build
 
+# prisma clients
+/prisma/master/client
+/prisma/tenant/client
+
 # Logs
 logs
 *.log

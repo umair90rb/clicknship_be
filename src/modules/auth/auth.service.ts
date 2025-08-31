@@ -1,3 +1,4 @@
+import { PrismaClient as PrismaTenantClient } from '@/prisma/tenant/client';
 import {
   Inject,
   Injectable,
@@ -5,7 +6,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaClient } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { JwtTokenPayload } from 'src/types/auth';
 import decrypt from 'src/utils/dcrypt';
@@ -16,13 +16,13 @@ import { LoginDto } from './dtos/auth.dto';
 export class AuthService {
   constructor(
     private jwtService: JwtService,
-    @Inject('TENANT_CONNECTION') private prisma: PrismaClient,
+    @Inject('TENANT_CONNECTION') private prismaTenant: PrismaTenantClient,
     private roleService: RoleService,
   ) {}
 
   async login(credentials: LoginDto): Promise<{ access_token: string }> {
     const { email, password } = credentials;
-    const user = await this.prisma.user.findFirst({ where: { email } });
+    const user = await this.prismaTenant.user.findFirst({ where: { email } });
 
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -52,7 +52,7 @@ export class AuthService {
   }
 
   async getTenantJwtSecret(): Promise<string> {
-    const { value } = await this.prisma.secret.findFirst({
+    const { value } = await this.prismaTenant.secret.findFirst({
       where: { key: 'jwt_secret' },
       select: { value: true },
     });
@@ -63,7 +63,9 @@ export class AuthService {
   }
 
   async getUserPermissions(userId: number) {
-    const user = await this.prisma.user.findFirst({ where: { id: userId } });
+    const user = await this.prismaTenant.user.findFirst({
+      where: { id: userId },
+    });
     if (!user) {
       throw new NotFoundException('User not found');
     }

@@ -1,18 +1,11 @@
 generator client {
   provider = "prisma-client-js"
+  output = "client"
 }
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URI")
-}
-
-model Tenant {
-  tenantId    String  @id @unique @map("tenant_id")
-  dbName      String? @unique @map("db_name")
-  companyName String? @map("company_name")
-
-  @@map("tenants")
+  url      = env("DATABASE_URL")
 }
 
 model User {
@@ -52,6 +45,27 @@ model Permission {
   roleId   Int @map("role_id")
 
   @@map("permissions")
+}
+
+model ShopifyWebhookLog {
+  id      String    @id @default(uuid())
+  webhookId String @map("webhook_id")
+  eventId String @map("event_id")
+  identifier  String?
+  domain  String
+  topic   String
+  apiVersion  String @map("api_version")
+  triggeredAt DateTime @map("triggered_at")
+  receivedAt  DateTime @map("received_at") 
+  processedAt DateTime? @map("processed_at")
+  status  String @default("received")
+  error   String?
+  payload Json
+  retries Int @default(0)
+  itemQuantity Int? @map("item_quantity")
+  amount Float?
+
+  @@map("shopify_webhook_logs")
 }
 
 model Product {

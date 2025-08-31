@@ -1,9 +1,9 @@
+import { PrismaClient, Role } from '@/prisma/tenant/client';
+import { PrismaMasterClient } from '@/src/services/master-connection.server';
 import { BadRequestException, Injectable } from '@nestjs/common';
-import { PrismaClient, Role } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import { nanoid } from 'nanoid';
 import { SUPER_ADMIN_ROLE } from 'src/constants/common';
-import { PrismaService } from 'src/services/prisma.service';
 import encrypt from 'src/utils/encrypt';
 import { RESOURCES_PERMISSIONS_LIST } from '../role/constant/permission-list';
 import { OnboardTenantDto } from './dtos/onboard.dto';
@@ -14,8 +14,8 @@ import { TenantService } from './tenant.service';
 @Injectable()
 export class OnboardService {
   constructor(
+    private prismaMaster: PrismaMasterClient,
     private tenantService: TenantService,
-    private prisma: PrismaService,
     private migrationService: MigrationService,
   ) {}
   async onboard(registrationData: OnboardTenantDto) {
@@ -41,7 +41,7 @@ export class OnboardService {
     }
     try {
       //create tenant database
-      await this.prisma.$executeRawUnsafe(`CREATE DATABASE ${dbName}`);
+      await this.prismaMaster.$executeRawUnsafe(`CREATE DATABASE ${dbName}`);
       //run migrations for tenant database
       await this.migrationService.migrateTenant(dbName);
       // await this.dropTablesForTenant(tenantId, dbName); cause issue for future migrations, need other way to drop tables like tenant
@@ -58,14 +58,14 @@ export class OnboardService {
       return { tenantId };
     } catch (error) {
       console.log(error);
-      await this.prisma.tenant.delete({ where: { tenantId } });
-      await this.prisma.$executeRawUnsafe(`
+      await this.prismaMaster.tenant.delete({ where: { tenantId } });
+      await this.prismaMaster.$executeRawUnsafe(`
         SELECT pg_terminate_backend(pid)
         FROM pg_stat_activity
         WHERE datname = '${dbName}' AND pid <> pg_backend_pid();
         `);
 
-      await this.prisma.$executeRawUnsafe(
+      await this.prismaMaster.$executeRawUnsafe(
         `DROP DATABASE IF EXISTS "${dbName}"`,
       );
       throw new BadRequestException('Something went wrong, try again later');
@@ -132,7 +132,7 @@ export class OnboardService {
       throw new BadRequestException('Tenant does not exist');
     }
     const prisma = new PrismaClient({
-      datasourceUrl: `${process.env.DATABASE_SERVER_URI}/${dbName}`,
+      datasourceUrl: `${process.env.TENANT_DATABASE_SERVER_URL}/${dbName}`,
     });
     return prisma;
   }

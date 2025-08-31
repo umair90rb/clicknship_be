@@ -1,10 +1,10 @@
+import { PrismaClient as PrismaTenantClient } from '@/prisma/tenant/client';
 import {
   BadRequestException,
   Inject,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
 import { SUPER_ADMIN_ROLE } from 'src/constants/common';
 import {
   CreateRoleDto,
@@ -15,10 +15,12 @@ import {
 
 @Injectable()
 export class RoleService {
-  constructor(@Inject('TENANT_CONNECTION') private prisma: PrismaClient) {}
+  constructor(
+    @Inject('TENANT_CONNECTION') private prismaTenant: PrismaTenantClient,
+  ) {}
 
   async getAllRole() {
-    return this.prisma.role.findMany({
+    return this.prismaTenant.role.findMany({
       include: {
         permissions: {
           select: {
@@ -31,7 +33,7 @@ export class RoleService {
   }
 
   async getRole(roleId: number) {
-    const role = await this.prisma.role.findFirst({
+    const role = await this.prismaTenant.role.findFirst({
       where: { id: roleId },
       include: {
         permissions: {
@@ -53,7 +55,7 @@ export class RoleService {
   async getRolePermissions(
     roleId: number,
   ): Promise<{ resource: string; actions: string[] }[]> {
-    return this.prisma.permission.findMany({
+    return this.prismaTenant.permission.findMany({
       where: { roleId },
       select: {
         resource: true,
@@ -63,7 +65,7 @@ export class RoleService {
   }
 
   async createRole(role: CreateRoleDto) {
-    return this.prisma.role.create({
+    return this.prismaTenant.role.create({
       include: {
         permissions: {
           select: {
@@ -96,7 +98,7 @@ export class RoleService {
         newPermissions.push(permission);
       }
     }
-    return this.prisma.role.update({
+    return this.prismaTenant.role.update({
       where: {
         id: roleId,
       },
@@ -121,13 +123,13 @@ export class RoleService {
 
   async deleteRole(roleId: number) {
     this.isRoleSuperAdmin(roleId);
-    const role = await this.prisma.role.findFirst({
+    const role = await this.prismaTenant.role.findFirst({
       where: { id: roleId },
     });
     if (!role) {
       throw new NotFoundException();
     }
-    await this.prisma.role.delete({ where: { id: role.id } });
+    await this.prismaTenant.role.delete({ where: { id: role.id } });
     return role;
   }
 

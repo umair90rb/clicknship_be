@@ -14,7 +14,7 @@ set +o allexport
 ENV=${1:-dev}
 echo "Env: "$ENV
 echo "Master DB:" ${DATABASE_URI} 
-echo "Server Connection String:" ${DATABASE_SERVER_URI} 
+echo "Server Connection String:" ${TENANT_DATABASE_SERVER_URL} 
 
 QUERY="select db_name from public.tenants;"
 
@@ -25,15 +25,14 @@ echo ${DB_LIST}
 # Temporarily change IFS to a comma
 IFS=","
 
-SCHEMA_PATH=$(pwd)/src/prisma/schema.prisma
+SCHEMA_PATH=$(pwd)/prisma/tenant/schema.prisma
 MIGRATE_TYPE=dev
 if [[ "$ENV" == "prod" ]]; then
-    SCHEMA_PATH=$(pwd)/dist/prisma/schema.prisma
     MIGRATE_TYPE="deploy"
 fi
 # Loop through the string, treating commas as delimiters
 for DB_NAME in $DB_LIST; do
-  DB=$DATABASE_SERVER_URI/$DB_NAME
+  DB=$TENANT_DATABASE_SERVER_URL/$DB_NAME
   echo "Processing: $DB"
   export DATABASE_URI=$DB
   echo "running migration..."
