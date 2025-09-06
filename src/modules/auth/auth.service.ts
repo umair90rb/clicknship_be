@@ -11,12 +11,14 @@ import { JwtTokenPayload } from 'src/types/auth';
 import decrypt from 'src/utils/dcrypt';
 import { RoleService } from '../role/role.service';
 import { LoginDto } from './dtos/auth.dto';
+import { TENANT_CONNECTION_PROVIDER } from '../../constants/common';
 
 @Injectable()
 export class AuthService {
   constructor(
     private jwtService: JwtService,
-    @Inject('TENANT_CONNECTION') private prismaTenant: PrismaTenantClient,
+    @Inject(TENANT_CONNECTION_PROVIDER)
+    private prismaTenant: PrismaTenantClient,
     private roleService: RoleService,
   ) {}
 

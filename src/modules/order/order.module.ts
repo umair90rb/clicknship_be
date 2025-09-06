@@ -1,6 +1,6 @@
 import { BullModule } from '@nestjs/bullmq';
 import { Module } from '@nestjs/common';
-import { WEBHOOK_ORDER_PROCESSOR_QUEUE } from 'src/constants/common';
+import { WEBHOOK_ORDER_CREATE_QUEUE } from 'src/constants/common';
 import { tenantConnectionProvider } from 'src/providers/tenant-connection.provider';
 import { OrderController } from './order.controller';
 import { OrderService } from './order.service';
@@ -10,7 +10,7 @@ import { ShopifyService } from './shopify.service';
 @Module({
   imports: [
     BullModule.registerQueue({
-      name: WEBHOOK_ORDER_PROCESSOR_QUEUE,
+      name: WEBHOOK_ORDER_CREATE_QUEUE,
     }),
   ],
   controllers: [OrderController, ShopifyController],

@@ -1,8 +1,10 @@
 import { ValidationPipe } from '@nestjs/common';
+import { SwaggerModule } from '@nestjs/swagger';
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { AllExceptionFilter } from './filters/all-exception.filter';
 import { DbConnectionCleanupInterceptor } from './interceptors/db-connection-cleanup.interceptor';
+import { config } from './config/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -11,6 +13,8 @@ async function bootstrap() {
   app.useGlobalInterceptors(new DbConnectionCleanupInterceptor());
   app.useGlobalFilters(new AllExceptionFilter());
   app.enableCors();
+  const documentFactory = () => SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('docs', app, documentFactory);
   await app.listen(process.env.PORT);
 }
 bootstrap();

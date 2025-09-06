@@ -9,6 +9,7 @@ import { Reflector } from '@nestjs/core';
 import { PERMISSION_KEY } from 'src/decorators/permission.decorator';
 import { AuthService } from 'src/modules/auth/auth.service';
 import { Permission } from 'src/modules/role/dtos/role.dto';
+import { USER_ID_NOT_FOUND } from '../constants/errors';
 
 @Injectable()
 export class AuthorizationGuard implements CanActivate {
@@ -28,7 +29,7 @@ export class AuthorizationGuard implements CanActivate {
 
     const userId = req.user?.id;
     if (!userId) {
-      throw new UnauthorizedException('User id not found');
+      throw new UnauthorizedException(USER_ID_NOT_FOUND);
     }
     const userPermissions = await this.authService.getUserPermissions(userId);
     if (

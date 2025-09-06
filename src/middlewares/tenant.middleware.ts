@@ -5,6 +5,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { TenantService } from 'src/modules/onboard/tenant.service';
+import { TENANT_NOT_EXIST, TENANT_NOT_PROVIDED } from '../constants/errors';
 
 @Injectable()
 export class TenantMiddleware implements NestMiddleware {
@@ -13,12 +14,12 @@ export class TenantMiddleware implements NestMiddleware {
     try {
       const host = req.headers.host;
       if (host === process.env.BASE_URL) {
-        throw new BadRequestException('Tenant not provided!');
+        throw new BadRequestException(TENANT_NOT_PROVIDED);
       }
       const tenantId = host.split('.')[0];
       const tenant = await this.tenantService.getTenantById(tenantId);
       if (!tenant) {
-        throw new NotFoundException('Tenant does not exist!');
+        throw new NotFoundException(TENANT_NOT_EXIST);
       }
       req.tenant = tenant;
       next();

@@ -1,12 +1,16 @@
 import {
-    PrismaClient as PrismaTenantClient,
-    ShopifyWebhookLog,
+  PrismaClient as PrismaTenantClient,
+  ShopifyWebhookLog,
 } from '@/prisma/tenant/client';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Queue } from 'bullmq';
 import * as crypto from 'crypto';
-import { WEBHOOK_ORDER_PROCESSOR_QUEUE } from 'src/constants/common';
+import {
+  SHOPIFY_TOPICS,
+  TENANT_CONNECTION_PROVIDER,
+  WEBHOOK_ORDER_CREATE_QUEUE,
+} from 'src/constants/common';
 import { OrderStatus } from 'src/types/order';
 import { Tenant } from 'src/types/tenant';
 import { OrderData } from './order.types';
@@ -15,12 +19,14 @@ import { OrderData } from './order.types';
 export class ShopifyService {
   private readonly logger = new Logger(ShopifyService.name);
   constructor(
-    @Inject('TENANT_CONNECTION') private prismaTenant: PrismaTenantClient,
-    @InjectQueue(WEBHOOK_ORDER_PROCESSOR_QUEUE)
+    @Inject(TENANT_CONNECTION_PROVIDER)
+    private prismaTenant: PrismaTenantClient,
+    @InjectQueue(WEBHOOK_ORDER_CREATE_QUEUE)
     private webhookOrderQueue: Queue,
   ) {}
 
   async createShopifyOrder(tenant: Tenant, headers: Headers, body: OrderData) {
+    // this is required for production
     // const hmac = headers['x-shopify-hmac-sha256'] as string;
     // const isValid = this.validateWebhookRequest(tenant.tenantId, hmac, body);
     // if (!isValid) {
@@ -68,7 +74,7 @@ export class ShopifyService {
 
       // 3. Add a job to the queue for processing
       await this.webhookOrderQueue.add(
-        'process-order-webhook',
+        SHOPIFY_TOPICS.order.create,
         {
           webhookId: logEntry.id,
           orderId: orderId,

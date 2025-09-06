@@ -5,7 +5,10 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { SUPER_ADMIN_ROLE } from 'src/constants/common';
+import {
+  SUPER_ADMIN_ROLE,
+  TENANT_CONNECTION_PROVIDER,
+} from 'src/constants/common';
 import {
   CreateRoleDto,
   Permission,
@@ -16,7 +19,8 @@ import {
 @Injectable()
 export class RoleService {
   constructor(
-    @Inject('TENANT_CONNECTION') private prismaTenant: PrismaTenantClient,
+    @Inject(TENANT_CONNECTION_PROVIDER)
+    private prismaTenant: PrismaTenantClient,
   ) {}
 
   async getAllRole() {
