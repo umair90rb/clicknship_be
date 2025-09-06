@@ -74,7 +74,7 @@ export class ShopifyService {
 
       // 3. Add a job to the queue for processing
       await this.webhookOrderQueue.add(
-        SHOPIFY_TOPICS.order.create,
+        `${}-${SHOPIFY_TOPICS.order.create}`,
         {
           webhookId: logEntry.id,
           orderId: orderId,
