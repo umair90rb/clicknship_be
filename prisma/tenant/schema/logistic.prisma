@@ -1,0 +1,8 @@
+model CourierService {
+    id   Int    @id @default(autoincrement())
+    name String
+
+    orders Order[]
+
+    @@map("courier_service_account")
+}

@@ -11,6 +11,9 @@ import { ShopifyService } from './shopify.service';
   imports: [
     BullModule.registerQueue({
       name: WEBHOOK_ORDER_CREATE_QUEUE,
+      defaultJobOptions: {
+        removeOnComplete: true
+      }
     }),
   ],
   controllers: [OrderController, ShopifyController],

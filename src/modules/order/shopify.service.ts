@@ -23,7 +23,7 @@ export class ShopifyService {
     private prismaTenant: PrismaTenantClient,
     @InjectQueue(WEBHOOK_ORDER_CREATE_QUEUE)
     private webhookOrderQueue: Queue,
-  ) {}
+  ) { }
 
   async createShopifyOrder(tenant: Tenant, headers: Headers, body: OrderData) {
     // this is required for production
@@ -74,9 +74,11 @@ export class ShopifyService {
 
       // 3. Add a job to the queue for processing
       await this.webhookOrderQueue.add(
-        `${}-${SHOPIFY_TOPICS.order.create}`,
+        SHOPIFY_TOPICS.order.create,
         {
-          webhookId: logEntry.id,
+          tenantId: tenant.tenantId,
+          logId: logEntry.id,
+          eventId: eventId,
           orderId: orderId,
           domain: shopDomain,
           payload: body,
@@ -93,6 +95,10 @@ export class ShopifyService {
       // Log the error and potentially re-throw or handle as needed
       throw error;
     }
+  }
+
+  async getWebhookLogByEventId(eventId: string): Promise<ShopifyWebhookLog> {
+    return this.prismaTenant.shopifyWebhookLog.findFirst({ where: { eventId } })
   }
 
   validateWebhookRequest(tenantId: string, hmac: string, body: any) {

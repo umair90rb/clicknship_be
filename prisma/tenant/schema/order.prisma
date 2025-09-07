@@ -1,0 +1,182 @@
+model Order {
+    id            Int       @id @default(autoincrement())
+    orderNumber   String?   @map("order_number")
+    totalAmount   Float?    @map("total_amount")
+    totalTax      Float?    @map("total_tax")
+    totalDiscount Float?    @map("total_discounts")
+    tags          String[]  @map("tags")
+    status        String    @default("Received") @map("status")
+    remarks       String?   @map("remarks")
+    createdAt     DateTime? @default(now()) @map("created_at")
+    deletedAt     DateTime? @map("deleted_at")
+
+    customerId Int?      @map("customer_id")
+    customer   Customer? @relation(fields: [customerId], references: [id])
+
+    channelId Int?     @map("channel_id")
+    channel   Channel? @relation(fields: [channelId], references: [id])
+
+    brandId Int?   @map("brand_id")
+    brand   Brand? @relation(fields: [brandId], references: [id])
+
+    courierServiceId Int?            @map("courier_service_id")
+    courerService    CourierService? @relation(fields: [courierServiceId], references: [id])
+
+    address Address?
+
+    user       User?     @relation(fields: [userId], references: [id])
+    userId     Int?      @map("user_id")
+    assignedAt DateTime? @map("assigned_at")
+
+    delivery OrderDelivery?
+    items    OrderItem[]
+    logs     OrderLog[]
+    payments OrderPayment[]
+
+    @@index([orderNumber])
+    @@map("orders")
+}
+
+model OrderItem {
+    id        Int     @id @default(autoincrement())
+    name      String?
+    unitPrice Float?  @map("unit_price")
+    grams     Float?
+    quantity  Float?
+    discount  Float?
+    sku       String?
+    productId Float?  @map("product_id")
+    variantId Float?  @map("variant_id")
+
+    orderId Int   @map("order_id")
+    order   Order @relation(fields: [orderId], references: [id])
+
+    @@map("order_items")
+}
+
+model Address {
+    id        Int     @id @default(autoincrement())
+    address   String?
+    note      String?
+    city      String?
+    phone     String?
+    zip       Float?
+    province  String?
+    country   String?
+    longitude Float?
+    latitude  Float?
+
+    orderId Int   @unique @map("order_id")
+    order   Order @relation(fields: [orderId], references: [id])
+
+    @@map("order_addresses")
+}
+
+model Customer {
+    id    Int     @id @default(autoincrement())
+    name  String?
+    email String?
+    phone String?
+
+    orders Order[]
+
+    @@map("customers")
+}
+
+model OrderPayment {
+    id     Int     @id @default(autoincrement())
+    type   String
+    bank   String
+    tId    String  @map("t_id")
+    amount Float
+    note   String?
+
+    orderId Int   @map("order_id")
+    order   Order @relation(fields: [orderId], references: [id])
+
+    @@map("order_payments")
+}
+
+model OrderDelivery {
+    id             Int       @id @default(autoincrement())
+    cn             String?
+    status         String?
+    trackingStatus String?   @map("tracking_status")
+    trackedAt      DateTime? @map("tracked_at")
+    tracking       String?
+
+    orderId Int   @unique() @map("order_id")
+    order   Order @relation(fields: [orderId], references: [id])
+
+    courierServiceId      Int     @map("courier_service_id")
+    courierServiceCompany String? @map("courier_service_company")
+
+    @@index([cn])
+    @@index([orderId])
+    @@map("order_deliveries")
+}
+
+model OrderLog {
+    id     Int    @id @default(autoincrement())
+    event  String
+    userId Int    @map("user_id")
+
+    orderId Int   @map("order_id")
+    order   Order @relation(fields: [orderId], references: [id])
+
+    @@map("order_logs")
+}
+
+model Channel {
+    id     Int     @id @default(autoincrement())
+    name   String
+    type   String?
+    source String?
+    active Boolean @default(true)
+
+    brandId Int?    @map("brand_id")
+    brand   Brand?  @relation(fields: [brandId], references: [id])
+    orders  Order[]
+
+    @@map("channels")
+}
+
+model Brand {
+    id     Int     @id @default(autoincrement())
+    name   String
+    active Boolean @default(true)
+
+    channels Channel[]
+    orders   Order[]
+
+    @@map("brands")
+}
+
+model ShopifyWebhookLog {
+    id           String    @id @default(uuid())
+    webhookId    String    @map("webhook_id")
+    eventId      String    @map("event_id")
+    identifier   String?
+    domain       String
+    topic        String
+    apiVersion   String    @map("api_version")
+    triggeredAt  DateTime  @map("triggered_at")
+    receivedAt   DateTime  @map("received_at")
+    processedAt  DateTime? @map("processed_at")
+    status       String    @default("received")
+    error        String?
+    payload      Json
+    retries      Int       @default(0)
+    itemQuantity Int?      @map("item_quantity")
+    amount       Float?
+
+    @@map("shopify_webhook_logs")
+}
+
+model Product {
+    id    Int    @id @default(autoincrement())
+    name  String
+    price Int
+
+    @@map("products")
+}

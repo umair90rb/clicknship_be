@@ -25,7 +25,7 @@ echo ${DB_LIST}
 # Temporarily change IFS to a comma
 IFS=","
 
-SCHEMA_PATH=$(pwd)/prisma/tenant/schema.prisma
+SCHEMA_PATH=$(pwd)/prisma/tenant/schema/schema.prisma
 MIGRATE_TYPE=dev
 if [[ "$ENV" == "prod" ]]; then
     MIGRATE_TYPE="deploy"
