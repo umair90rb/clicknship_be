@@ -38,7 +38,7 @@ echo "Databases found: ${DB_LIST}"
 IFS=","
 
 # Get the path to the Prisma schema file.
-SCHEMA_PATH=$(pwd)/prisma/tenant/schema/schema.prisma
+SCHEMA_PATH=$(pwd)/prisma/tenant/schema/
 
 # Loop through each database name in the list.
 for DB_NAME in $DB_LIST; do
