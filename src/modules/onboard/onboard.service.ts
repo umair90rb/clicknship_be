@@ -17,7 +17,7 @@ export class OnboardService {
     private prismaMaster: PrismaMasterClient,
     private tenantService: TenantService,
     private migrationService: MigrationService,
-  ) {}
+  ) { }
   async onboard(registrationData: OnboardTenantDto) {
     const { companyName, ...userData } = registrationData;
     //make tenant id from company name

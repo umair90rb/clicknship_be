@@ -12,12 +12,12 @@ export class MigrationService {
     this.logger.log(`Running migrations for tenant database: ${url}`);
     try {
       const result = await execAsync(
-        `npx prisma migrate deploy --schema=prisma/tenant/schema/schema.prisma`,
+        `npx prisma migrate deploy --schema prisma/tenant/schema`,
         {
           cwd: process.cwd(),
           env: {
             ...process.env,
-            DATABASE_URL: url,
+            TENANT_DATABASE_SERVER_URL: url,
             PATH: process.env.PATH,
           },
         },
@@ -35,12 +35,12 @@ export class MigrationService {
     this.logger.log(`Running seeders for tenant database: ${url}`);
     try {
       const result = await execAsync(
-        `npx prisma migrate deploy --schema=prisma/tenant/schema/schema.prisma`,
+        `npx prisma migrate deploy --schema prisma/tenant/schema`,
         {
           cwd: process.cwd(),
           env: {
             ...process.env,
-            DATABASE_URL: url,
+            TENANT_DATABASE_SERVER_URL: url,
             PATH: process.env.PATH,
           },
         },

@@ -4,5 +4,5 @@ model CourierService {
 
     orders Order[]
 
-    @@map("courier_service_account")
+    @@map("courier_services")
 }

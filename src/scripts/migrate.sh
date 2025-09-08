@@ -36,7 +36,7 @@ for DB_NAME in $DB_LIST; do
   echo "Processing: $DB"
   export DATABASE_URI=$DB
   echo "running migration..."
-  npx prisma migrate $MIGRATE_TYPE --schema=$SCHEMA_PATH --skip-generate
+  npx prisma migrate $MIGRATE_TYPE --schema $SCHEMA_PATH --skip-generate
   echo "migrated"
 done
 

@@ -53,7 +53,7 @@ for DB_NAME in $DB_LIST; do
   echo "Rolling back migration '${MIGRATION_NAME}' for ${DB_NAME}..."
   
   # Run the Prisma command to mark the migration as rolled back.
-  npx prisma migrate resolve --rolled-back "${MIGRATION_NAME}" --schema="${SCHEMA_PATH}"
+  npx prisma migrate resolve --rolled-back "${MIGRATION_NAME}" --schema "${SCHEMA_PATH}"
   
   echo "Rollback successful for ${DB_NAME}."
 done
