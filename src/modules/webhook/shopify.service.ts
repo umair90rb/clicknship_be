@@ -13,7 +13,7 @@ import {
 } from 'src/constants/common';
 import { OrderStatus } from 'src/types/order';
 import { Tenant } from 'src/types/tenant';
-import { OrderData } from './order.types';
+import { OrderData } from '../order/order.types';
 
 @Injectable()
 export class ShopifyService {
@@ -40,7 +40,7 @@ export class ShopifyService {
     const eventId = headers['x-shopify-event-id'] as string;
 
     const payload = body;
-    const orderId = `#${payload.order_number.toString()}`;
+    const orderId = `#${payload.order_number}`;
     const totalItemsQuantity = payload.line_items.reduce(
       (sum, item) => sum + item.quantity,
       0,
@@ -83,7 +83,7 @@ export class ShopifyService {
           domain: shopDomain,
           payload: body,
         },
-        { jobId: webhookId }, // Use webhookId to ensure idempotency
+        // { jobId: webhookId }, // Use webhookId to ensure idempotency
       );
 
       this.logger.log(`Job for webhook '${webhookId}' added to queue.`);

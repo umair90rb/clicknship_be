@@ -119,7 +119,7 @@ model OrderDelivery {
 model OrderLog {
     id     Int    @id @default(autoincrement())
     event  String
-    userId Int    @map("user_id")
+    userId Int?   @map("user_id")
 
     orderId Int   @map("order_id")
     order   Order @relation(fields: [orderId], references: [id])

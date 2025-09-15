@@ -9,6 +9,7 @@ import { OnboardModule } from './modules/onboard/onboard.module';
 import { OrderModule } from './modules/order/order.module';
 import { ProductModule } from './modules/product/product.module';
 import { RoleModule } from './modules/role/role.module';
+import { WebhookModule } from './modules/webhook/webhook.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { RoleModule } from './modules/role/role.module';
     OnboardModule,
     RoleModule,
     OrderModule,
+    WebhookModule,
   ],
   controllers: [AppController],
   providers: [],
