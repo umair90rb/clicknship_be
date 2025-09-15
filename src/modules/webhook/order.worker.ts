@@ -131,6 +131,7 @@ export class WebhookOrderCreateConsumer extends WorkerHost {
       where: { id: logId }, data: {
         status: 'processed',
         processedAt: new Date(),
+
       }
     })
 
