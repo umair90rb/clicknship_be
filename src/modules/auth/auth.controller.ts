@@ -3,6 +3,7 @@ import { AuthenticationGuard } from 'src/guards/authentication.guard';
 import { RequestWithUser } from 'src/types/auth';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dtos/auth.dto';
+import { RequestUser } from '@/src/decorators/user.decorator';
 
 @Controller('auth')
 export class AuthController {
@@ -15,7 +16,7 @@ export class AuthController {
 
   @Get('me')
   @UseGuards(AuthenticationGuard)
-  me(@Req() req: RequestWithUser) {
-    return this.authService.profile(req.user);
+  me(@RequestUser() user: RequestWithUser) {
+    return this.authService.profile(user);
   }
 }

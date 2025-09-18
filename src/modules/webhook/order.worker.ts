@@ -2,12 +2,8 @@ import { PrismaClient } from '@/prisma/tenant/client';
 import { WEBHOOK_ORDER_CREATE_QUEUE } from '@/src/constants/common';
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
-import { Job, tryCatch } from 'bullmq';
-import {
-  extractKeysFromObj,
-  formatPhoneNumber,
-  underscoreToCamelcase,
-} from './utils';
+import { Job } from 'bullmq';
+import { extractKeysFromObj, formatPhoneNumber } from './utils';
 import {
   ADDRESS_DATA_KEYS,
   ADDRESS_DATA_KEYS_FROM_NOTES,
@@ -16,9 +12,10 @@ import {
   ITEM_DATA_KEYS,
   ORDER_DATA_KEYS,
 } from './order-data-keys';
-import { OrderData } from '../order/order.types';
+
 import { CreateOrderJobData } from './order.types';
 import { tenantWithPrefix } from '@/src/utils/tenant';
+import { OrderStatus } from '@/src/types/order';
 
 @Processor(WEBHOOK_ORDER_CREATE_QUEUE, {})
 export class WebhookOrderCreateConsumer extends WorkerHost {
@@ -42,19 +39,20 @@ export class WebhookOrderCreateConsumer extends WorkerHost {
     const { tenantId, eventId, logId, payload, domain }: CreateOrderJobData =
       job.data;
     await this.openTenantDbConnection(tenantId);
-    const webhookLog =
-      await this.prismaTenantConnection.shopifyWebhookLog.findFirst({
-        where: {
-          AND: [
-            { eventId },
-            {
-              NOT: {
-                id: logId,
-              },
-            },
-          ],
-        },
-      });
+
+    // const webhookLog =
+    //   await this.prismaTenantConnection.shopifyWebhookLog.findFirst({
+    //     where: {
+    //       AND: [
+    //         { eventId },
+    //         {
+    //           NOT: {
+    //             id: logId,
+    //           },
+    //         },
+    //       ],
+    //     },
+    //   });
 
     // mark order as duplicate based on webhook event id. if event id is duplcated mean same order received twice from shopify webhook
     // if (webhookLog) {
@@ -152,6 +150,7 @@ export class WebhookOrderCreateConsumer extends WorkerHost {
         channelId: chanel?.id,
         brandId: chanel?.brandId,
         customerId: customer?.id,
+        status: OrderStatus.received,
       },
       select: { id: true },
     });

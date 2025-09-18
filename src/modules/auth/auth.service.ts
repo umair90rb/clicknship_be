@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { JwtTokenPayload } from 'src/types/auth';
+import { JwtTokenPayload, RequestWithUser } from 'src/types/auth';
 import decrypt from 'src/utils/dcrypt';
 import { RoleService } from '../role/role.service';
 import { LoginDto } from './dtos/auth.dto';
@@ -79,7 +79,7 @@ export class AuthService {
     return this.roleService.getRolePermissions(userRoleId);
   }
 
-  async profile(user: JwtTokenPayload) {
+  async profile(user: RequestWithUser) {
     return user;
   }
 }

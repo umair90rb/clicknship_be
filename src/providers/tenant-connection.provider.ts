@@ -13,6 +13,7 @@ export const tenantConnectionProvider = {
     }
     const prisma = new PrismaTenantClient({
       datasourceUrl: `${process.env.TENANT_DATABASE_SERVER_URL}/${tenant.dbName}`,
+      log: process.env.NODE_ENV === 'development' ? ['query'] : ['error'],
     });
     request.prismaClient = prisma;
     return prisma;

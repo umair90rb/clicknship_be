@@ -1,253 +1,306 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { TENANT_CONNECTION_PROVIDER } from '@/src/constants/common';
 import { PrismaClient as PrismaTenantClient } from '@/prisma/tenant/client';
+import { OrderStatus } from '@/src/types/order';
+import { RequestUser } from '@/src/types/auth';
 
 @Injectable()
 export class OrderService {
-    constructor(
-        @Inject(TENANT_CONNECTION_PROVIDER)
-        private prismaTenant: PrismaTenantClient) { }
+  constructor(
+    @Inject(TENANT_CONNECTION_PROVIDER)
+    private prismaTenant: PrismaTenantClient,
+  ) {}
 
-    private includeRelations = {
-        include: {
-            items: true,
-            address: true,
-            payments: true,
-            delivery: true,
-            customer: true,
-            channel: true,
-            brand: true,
-            user: true,
-            logs: true,
-        },
+  private includeRelations = {
+    include: {
+      items: true,
+      address: true,
+      payments: true,
+      delivery: true,
+      customer: true,
+      channel: true,
+      brand: true,
+      user: true,
+      logs: true,
+    },
+  };
+
+  async list(skip?: number, take?: number, filters?: any) {
+    const where: any = {
+      deletedAt: null,
     };
 
-    async create(createDto: CreateOrderDto) {
-        const {
-            items,
-            address,
-            payments,
-            tags,
-            ...rest
-        } = createDto;
+    if (filters.status)
+      where.status = { equals: filters.status, mode: 'insensitive' };
 
-        return this.prismaTenant.order.create({
-            data: {
-                ...rest,
-                tags: tags ?? [],
-                items: items ? { create: items } : undefined,
-                address: address ? { create: address } : undefined,
-            },
-            ...this.includeRelations,
-        });
+    if (filters.city) {
+      where.address = { city: { contains: filters.city, mode: 'insensitive' } };
     }
 
-    async findOne(id: number) {
-        const order = await this.prismaTenant.order.findFirst({
-            where: { id, deletedAt: null },
-            ...this.includeRelations,
-        });
+    const [orders, total] = await Promise.all([
+      this.prismaTenant.order.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { createdAt: 'desc' },
+        select: {
+          id: true,
+          orderNumber: true,
+          totalAmount: true,
+          createdAt: true,
+          status: true,
+          tags: true,
+          channel: { select: { name: true } },
+          address: {
+            select: { address: true, city: true, phone: true, province: true },
+          },
+          customer: { select: { name: true, phone: true } },
+        },
+      }),
+      this.prismaTenant.order.count({ where }),
+    ]);
 
-        if (!order) throw new NotFoundException('Order not found');
-        return order;
+    return {
+      data: orders,
+      meta: { total, skip, take },
+    };
+  }
+
+  async find(id: number) {
+    const order = await this.prismaTenant.order.findFirst({
+      where: { id, deletedAt: null },
+      ...this.includeRelations,
+    });
+
+    if (!order) throw new NotFoundException('Order not found');
+    return { data: order };
+  }
+
+  async create(user: RequestUser, createDto: CreateOrderDto) {
+    const {
+      items,
+      address,
+      payments,
+      tags,
+      customer,
+      channelId,
+      brandId,
+      status,
+      courierServiceId,
+      remarks,
+      totalAmount,
+      totalDiscount,
+      totalTax,
+    } = createDto;
+    const { id: existingCustomerId, ...customerData } = customer;
+    const { id: existingAddressId, ...addressData } = address;
+    console.log(user);
+    return this.prismaTenant.order.create({
+      data: {
+        ...(user?.id
+          ? { user: { connect: { id: user.id } }, assignedAt: new Date() }
+          : {}),
+        status,
+        remarks,
+        totalAmount,
+        totalDiscount,
+        totalTax,
+        tags: tags ?? [],
+        items: items ? { create: items } : undefined,
+        payments: payments ? { create: payments } : undefined,
+        channel: { connect: { id: channelId } },
+        brand: { connect: { id: brandId } },
+        ...(courierServiceId
+          ? { courerService: { connect: { id: courierServiceId } } }
+          : {}),
+        address: {
+          connectOrCreate: {
+            where: { id: existingAddressId ?? 0 },
+            create: addressData,
+          },
+        },
+        customer: {
+          connectOrCreate: {
+            where: { id: existingCustomerId ?? 0 },
+            create: customerData,
+          },
+        },
+      },
+      include: {
+        user: true,
+        items: true,
+        address: true,
+        payments: true,
+        customer: true,
+        channel: true,
+      },
+    });
+  }
+
+  async update(user: RequestUser, id: number, updateDto: UpdateOrderDto) {
+    const existing = await this.prismaTenant.order.findUnique({
+      where: { id, deletedAt: { equals: null } },
+      select: { userId: true, status: true },
+    });
+
+    if (!existing) {
+      throw new NotFoundException('Order not found');
     }
 
-    async updateFull(id: number, updateDto: CreateOrderDto) {
-        // This is used by PUT (full replace)
-        // For nested arrays we remove old related records and recreate them
-        const existing = await this.prismaTenant.order.findUnique({
-            where: { id },
-            include: { items: true, payments: true },
-        });
-
-        if (!existing || existing.deletedAt) throw new NotFoundException('Order not found');
-
-        const {
-            items,
-            payments,
-            address,
-            tags,
-            ...rest
-        } = updateDto;
-
-        // Build data object
-        const data: any = {
-            ...rest,
-            tags: tags ?? [],
-        };
-
-        // nested handling
-        if (address) {
-            data.address = {
-                upsert: {
-                    create: address,
-                    update: address,
-                },
-            };
-        } else {
-            // If full replace and address is not provided, remove it
-            data.address = {
-                delete: true,
-            };
-        }
-
-        if (items) {
-            data.items = {
-                deleteMany: {}, // remove all existing items for this order
-                create: items,
-            };
-        } else {
-            // If full replace and no items provided, remove all items
-            data.items = {
-                deleteMany: {},
-            };
-        }
-
-        if (payments) {
-            data.payments = {
-                deleteMany: {},
-                create: payments,
-            };
-        } else {
-            data.payments = {
-                deleteMany: {},
-            };
-        }
-
-        const updated = await this.prismaTenant.order.update({
-            where: { id },
-            data,
-            ...this.includeRelations,
-        });
-
-        return updated;
+    // TODO: how to handle this -> add a middleware that add user permisions in request and then pick permission from user obj
+    // check if user has permission to "update-confirmed-order" then allow otherwise throw forbidden exception
+    if (
+      existing.status === OrderStatus.confirmed &&
+      user.id !== existing.userId
+    ) {
+      throw new ForbiddenException('Order already confirmed');
     }
 
-    async updatePartial(id: number, updateDto: UpdateOrderDto) {
-        const existing = await this.prismaTenant.order.findUnique({
-            where: { id },
-            include: { items: true, payments: true, address: true, delivery: true },
-        });
-        if (!existing || existing.deletedAt) throw new NotFoundException('Order not found');
+    const {
+      items,
+      address,
+      payments,
+      tags,
+      customer,
+      channelId,
+      brandId,
+      status,
+      courierServiceId,
+      remarks,
+      totalAmount,
+      totalDiscount,
+      totalTax,
+    } = updateDto;
+    const { id: existingCustomerId, ...customerData } = customer;
+    const { id: existingAddressId, ...addressData } = address;
 
-        const {
-            items,
-            payments,
-            address,
-            delivery,
-            tags,
-            ...rest
-        } = updateDto as any;
+    //TODO: update in a way to that if value existed then update it otherwise skip it, etc ...(condition ? {key: value} : {})
 
-        const data: any = {};
+    const updated = await this.prismaTenant.order.update({
+      where: { id },
+      data: {
+        ...(user?.id
+          ? { user: { connect: { id: user.id } }, assignedAt: new Date() }
+          : {}),
+        status,
+        remarks,
+        totalAmount,
+        totalDiscount,
+        totalTax,
+        tags: tags ?? [],
+        items: items ? { create: items } : undefined,
+        payments: payments ? { create: payments } : undefined,
+        channel: { connect: { id: channelId } },
+        brand: { connect: { id: brandId } },
+        ...(courierServiceId
+          ? { courerService: { connect: { id: courierServiceId } } }
+          : {}),
+        address: {
+          connectOrCreate: {
+            where: { id: existingAddressId ?? 0 },
+            create: addressData,
+          },
+        },
+        customer: {
+          connectOrCreate: {
+            where: { id: existingCustomerId ?? 0 },
+            create: customerData,
+          },
+        },
+      },
+      include: {
+        user: true,
+        items: true,
+        address: true,
+        payments: true,
+        customer: true,
+        channel: true,
+      },
+    });
 
-        // Only attach fields that are present in request
-        Object.keys(rest).forEach((k) => {
-            if (rest[k] !== undefined) data[k] = rest[k];
-        });
+    return updated;
+  }
 
-        if (tags !== undefined) data.tags = tags;
+  async delete(id: number) {
+    const existing = await this.prismaTenant.order.findUnique({
+      where: { id },
+    });
+    if (!existing || existing.deletedAt)
+      throw new NotFoundException('Order not found');
 
-        if (address !== undefined) {
-            // upsert address
-            data.address = {
-                upsert: {
-                    create: address,
-                    update: address,
-                },
-            };
-        }
+    return this.prismaTenant.order.update({
+      where: { id },
+      data: { deletedAt: new Date() },
+    });
+  }
 
-        if (delivery !== undefined) {
-            data.delivery = {
-                upsert: {
-                    create: delivery,
-                    update: delivery,
-                },
-            };
-        }
+  // async updatePartial(id: number, updateDto: UpdateOrderDto) {
+  //   const existing = await this.prismaTenant.order.findUnique({
+  //     where: { id },
+  //     include: { items: true, payments: true, address: true, delivery: true },
+  //   });
+  //   if (!existing || existing.deletedAt)
+  //     throw new NotFoundException('Order not found');
 
-        if (items !== undefined) {
-            // Replace items with provided ones
-            data.items = {
-                deleteMany: {},
-                create: items,
-            };
-        }
+  //   const { items, payments, address, delivery, tags, ...rest } =
+  //     updateDto as any;
 
-        if (payments !== undefined) {
-            data.payments = {
-                deleteMany: {},
-                create: payments,
-            };
-        }
+  //   const data: any = {};
 
-        const updated = await this.prismaTenant.order.update({
-            where: { id },
-            data,
-            ...this.includeRelations,
-        });
+  //   // Only attach fields that are present in request
+  //   Object.keys(rest).forEach((k) => {
+  //     if (rest[k] !== undefined) data[k] = rest[k];
+  //   });
 
-        return updated;
-    }
+  //   if (tags !== undefined) data.tags = tags;
 
-    async softDelete(id: number) {
-        const existing = await this.prismaTenant.order.findUnique({ where: { id } });
-        if (!existing || existing.deletedAt) throw new NotFoundException('Order not found');
+  //   if (address !== undefined) {
+  //     // upsert address
+  //     data.address = {
+  //       upsert: {
+  //         create: address,
+  //         update: address,
+  //       },
+  //     };
+  //   }
 
-        return this.prismaTenant.order.update({
-            where: { id },
-            data: { deletedAt: new Date() },
-        });
-    }
+  //   if (delivery !== undefined) {
+  //     data.delivery = {
+  //       upsert: {
+  //         create: delivery,
+  //         update: delivery,
+  //       },
+  //     };
+  //   }
 
-    async list(query: {
-        page?: number;
-        pageSize?: number;
-        status?: string;
-        city?: string;
-        orderNumber?: string;
-        customerName?: string;
-        customerPhone?: string;
-    }) {
-        const page = query.page && query.page > 0 ? query.page : 1;
-        const pageSize = query.pageSize && query.pageSize > 0 ? query.pageSize : 20;
+  //   if (items !== undefined) {
+  //     // Replace items with provided ones
+  //     data.items = {
+  //       deleteMany: {},
+  //       create: items,
+  //     };
+  //   }
 
-        const where: any = {
-            deletedAt: null,
-        };
+  //   if (payments !== undefined) {
+  //     data.payments = {
+  //       deleteMany: {},
+  //       create: payments,
+  //     };
+  //   }
 
-        if (query.status) where.status = { equals: query.status };
-        if (query.orderNumber) where.orderNumber = { contains: query.orderNumber, mode: 'insensitive' };
+  //   const updated = await this.prismaTenant.order.update({
+  //     where: { id },
+  //     data,
+  //     ...this.includeRelations,
+  //   });
 
-        if (query.city) {
-            where.address = { city: { contains: query.city, mode: 'insensitive' } };
-        }
-
-        if (query.customerName) {
-            where.customer = { name: { contains: query.customerName, mode: 'insensitive' } };
-        }
-
-        if (query.customerPhone) {
-            where.customer = { phone: { contains: query.customerPhone, mode: 'insensitive' } };
-        }
-
-        const [items, total] = await Promise.all([
-            this.prismaTenant.order.findMany({
-                where,
-                ...this.includeRelations,
-                skip: (page - 1) * pageSize,
-                take: pageSize,
-                orderBy: { createdAt: 'desc' },
-            }),
-            this.prismaTenant.order.count({ where }),
-        ]);
-
-        return {
-            data: items,
-            meta: { total, page, pageSize, totalPages: Math.ceil(total / pageSize) },
-        };
-    }
+  //   return updated;
+  // }
 }

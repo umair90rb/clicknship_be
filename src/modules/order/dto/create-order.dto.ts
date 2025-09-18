@@ -1,176 +1,183 @@
 import {
-    IsOptional,
-    IsString,
-    IsNumber,
-    IsArray,
-    ValidateNested,
-    IsEnum,
-    IsDateString,
+  IsOptional,
+  IsString,
+  IsNumber,
+  IsArray,
+  ValidateNested,
+  IsDateString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
+import { OrderStatus } from '@/src/types/order';
 
 export class CreateOrderItemDto {
-    @IsOptional()
-    @IsString()
-    name?: string;
+  @IsOptional()
+  @IsNumber()
+  id?: number;
 
-    @IsOptional()
-    @IsNumber()
-    unitPrice?: number;
+  @IsOptional()
+  @IsString()
+  name?: string;
 
-    @IsOptional()
-    @IsNumber()
-    grams?: number;
+  @IsOptional()
+  @IsNumber()
+  unitPrice?: number;
 
-    @IsOptional()
-    @IsNumber()
-    quantity?: number;
+  @IsOptional()
+  @IsNumber()
+  quantity?: number;
 
-    @IsOptional()
-    @IsNumber()
-    discount?: number;
+  @IsOptional()
+  @IsNumber()
+  discount?: number;
 
-    @IsOptional()
-    @IsString()
-    sku?: string;
+  @IsOptional()
+  @IsString()
+  sku?: string;
 
-    @IsOptional()
-    @IsNumber()
-    productId?: number;
+  @IsOptional()
+  @IsNumber()
+  grams?: number;
 
-    @IsOptional()
-    @IsNumber()
-    variantId?: number;
+  @IsOptional()
+  @IsString()
+  productId?: string;
+
+  @IsOptional()
+  @IsString()
+  variantId?: string;
 }
-
 
 export class CreateAddressDto {
-    @IsOptional()
-    @IsString()
-    address?: string;
+  @IsOptional()
+  @IsNumber()
+  id?: number;
 
-    @IsOptional()
-    @IsString()
-    note?: string;
+  @IsOptional()
+  @IsString()
+  address?: string;
 
-    @IsOptional()
-    @IsString()
-    city?: string;
+  @IsOptional()
+  @IsString()
+  note?: string;
 
-    @IsOptional()
-    @IsString()
-    phone?: string;
+  @IsOptional()
+  @IsString()
+  city?: string;
 
-    @IsOptional()
-    @IsNumber()
-    zip?: number;
+  @IsOptional()
+  @IsNumber()
+  zip?: number;
 
-    @IsOptional()
-    @IsString()
-    province?: string;
+  @IsOptional()
+  @IsString()
+  province?: string;
 
-    @IsOptional()
-    @IsString()
-    country?: string;
-
-    @IsOptional()
-    @IsNumber()
-    longitude?: number;
-
-    @IsOptional()
-    @IsNumber()
-    latitude?: number;
+  @IsOptional()
+  @IsString()
+  country?: string;
 }
-
 
 export class CreatePaymentDto {
-    @IsString()
-    type: string;
+  @IsString()
+  type: string;
 
-    @IsOptional()
-    @IsString()
-    bank?: string;
+  @IsOptional()
+  @IsString()
+  bank: string;
 
-    @IsOptional()
-    @IsString()
-    tId?: string;
+  @IsOptional()
+  @IsString()
+  tId: string;
 
-    @IsNumber()
-    amount: number;
+  @IsNumber()
+  amount: number;
 
-    @IsOptional()
-    @IsString()
-    note?: string;
+  @IsOptional()
+  @IsString()
+  note?: string;
 }
 
+export class CreateCustomerDto {
+  @IsOptional()
+  @IsNumber()
+  id?: number;
+
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsString()
+  email?: string;
+}
 
 export class CreateOrderDto {
-    @IsOptional()
-    @IsString()
-    orderNumber?: string;
+  @IsOptional()
+  @IsNumber()
+  totalAmount?: number;
 
-    @IsOptional()
-    @IsNumber()
-    totalAmount?: number;
+  @IsOptional()
+  @IsNumber()
+  totalTax?: number;
 
-    @IsOptional()
-    @IsNumber()
-    totalTax?: number;
+  @IsOptional()
+  @IsNumber()
+  totalDiscount?: number;
 
-    @IsOptional()
-    @IsNumber()
-    totalDiscount?: number;
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  tags?: string[];
 
-    @IsOptional()
-    @IsArray()
-    @IsString({ each: true })
-    tags?: string[];
+  @IsOptional()
+  @IsString()
+  status?: OrderStatus;
 
-    @IsOptional()
-    @IsString()
-    status?: string; // If you have status enum, replace with IsEnum
+  @IsOptional()
+  @IsString()
+  remarks?: string;
 
-    @IsOptional()
-    @IsString()
-    remarks?: string;
+  @IsOptional()
+  @IsNumber()
+  customerId?: number;
 
-    @IsOptional()
-    @IsNumber()
-    customerId?: number;
+  @IsOptional()
+  @IsNumber()
+  channelId?: number;
 
-    @IsOptional()
-    @IsNumber()
-    channelId?: number;
+  @IsOptional()
+  @IsNumber()
+  brandId?: number;
 
-    @IsOptional()
-    @IsNumber()
-    brandId?: number;
+  @IsOptional()
+  @IsNumber()
+  courierServiceId?: number;
 
-    @IsOptional()
-    @IsNumber()
-    courierServiceId?: number;
+  @IsOptional()
+  @IsNumber()
+  userId?: number;
 
-    @IsOptional()
-    @IsNumber()
-    userId?: number;
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => CreateOrderItemDto)
+  items?: CreateOrderItemDto[];
 
-    @IsOptional()
-    @IsDateString()
-    assignedAt?: string;
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CreateAddressDto)
+  address?: CreateAddressDto;
 
-    @IsOptional()
-    @ValidateNested({ each: true })
-    @Type(() => CreateOrderItemDto)
-    items?: CreateOrderItemDto[];
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => CreateCustomerDto)
+  customer?: CreateCustomerDto;
 
-    @IsOptional()
-    @ValidateNested()
-    @Type(() => CreateAddressDto)
-    address?: CreateAddressDto;
-
-    @IsOptional()
-    @ValidateNested({ each: true })
-    @Type(() => CreatePaymentDto)
-    payments?: CreatePaymentDto[];
-
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => CreatePaymentDto)
+  payments?: CreatePaymentDto[];
 }
