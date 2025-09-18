@@ -77,14 +77,6 @@ export class WebhookOrderCreateConsumer extends WorkerHost {
 
     //create received order in db
     const orderData = extractKeysFromObj(payload, ORDER_DATA_KEYS);
-    let adderssData = extractKeysFromObj(
-      payload?.shipping_address,
-      ADDRESS_DATA_KEYS,
-    );
-    let customerData = extractKeysFromObj(
-      payload?.customer,
-      CUSTOMER_DATA_KEYS,
-    );
 
     const notesAttributes = payload?.note_attributes?.reduce(
       (pv, { name, value }) => ({
@@ -92,6 +84,27 @@ export class WebhookOrderCreateConsumer extends WorkerHost {
         ...pv,
       }),
       {},
+    );
+
+    let adderssData = extractKeysFromObj(
+      payload?.shipping_address,
+      ADDRESS_DATA_KEYS,
+    );
+
+    if (!adderssData || !Object.keys(adderssData).length) {
+      const addressDataFromNotes = extractKeysFromObj(
+        notesAttributes,
+        ADDRESS_DATA_KEYS_FROM_NOTES,
+      );
+      adderssData = {
+        address1: addressDataFromNotes?.address,
+        ...addressDataFromNotes,
+      };
+    }
+
+    let customerData = extractKeysFromObj(
+      payload?.customer,
+      CUSTOMER_DATA_KEYS,
     );
 
     if (!customerData || !Object.keys(customerData).length) {
@@ -106,21 +119,8 @@ export class WebhookOrderCreateConsumer extends WorkerHost {
       delete customerData.full_name;
     }
 
-    if (!adderssData || !Object.keys(adderssData).length) {
-      const addressDataFromNotes = extractKeysFromObj(
-        notesAttributes,
-        ADDRESS_DATA_KEYS_FROM_NOTES,
-      );
-      adderssData = {
-        address1: addressDataFromNotes?.address,
-        ...addressDataFromNotes,
-      };
-    }
-
     if (Boolean(customerData?.phone)) {
       customerData['phone'] = formatPhoneNumber(customerData?.phone);
-    } else if (Boolean(adderssData?.phone)) {
-      customerData['phone'] = formatPhoneNumber(adderssData?.phone);
     } else if (Boolean(adderssData?.phone)) {
       customerData['phone'] = formatPhoneNumber(adderssData?.phone);
     }
@@ -134,7 +134,7 @@ export class WebhookOrderCreateConsumer extends WorkerHost {
     if (!customer) {
       customer = await this.prismaTenantConnection.customer.create({
         data: {
-          name: `${customerData.first_name} ${customerData.last_name}`.trimEnd(),
+          name: `${customerData.first_name} ${customerData.last_name || ''}`.trimEnd(),
           email: customerData?.email,
           phone: customerData?.phone,
         },
@@ -161,6 +161,7 @@ export class WebhookOrderCreateConsumer extends WorkerHost {
         address: adderssData?.address1,
         note: adderssData?.address2,
         city: adderssData?.city,
+        country: adderssData?.country,
         phone: adderssData?.phone,
         orderId: order.id,
         province: adderssData?.province,
