@@ -10,6 +10,7 @@ import { OnboardTenantDto } from './dtos/onboard.dto';
 import { MigrationService } from './migration.service';
 import { User } from './onboard.types';
 import { TenantService } from './tenant.service';
+import { tenantWithPrefix } from '@/src/utils/tenant';
 
 @Injectable()
 export class OnboardService {
@@ -22,7 +23,7 @@ export class OnboardService {
     const { companyName, ...userData } = registrationData;
     //make tenant id from company name
     const tenantId = companyName.toLowerCase().replace(/\s+/g, '-');
-    const dbName = `tenant_${tenantId.replace(/-/g, '_')}`;
+    const dbName = tenantWithPrefix(tenantId.replace(/-/g, '_'));
     //check if tenant id is available
     const isExists = await this.tenantService.getTenantById(tenantId);
     if (isExists) {

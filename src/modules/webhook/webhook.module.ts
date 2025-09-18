@@ -4,6 +4,7 @@ import { ShopifyService } from './shopify.service';
 import { tenantConnectionProvider } from '@/src/providers/tenant-connection.provider';
 import { BullModule } from '@nestjs/bullmq';
 import { WEBHOOK_ORDER_CREATE_QUEUE } from '@/src/constants/common';
+import { WebhookOrderCreateConsumer } from './order.worker';
 
 @Module({
     imports: [
@@ -11,11 +12,13 @@ import { WEBHOOK_ORDER_CREATE_QUEUE } from '@/src/constants/common';
             name: WEBHOOK_ORDER_CREATE_QUEUE,
             defaultJobOptions: {
                 removeOnComplete: true,
-                removeOnFail: true
+                removeOnFail: true,
+                attempts: 3,
+                delay: 2000
             }
         }),
     ],
-    providers: [ShopifyService, tenantConnectionProvider],
+    providers: [ShopifyService, tenantConnectionProvider, WebhookOrderCreateConsumer],
     controllers: [ShopifyController]
 })
 export class WebhookModule {

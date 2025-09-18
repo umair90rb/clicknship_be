@@ -45,8 +45,8 @@ model OrderItem {
     quantity  Float?
     discount  Float?
     sku       String?
-    productId Float?  @map("product_id")
-    variantId Float?  @map("variant_id")
+    productId String? @map("product_id")
+    variantId String? @map("variant_id")
 
     orderId Int   @map("order_id")
     order   Order @relation(fields: [orderId], references: [id])
