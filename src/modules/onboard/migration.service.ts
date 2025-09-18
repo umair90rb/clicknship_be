@@ -17,7 +17,7 @@ export class MigrationService {
           cwd: process.cwd(),
           env: {
             ...process.env,
-            TENANT_DATABASE_SERVER_URL: url,
+            DATABASE_URL: url,
             PATH: process.env.PATH,
           },
         },
