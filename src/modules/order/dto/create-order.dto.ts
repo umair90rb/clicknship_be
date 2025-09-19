@@ -78,6 +78,11 @@ export class CreateAddressDto {
 }
 
 export class CreatePaymentDto {
+  @IsOptional()
+  @IsNumber()
+  id: number;
+
+  @IsOptional()
   @IsString()
   type: string;
 

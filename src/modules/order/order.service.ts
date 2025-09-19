@@ -98,11 +98,11 @@ export class OrderService {
       totalAmount,
       totalDiscount,
       totalTax,
-    } = createDto;
-    const { id: existingCustomerId, ...customerData } = customer;
-    const { id: existingAddressId, ...addressData } = address;
-    console.log(user);
+    } = createDto || {};
+    const { id: existingCustomerId, ...customerData } = customer || {};
+    const { id: existingAddressId, ...addressData } = address || {};
     return this.prismaTenant.order.create({
+      relationLoadStrategy: 'join',
       data: {
         ...(user?.id
           ? { user: { connect: { id: user.id } }, assignedAt: new Date() }
@@ -177,43 +177,122 @@ export class OrderService {
       totalAmount,
       totalDiscount,
       totalTax,
-    } = updateDto;
-    const { id: existingCustomerId, ...customerData } = customer;
-    const { id: existingAddressId, ...addressData } = address;
+    } = updateDto || {};
+    const { id: existingCustomerId, ...customerData } = customer || {};
+    const { id: existingAddressId, ...addressData } = address || {};
 
     //TODO: update in a way to that if value existed then update it otherwise skip it, etc ...(condition ? {key: value} : {})
-
     const updated = await this.prismaTenant.order.update({
+      relationLoadStrategy: 'join',
       where: { id },
       data: {
         ...(user?.id
           ? { user: { connect: { id: user.id } }, assignedAt: new Date() }
           : {}),
-        status,
-        remarks,
-        totalAmount,
-        totalDiscount,
-        totalTax,
-        tags: tags ?? [],
-        items: items ? { create: items } : undefined,
-        payments: payments ? { create: payments } : undefined,
-        channel: { connect: { id: channelId } },
-        brand: { connect: { id: brandId } },
+        ...(status !== undefined ? { status } : {}),
+        ...(remarks !== undefined ? { remarks } : {}),
+        ...(totalAmount !== undefined ? { totalAmount } : {}),
+        ...(totalDiscount !== undefined ? { totalDiscount } : {}),
+        ...(totalTax !== undefined ? { totalTax } : {}),
+        ...(tags !== undefined ? { tags } : {}),
+        ...(channelId ? { channel: { connect: { id: channelId } } } : {}),
+        ...(brandId ? { brand: { connect: { id: brandId } } } : {}),
         ...(courierServiceId
-          ? { courerService: { connect: { id: courierServiceId } } }
+          ? { courierService: { connect: { id: courierServiceId } } }
           : {}),
-        address: {
-          connectOrCreate: {
-            where: { id: existingAddressId ?? 0 },
-            create: addressData,
-          },
-        },
-        customer: {
-          connectOrCreate: {
-            where: { id: existingCustomerId ?? 0 },
-            create: customerData,
-          },
-        },
+        ...(payments ? { payments: { create: payments } } : {}),
+        ...(payments
+          ? {
+              payments: {
+                deleteMany: {
+                  orderId: id,
+                  NOT: payments.filter((p) => p.id).map((p) => ({ id: p.id })),
+                },
+                upsert: payments.map((payments) => ({
+                  where: { id: payments.id ?? 0 },
+                  update: {
+                    type: payments.type,
+                    tId: payments.tId,
+                    bank: payments.bank,
+                    amount: payments.amount,
+                    note: payments.note,
+                  },
+                  create: {
+                    type: payments.type,
+                    tId: payments.tId,
+                    bank: payments.bank,
+                    amount: payments.amount,
+                    note: payments.note,
+                  },
+                })),
+              },
+            }
+          : {}),
+        ...(items
+          ? {
+              items: {
+                deleteMany: {
+                  orderId: id,
+                  NOT: items.filter((i) => i.id).map((i) => ({ id: i.id })),
+                },
+                upsert: items.map((item) => ({
+                  where: { id: item.id ?? 0 },
+                  update: {
+                    name: item.name,
+                    grams: item.grams,
+                    discount: item.discount,
+                    sku: item.sku,
+                    quantity: item.quantity,
+                    unitPrice: item.unitPrice,
+                  },
+                  create: {
+                    name: item.name,
+                    grams: item.grams,
+                    discount: item.discount,
+                    sku: item.sku,
+                    quantity: item.quantity,
+                    unitPrice: item.unitPrice,
+                  },
+                })),
+              },
+            }
+          : {}),
+        ...(Object.keys(addressData).length
+          ? {
+              address: {
+                update: {
+                  ...('address' in addressData
+                    ? { address: addressData.address }
+                    : {}),
+                  ...('note' in addressData ? { note: addressData.note } : {}),
+                  ...('city' in addressData ? { city: addressData.city } : {}),
+                  ...('province' in addressData
+                    ? { province: addressData.province }
+                    : {}),
+                  ...('country' in addressData
+                    ? { country: addressData.country }
+                    : {}),
+                },
+              },
+            }
+          : {}),
+        ...(Object.keys(customerData).length
+          ? {
+              customer: {
+                update: {
+                  ...('name' in customerData
+                    ? { name: customerData?.name }
+                    : {}),
+                  ...('email' in customerData
+                    ? { email: customerData.email }
+                    : {}),
+                  ...('phone' in customerData
+                    ? { phone: customerData.phone }
+                    : {}),
+                },
+              },
+            }
+          : {}),
       },
       include: {
         user: true,
