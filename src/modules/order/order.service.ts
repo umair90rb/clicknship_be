@@ -57,18 +57,21 @@ export class OrderService {
       };
     }
 
-    if (filters.name) {
-      where.name = {
-        contains: filters.name,
-        mode: 'insensitive',
-      };
-    }
+    if (filters.name || filters.phone) {
+      where.customer = {};
+      if (filters.name) {
+        where.customer.name = {
+          contains: filters.name,
+          mode: 'insensitive',
+        };
+      }
 
-    if (filters.phone) {
-      where.phone = {
-        contains: filters.phone,
-        mode: 'insensitive',
-      };
+      if (filters.phone) {
+        where.customer.phone = {
+          contains: filters.phone,
+          mode: 'insensitive',
+        };
+      }
     }
 
     // Nested address filters
@@ -158,7 +161,28 @@ export class OrderService {
   async find(id: number) {
     const order = await this.prismaTenant.order.findFirst({
       where: { id, deletedAt: null },
-      ...this.includeRelations,
+      select: {
+        id: true,
+        orderNumber: true,
+        status: true,
+        createdAt: true,
+        remarks: true,
+        tags: true,
+        totalAmount: true,
+        totalDiscount: true,
+        totalTax: true,
+        assignedAt: true,
+        courerService: true,
+        items: true,
+        address: true,
+        payments: true,
+        delivery: true,
+        customer: true,
+        channel: true,
+        brand: true,
+        user: { select: { name: true, id: true, phone: true, email: true } },
+        logs: true,
+      },
     });
 
     if (!order) throw new NotFoundException('Order not found');
