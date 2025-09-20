@@ -3,6 +3,7 @@ import { REQUEST } from '@nestjs/core';
 import { PrismaClient as PrismaTenantClient } from 'prisma/tenant/client';
 import { TENANT_CONNECTION_PROVIDER } from '../constants/common';
 import { TENANT_MIDDLEWARE_NOT_APPLIED } from '../constants/errors';
+import { getDbUrl } from '../modules/onboard/utils';
 
 export const tenantConnectionProvider = {
   provide: TENANT_CONNECTION_PROVIDER,
@@ -12,7 +13,7 @@ export const tenantConnectionProvider = {
       throw new InternalServerErrorException(TENANT_MIDDLEWARE_NOT_APPLIED);
     }
     const prisma = new PrismaTenantClient({
-      datasourceUrl: `${process.env.TENANT_DATABASE_SERVER_URL}/${tenant.dbName}`,
+      datasourceUrl: getDbUrl(tenant.dbName),
       log: process.env.NODE_ENV === 'development' ? ['query'] : ['error'],
       errorFormat: 'pretty',
     });

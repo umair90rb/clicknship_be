@@ -13,7 +13,7 @@ import {
 } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
-import { ListOrdersQueryDto } from './dto/list-order.dto';
+import { ListOrdersBodyDto } from './dto/list-order.dto';
 import { OrderService } from './order.service';
 import { RequestWithUser, RequestUser } from '@/src/types/auth';
 import { RequestUser as RequestUserDeco } from '@/src/decorators/user.decorator';
@@ -24,14 +24,9 @@ import { AuthenticationGuard } from '@/src/guards/authentication.guard';
 export class OrderController {
   constructor(private readonly ordersService: OrderService) {}
 
-  @Get()
-  async list(@Query() query: ListOrdersQueryDto) {
-    const { skip, take, city, status } = query;
-
-    return this.ordersService.list(parseInt(skip), parseInt(take), {
-      city,
-      status,
-    });
+  @Post()
+  async list(@Body() body: ListOrdersBodyDto) {
+    return this.ordersService.list(body);
   }
 
   @Get(':id')
@@ -39,7 +34,7 @@ export class OrderController {
     return this.ordersService.find(id);
   }
 
-  @Post()
+  @Post('create')
   async create(
     @RequestUserDeco() user: RequestUser,
     @Body() createDto: CreateOrderDto,

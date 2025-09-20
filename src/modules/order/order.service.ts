@@ -10,6 +10,7 @@ import { TENANT_CONNECTION_PROVIDER } from '@/src/constants/common';
 import { PrismaClient as PrismaTenantClient } from '@/prisma/tenant/client';
 import { OrderStatus } from '@/src/types/order';
 import { RequestUser } from '@/src/types/auth';
+import { ListOrdersBodyDto } from './dto/list-order.dto';
 
 @Injectable()
 export class OrderService {
@@ -32,16 +33,97 @@ export class OrderService {
     },
   };
 
-  async list(skip?: number, take?: number, filters?: any) {
+  async list(body: ListOrdersBodyDto) {
+    const { skip, take, ...filters } = body;
     const where: any = {
       deletedAt: null,
     };
 
-    if (filters.status)
-      where.status = { equals: filters.status, mode: 'insensitive' };
+    console.log(filters);
+    // String filters (simple contains)
+    if (filters.orderNumber) {
+      where.orderNumber = {
+        contains: filters.orderNumber,
+        mode: 'insensitive',
+      };
+    }
 
-    if (filters.city) {
-      where.address = { city: { contains: filters.city, mode: 'insensitive' } };
+    if (filters.channel) {
+      where.channel = {
+        name: {
+          contains: filters.channel,
+          mode: 'insensitive',
+        },
+      };
+    }
+
+    if (filters.name) {
+      where.name = {
+        contains: filters.name,
+        mode: 'insensitive',
+      };
+    }
+
+    if (filters.phone) {
+      where.phone = {
+        contains: filters.phone,
+        mode: 'insensitive',
+      };
+    }
+
+    // Nested address filters
+    if (filters.address || filters.city) {
+      where.address = {};
+
+      if (filters.address) {
+        where.address.address = {
+          contains: filters.address,
+          mode: 'insensitive',
+        };
+      }
+
+      if (filters.city) {
+        where.address.city = {
+          contains: filters.city,
+          mode: 'insensitive',
+        };
+      }
+    }
+
+    // Status (array of enums/strings)
+    if (filters.status?.length) {
+      where.status = {
+        in: filters.status,
+        mode: 'insensitive', // if status is string, keep case-insensitive
+      };
+    }
+    if (filters.tags?.length) {
+      where.tags = {
+        hasSome: filters.tags,
+      };
+    }
+
+    // Ranges (numeric or datetime)
+    if (filters.totalAmount) {
+      const { min, max } = filters.totalAmount;
+      where.totalAmount = {};
+      if (min !== undefined && min !== null && min !== '') {
+        where.totalAmount.gte = Number(min);
+      }
+      if (max !== undefined && max !== null && max !== '') {
+        where.totalAmount.lte = Number(max);
+      }
+    }
+
+    if (filters.createdAt) {
+      const { min, max } = filters.createdAt;
+      where.createdAt = {};
+      if (min) {
+        where.createdAt.gte = new Date(min);
+      }
+      if (max) {
+        where.createdAt.lte = new Date(max);
+      }
     }
 
     const [orders, total] = await Promise.all([
@@ -69,7 +151,7 @@ export class OrderService {
 
     return {
       data: orders,
-      meta: { total, skip, take },
+      meta: { total, skip, take, ...filters },
     };
   }
 

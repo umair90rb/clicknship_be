@@ -1,11 +1,11 @@
 import { IsOptional, IsNumber, IsNumberString } from 'class-validator';
 
-export class PaginationQueryDto {
+export class PaginationBodyDto {
   @IsOptional()
-  @IsNumberString()
-  skip?: string = '0';
+  @IsNumber()
+  skip?: number = 0;
 
   @IsOptional()
-  @IsNumberString()
-  take?: string = '100';
+  @IsNumber()
+  take?: number = 100;
 }

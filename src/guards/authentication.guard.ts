@@ -12,18 +12,23 @@ import { INVALID_TOKEN, TOKEN_NOT_PRESENT } from '../constants/errors';
 export class AuthenticationGuard implements CanActivate {
   constructor(private readonly authService: AuthService) {}
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    const req = context.switchToHttp().getRequest();
-    const tokenHeader = req.headers['authorization'];
-    if (!tokenHeader) {
-      throw new UnauthorizedException(TOKEN_NOT_PRESENT);
-    }
-    const token = tokenHeader.split(' ')[1];
-    if (!token) {
-      throw new UnauthorizedException(INVALID_TOKEN);
-    }
+    try {
+      const req = context.switchToHttp().getRequest();
+      const tokenHeader = req.headers['authorization'];
+      if (!tokenHeader) {
+        throw new UnauthorizedException(TOKEN_NOT_PRESENT);
+      }
+      const token = tokenHeader.split(' ')[1];
+      if (!token) {
+        throw new UnauthorizedException(INVALID_TOKEN);
+      }
 
-    const payload: JwtTokenPayload = await this.authService.verifyToken(token);
-    req.user = payload;
-    return true;
+      const payload: JwtTokenPayload =
+        await this.authService.verifyToken(token);
+      req.user = payload;
+      return true;
+    } catch (error) {
+      throw new UnauthorizedException(error);
+    }
   }
 }

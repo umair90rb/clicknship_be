@@ -11,6 +11,7 @@ import { MigrationService } from './migration.service';
 import { User } from './onboard.types';
 import { TenantService } from './tenant.service';
 import { tenantWithPrefix } from '@/src/utils/tenant';
+import { getDbUrl } from './utils';
 
 @Injectable()
 export class OnboardService {
@@ -18,7 +19,7 @@ export class OnboardService {
     private prismaMaster: PrismaMasterClient,
     private tenantService: TenantService,
     private migrationService: MigrationService,
-  ) { }
+  ) {}
   async onboard(registrationData: OnboardTenantDto) {
     const { companyName, ...userData } = registrationData;
     //make tenant id from company name
@@ -133,7 +134,7 @@ export class OnboardService {
       throw new BadRequestException('Tenant does not exist');
     }
     const prisma = new PrismaClient({
-      datasourceUrl: `${process.env.TENANT_DATABASE_SERVER_URL}/${dbName}`,
+      datasourceUrl: getDbUrl(dbName),
     });
     return prisma;
   }

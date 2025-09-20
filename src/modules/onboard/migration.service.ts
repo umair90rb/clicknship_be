@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import { getDbUrl } from './utils';
 
 const execAsync = promisify(exec);
 
@@ -8,7 +9,7 @@ const execAsync = promisify(exec);
 export class MigrationService {
   private readonly logger = new Logger(MigrationService.name);
   async migrateTenant(dbName: string) {
-    const url = `${process.env.TENANT_DATABASE_SERVER_URL}/${dbName}`;
+    const url = getDbUrl(dbName);
     this.logger.log(`Running migrations for tenant database: ${url}`);
     try {
       const result = await execAsync(
@@ -31,7 +32,7 @@ export class MigrationService {
   }
 
   async seedDb(dbName: string) {
-    const url = `${process.env.TENANT_DATABASE_SERVER_URL}/${dbName}`;
+    const url = getDbUrl(dbName);
     this.logger.log(`Running seeders for tenant database: ${url}`);
     try {
       const result = await execAsync(
@@ -40,7 +41,7 @@ export class MigrationService {
           cwd: process.cwd(),
           env: {
             ...process.env,
-            TENANT_DATABASE_SERVER_URL: url,
+            DATABASE_URL: url,
             PATH: process.env.PATH,
           },
         },
