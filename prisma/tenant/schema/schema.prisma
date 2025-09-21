@@ -18,7 +18,9 @@ model User {
   role     Role?  @relation(fields: [roleId], references: [id])
   roleId   Int?   @map("role_id")
 
-  orders Order[]
+  orders   Order[]
+  logs     OrderLog[]
+  comments OrderComment[]
 
   @@map("users")
 }

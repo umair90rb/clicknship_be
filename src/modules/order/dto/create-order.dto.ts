@@ -4,7 +4,6 @@ import {
   IsNumber,
   IsArray,
   ValidateNested,
-  IsDateString,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import { OrderStatus } from '@/src/types/order';
@@ -102,6 +101,19 @@ export class CreatePaymentDto {
   note?: string;
 }
 
+export class CreateCommentDto {
+  @IsOptional()
+  @IsNumber()
+  id?: number;
+
+  @IsOptional()
+  @IsString()
+  comment: string;
+
+  @IsNumber()
+  userId: number;
+}
+
 export class CreateCustomerDto {
   @IsOptional()
   @IsNumber()
@@ -185,4 +197,9 @@ export class CreateOrderDto {
   @ValidateNested({ each: true })
   @Type(() => CreatePaymentDto)
   payments?: CreatePaymentDto[];
+
+  @IsOptional()
+  @ValidateNested({ each: true })
+  @Type(() => CreateCommentDto)
+  comments?: CreateCommentDto[];
 }

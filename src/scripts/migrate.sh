@@ -26,7 +26,7 @@ if [[ "$ENV" == "prod" ]]; then
 fi
 
 for DB_NAME in $DB_LIST; do
-  DB="${TENANT_DATABASE_SERVER_URL}/${DB_NAME}"
+  DB=$(echo "$TENANT_DATABASE_SERVER_URL" | sed "s/{database}/$DB_NAME/g")
   echo "Processing: $DB"
   
   export DATABASE_URL=$DB

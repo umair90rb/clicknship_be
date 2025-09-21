@@ -19,27 +19,12 @@ export class OrderService {
     private prismaTenant: PrismaTenantClient,
   ) {}
 
-  private includeRelations = {
-    include: {
-      items: true,
-      address: true,
-      payments: true,
-      delivery: true,
-      customer: true,
-      channel: true,
-      brand: true,
-      user: true,
-      logs: true,
-    },
-  };
-
   async list(body: ListOrdersBodyDto) {
     const { skip, take, ...filters } = body;
     const where: any = {
       deletedAt: null,
     };
 
-    console.log(filters);
     // String filters (simple contains)
     if (filters.orderNumber) {
       where.orderNumber = {
@@ -179,9 +164,24 @@ export class OrderService {
         delivery: true,
         customer: true,
         channel: true,
+        comments: {
+          select: {
+            id: true,
+            comment: true,
+            createdAt: true,
+            user: { select: { id: true, name: true } },
+          },
+        },
         brand: true,
         user: { select: { name: true, id: true, phone: true, email: true } },
-        logs: true,
+        logs: {
+          select: {
+            id: true,
+            event: true,
+            createdAt: true,
+            user: { select: { name: true, id: true } },
+          },
+        },
       },
     });
 
@@ -280,6 +280,7 @@ export class OrderService {
       status,
       courierServiceId,
       remarks,
+      comments,
       totalAmount,
       totalDiscount,
       totalTax,
@@ -306,7 +307,6 @@ export class OrderService {
         ...(courierServiceId
           ? { courierService: { connect: { id: courierServiceId } } }
           : {}),
-        ...(payments ? { payments: { create: payments } } : {}),
         ...(payments
           ? {
               payments: {
@@ -314,21 +314,40 @@ export class OrderService {
                   orderId: id,
                   NOT: payments.filter((p) => p.id).map((p) => ({ id: p.id })),
                 },
-                upsert: payments.map((payments) => ({
-                  where: { id: payments.id ?? 0 },
+                upsert: payments.map((payment) => ({
+                  where: { id: payment.id ?? 0 },
                   update: {
-                    type: payments.type,
-                    tId: payments.tId,
-                    bank: payments.bank,
-                    amount: payments.amount,
-                    note: payments.note,
+                    type: payment.type,
+                    tId: payment.tId,
+                    bank: payment.bank,
+                    amount: payment.amount,
+                    note: payment.note,
                   },
                   create: {
-                    type: payments.type,
-                    tId: payments.tId,
-                    bank: payments.bank,
-                    amount: payments.amount,
-                    note: payments.note,
+                    type: payment.type,
+                    tId: payment.tId,
+                    bank: payment.bank,
+                    amount: payment.amount,
+                    note: payment.note,
+                  },
+                })),
+              },
+            }
+          : {}),
+        ...(comments
+          ? {
+              comments: {
+                deleteMany: {
+                  orderId: id,
+                  NOT: comments.filter((c) => c.id).map((c) => ({ id: c.id })),
+                },
+                upsert: comments.map((comment) => ({
+                  where: { id: comment.id ?? 0 },
+                  update: {
+                    comment: comment.comment,
+                  },
+                  create: {
+                    comment: comment.comment,
                   },
                 })),
               },
@@ -425,67 +444,4 @@ export class OrderService {
       data: { deletedAt: new Date() },
     });
   }
-
-  // async updatePartial(id: number, updateDto: UpdateOrderDto) {
-  //   const existing = await this.prismaTenant.order.findUnique({
-  //     where: { id },
-  //     include: { items: true, payments: true, address: true, delivery: true },
-  //   });
-  //   if (!existing || existing.deletedAt)
-  //     throw new NotFoundException('Order not found');
-
-  //   const { items, payments, address, delivery, tags, ...rest } =
-  //     updateDto as any;
-
-  //   const data: any = {};
-
-  //   // Only attach fields that are present in request
-  //   Object.keys(rest).forEach((k) => {
-  //     if (rest[k] !== undefined) data[k] = rest[k];
-  //   });
-
-  //   if (tags !== undefined) data.tags = tags;
-
-  //   if (address !== undefined) {
-  //     // upsert address
-  //     data.address = {
-  //       upsert: {
-  //         create: address,
-  //         update: address,
-  //       },
-  //     };
-  //   }
-
-  //   if (delivery !== undefined) {
-  //     data.delivery = {
-  //       upsert: {
-  //         create: delivery,
-  //         update: delivery,
-  //       },
-  //     };
-  //   }
-
-  //   if (items !== undefined) {
-  //     // Replace items with provided ones
-  //     data.items = {
-  //       deleteMany: {},
-  //       create: items,
-  //     };
-  //   }
-
-  //   if (payments !== undefined) {
-  //     data.payments = {
-  //       deleteMany: {},
-  //       create: payments,
-  //     };
-  //   }
-
-  //   const updated = await this.prismaTenant.order.update({
-  //     where: { id },
-  //     data,
-  //     ...this.includeRelations,
-  //   });
-
-  //   return updated;
-  // }
 }

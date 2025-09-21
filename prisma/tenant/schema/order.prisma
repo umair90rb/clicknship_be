@@ -31,6 +31,7 @@ model Order {
     delivery OrderDelivery?
     items    OrderItem[]
     logs     OrderLog[]
+    comments OrderComment[]
     payments OrderPayment[]
 
     @@index([orderNumber])
@@ -117,14 +118,31 @@ model OrderDelivery {
 }
 
 model OrderLog {
-    id     Int    @id @default(autoincrement())
-    event  String
-    userId Int?   @map("user_id")
+    id        Int      @id @default(autoincrement())
+    event     String
+    createdAt DateTime @default(now()) @map("created_at")
+
+    userId Int?  @map("user_id")
+    user   User? @relation(fields: [userId], references: [id])
 
     orderId Int   @map("order_id")
     order   Order @relation(fields: [orderId], references: [id])
 
     @@map("order_logs")
+}
+
+model OrderComment {
+    id        Int      @id @default(autoincrement())
+    comment   String
+    createdAt DateTime @default(now()) @map("created_at")
+
+    userId Int?  @map("user_id")
+    user   User? @relation(fields: [userId], references: [id])
+
+    orderId Int   @map("order_id")
+    order   Order @relation(fields: [orderId], references: [id])
+
+    @@map("order_comments")
 }
 
 model Channel {
