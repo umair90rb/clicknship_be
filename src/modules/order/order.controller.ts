@@ -18,11 +18,16 @@ import { OrderService } from './order.service';
 import { RequestWithUser, RequestUser } from '@/src/types/auth';
 import { RequestUser as RequestUserDeco } from '@/src/decorators/user.decorator';
 import { AuthenticationGuard } from '@/src/guards/authentication.guard';
+import { PostCommentDto } from './dto/post-comment.dto';
+import { OrderCommentService } from './comment.service';
 
 @Controller('orders')
 @UseGuards(AuthenticationGuard)
 export class OrderController {
-  constructor(private readonly ordersService: OrderService) {}
+  constructor(
+    private readonly ordersService: OrderService,
+    private readonly commentService: OrderCommentService,
+  ) {}
 
   @Post()
   async list(@Body() body: ListOrdersBodyDto) {
@@ -66,4 +71,14 @@ export class OrderController {
   //   ) {
   //     return this.ordersService.update(id, updateDto);
   //   }
+
+  // Partial update: update only provided fields
+  @Post(':id/comment')
+  async comment(
+    @RequestUserDeco() user: RequestUser,
+    @Param('id', ParseIntPipe) orderId: number,
+    @Body() body: PostCommentDto,
+  ) {
+    return this.commentService.create(orderId, body, user);
+  }
 }
