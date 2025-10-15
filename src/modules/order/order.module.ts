@@ -5,6 +5,8 @@ import { OrderService } from './order.service';
 import { WebhookOrderCreateConsumer } from '../webhook/order.worker';
 import { AuthModule } from '../auth/auth.module';
 import { OrderCommentService } from './comment.service';
+import { OrderItemService } from './item.service';
+import { OrderPaymentService } from './payment.service';
 
 @Module({
   imports: [AuthModule],
@@ -12,6 +14,8 @@ import { OrderCommentService } from './comment.service';
   providers: [
     OrderService,
     OrderCommentService,
+    OrderItemService,
+    OrderPaymentService,
     tenantConnectionProvider,
     WebhookOrderCreateConsumer,
   ],

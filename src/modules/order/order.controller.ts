@@ -20,6 +20,10 @@ import { RequestUser as RequestUserDeco } from '@/src/decorators/user.decorator'
 import { AuthenticationGuard } from '@/src/guards/authentication.guard';
 import { PostCommentDto } from './dto/post-comment.dto';
 import { OrderCommentService } from './comment.service';
+import { PostItemDto } from './dto/post-item.dto';
+import { OrderItemService } from './item.service';
+import { PostPaymentDto } from './dto/post-payment.dto';
+import { OrderPaymentService } from './payment.service';
 
 @Controller('orders')
 @UseGuards(AuthenticationGuard)
@@ -27,6 +31,8 @@ export class OrderController {
   constructor(
     private readonly ordersService: OrderService,
     private readonly commentService: OrderCommentService,
+    private readonly itemService: OrderItemService,
+    private readonly paymentService: OrderPaymentService,
   ) {}
 
   @Post()
@@ -80,5 +86,23 @@ export class OrderController {
     @Body() body: PostCommentDto,
   ) {
     return this.commentService.create(orderId, body, user);
+  }
+
+  @Post(':id/item')
+  async item(
+    @RequestUserDeco() user: RequestUser,
+    @Param('id', ParseIntPipe) orderId: number,
+    @Body() body: PostItemDto,
+  ) {
+    return this.itemService.create(orderId, body, user);
+  }
+
+  @Post(':id/payment')
+  async payment(
+    @RequestUserDeco() user: RequestUser,
+    @Param('id', ParseIntPipe) orderId: number,
+    @Body() body: PostPaymentDto,
+  ) {
+    return this.paymentService.create(orderId, body, user);
   }
 }

@@ -139,6 +139,10 @@ export class CreateOrderDto {
 
   @IsOptional()
   @IsNumber()
+  shippingCharges?: number;
+
+  @IsOptional()
+  @IsNumber()
   totalTax?: number;
 
   @IsOptional()

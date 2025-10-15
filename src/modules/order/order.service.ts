@@ -19,6 +19,45 @@ export class OrderService {
     private prismaTenant: PrismaTenantClient,
   ) {}
 
+  private select = {
+    id: true,
+    orderNumber: true,
+    status: true,
+    createdAt: true,
+    remarks: true,
+    tags: true,
+    totalAmount: true,
+    totalDiscount: true,
+    shippingCharges: true,
+    totalTax: true,
+    assignedAt: true,
+    courerService: true,
+    items: true,
+    address: true,
+    payments: true,
+    delivery: true,
+    customer: true,
+    channel: true,
+    comments: {
+      select: {
+        id: true,
+        comment: true,
+        createdAt: true,
+        user: { select: { id: true, name: true } },
+      },
+    },
+    brand: true,
+    user: { select: { name: true, id: true, phone: true, email: true } },
+    logs: {
+      select: {
+        id: true,
+        event: true,
+        createdAt: true,
+        user: { select: { name: true, id: true } },
+      },
+    },
+  };
+
   async list(body: ListOrdersBodyDto) {
     const { skip, take, ...filters } = body;
     const where: any = {
@@ -146,43 +185,7 @@ export class OrderService {
   async find(id: number) {
     const order = await this.prismaTenant.order.findFirst({
       where: { id, deletedAt: null },
-      select: {
-        id: true,
-        orderNumber: true,
-        status: true,
-        createdAt: true,
-        remarks: true,
-        tags: true,
-        totalAmount: true,
-        totalDiscount: true,
-        totalTax: true,
-        assignedAt: true,
-        courerService: true,
-        items: true,
-        address: true,
-        payments: true,
-        delivery: true,
-        customer: true,
-        channel: true,
-        comments: {
-          select: {
-            id: true,
-            comment: true,
-            createdAt: true,
-            user: { select: { id: true, name: true } },
-          },
-        },
-        brand: true,
-        user: { select: { name: true, id: true, phone: true, email: true } },
-        logs: {
-          select: {
-            id: true,
-            event: true,
-            createdAt: true,
-            user: { select: { name: true, id: true } },
-          },
-        },
-      },
+      select: this.select,
     });
 
     if (!order) throw new NotFoundException('Order not found');
@@ -208,6 +211,7 @@ export class OrderService {
     const { id: existingCustomerId, ...customerData } = customer || {};
     const { id: existingAddressId, ...addressData } = address || {};
     return this.prismaTenant.order.create({
+      select: this.select,
       relationLoadStrategy: 'join',
       data: {
         ...(user?.id
@@ -239,14 +243,14 @@ export class OrderService {
           },
         },
       },
-      include: {
-        user: true,
-        items: true,
-        address: true,
-        payments: true,
-        customer: true,
-        channel: true,
-      },
+      // include: {
+      //   user: true,
+      //   items: true,
+      //   address: true,
+      //   payments: true,
+      //   customer: true,
+      //   channel: true,
+      // },
     });
   }
 
@@ -284,18 +288,21 @@ export class OrderService {
       totalAmount,
       totalDiscount,
       totalTax,
+      shippingCharges,
     } = updateDto || {};
     const { id: existingCustomerId, ...customerData } = customer || {};
     const { id: existingAddressId, ...addressData } = address || {};
 
     //TODO: update in a way to that if value existed then update it otherwise skip it, etc ...(condition ? {key: value} : {})
     const updated = await this.prismaTenant.order.update({
+      select: this.select,
       relationLoadStrategy: 'join',
       where: { id },
       data: {
         ...(user?.id
           ? { user: { connect: { id: user.id } }, assignedAt: new Date() }
           : {}),
+        ...(shippingCharges !== undefined ? { shippingCharges } : {}),
         ...(status !== undefined ? { status } : {}),
         ...(remarks !== undefined ? { remarks } : {}),
         ...(totalAmount !== undefined ? { totalAmount } : {}),
@@ -419,14 +426,14 @@ export class OrderService {
             }
           : {}),
       },
-      include: {
-        user: true,
-        items: true,
-        address: true,
-        payments: true,
-        customer: true,
-        channel: true,
-      },
+      // include: {
+      //   user: true,
+      //   items: true,
+      //   address: true,
+      //   payments: true,
+      //   customer: true,
+      //   channel: true,
+      // },
     });
 
     return updated;
