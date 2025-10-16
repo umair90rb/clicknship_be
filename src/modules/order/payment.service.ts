@@ -12,31 +12,28 @@ export class OrderPaymentService {
     private prismaTenant: PrismaTenantClient,
   ) {}
 
-  create(orderId: number, body: PostPaymentDto, user: RequestUser) {
-    return Promise.all([
-      this.prismaTenant.orderItem.create({
-        data: { ...body, order: { connect: { id: orderId } } },
-        relationLoadStrategy: 'join',
-        select: {
-          orderId: true,
-          id: true,
-          name: true,
-          unitPrice: true,
-          grams: true,
-          quantity: true,
-          discount: true,
-          sku: true,
-          productId: true,
-          variantId: true,
-        },
-      }),
-      this.prismaTenant.orderLog.create({
-        data: {
-          event: 'New payment added',
-          order: { connect: { id: orderId } },
-          user: { connect: { id: user.id } },
-        },
-      }),
-    ]);
+  async create(orderId: number, body: PostPaymentDto, user: RequestUser) {
+    const payment = await this.prismaTenant.orderPayment.create({
+      data: { ...body, order: { connect: { id: orderId } } },
+      relationLoadStrategy: 'join',
+      select: {
+        orderId: true,
+        id: true,
+        bank: true,
+        amount: true,
+        tId: true,
+        type: true,
+        note: true,
+      },
+    });
+    await this.prismaTenant.orderLog.create({
+      data: {
+        event: 'New payment added',
+        order: { connect: { id: orderId } },
+        user: { connect: { id: user.id } },
+      },
+    });
+
+    return payment;
   }
 }

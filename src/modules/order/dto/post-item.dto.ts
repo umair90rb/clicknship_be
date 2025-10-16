@@ -1,35 +1,52 @@
-import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import {
+  Allow,
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  Min,
+} from 'class-validator';
 
 export class PostItemDto {
   @IsNumber()
-  @IsNotEmpty()
-  itemId: number;
+  @IsOptional()
+  id: number;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   variantId: string;
+
+  @IsString()
+  @IsOptional()
+  productId: string;
 
   @IsString()
   @IsNotEmpty()
   name: string;
 
   @IsString()
-  @IsNotEmpty()
+  @IsOptional()
   sku: string;
 
   @IsNumber()
   @IsNotEmpty()
+  @Min(1)
   quantity: number;
 
+  @IsOptional()
   @IsNumber()
-  @IsNotEmpty()
+  @Min(0)
   discount: number;
 
   @IsNumber()
-  @IsNotEmpty()
+  @IsOptional()
   unitPrice: number;
 
   @IsNumber()
-  @IsNotEmpty()
+  @IsOptional()
   grams: number;
+
+  @IsNumber()
+  @IsOptional()
+  total: number;
 }
