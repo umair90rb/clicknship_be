@@ -1,3 +1,4 @@
+import { PartialType } from '@nestjs/mapped-types';
 import {
   Allow,
   IsNotEmpty,
@@ -7,7 +8,7 @@ import {
   Min,
 } from 'class-validator';
 
-export class PostItemDto {
+export class CreateItemDto {
   @IsNumber()
   @IsOptional()
   id: number;
@@ -50,3 +51,5 @@ export class PostItemDto {
   @IsOptional()
   total: number;
 }
+
+export class UpdateItemDto extends PartialType(CreateItemDto) {}

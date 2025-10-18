@@ -16,5 +16,7 @@ export enum OrderEvents {
   statusUpdated = 'order status updated, {from} -> {to}',
   paymentAdded = 'payment added',
   itemAdded = 'new item added',
+  itemUpdated = 'item updated',
+  itemDeleted = 'item deleted',
   deleted = 'order deleted',
 }

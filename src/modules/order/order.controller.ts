@@ -4,11 +4,9 @@ import {
   Body,
   Param,
   Get,
-  Query,
   Patch,
   Delete,
   ParseIntPipe,
-  Req,
   UseGuards,
 } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
@@ -20,7 +18,7 @@ import { RequestUser as RequestUserDeco } from '@/src/decorators/user.decorator'
 import { AuthenticationGuard } from '@/src/guards/authentication.guard';
 import { PostCommentDto } from './dto/post-comment.dto';
 import { OrderCommentService } from './comment.service';
-import { PostItemDto } from './dto/post-item.dto';
+import { CreateItemDto, UpdateItemDto } from './dto/item.dto';
 import { OrderItemService } from './item.service';
 import { PostPaymentDto } from './dto/post-payment.dto';
 import { OrderPaymentService } from './payment.service';
@@ -105,9 +103,29 @@ export class OrderController {
   async item(
     @RequestUserDeco() user: RequestUser,
     @Param('id', ParseIntPipe) orderId: number,
-    @Body() body: PostItemDto,
+    @Body() body: CreateItemDto,
   ) {
     return this.itemService.create(orderId, body, user);
+  }
+
+  @Patch(':id/item/:itemId')
+  async updatedItem(
+    @RequestUserDeco() user: RequestUser,
+    @Param('id', ParseIntPipe) orderId: number,
+    @Param('itemId', ParseIntPipe) itemId: number,
+    @Body() body: UpdateItemDto,
+  ) {
+    return this.itemService.update(orderId, itemId, body, user);
+  }
+
+  @Delete(':id/item/:itemId')
+  async deleteItem(
+    @RequestUserDeco() user: RequestUser,
+    @Param('id', ParseIntPipe) orderId: number,
+    @Param('itemId', ParseIntPipe) itemId: number,
+    @Body() body: CreateItemDto,
+  ) {
+    return this.itemService.delete(orderId, itemId, user);
   }
 
   @Post(':id/payment')
