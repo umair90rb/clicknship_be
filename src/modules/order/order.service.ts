@@ -7,16 +7,21 @@ import {
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { TENANT_CONNECTION_PROVIDER } from '@/src/constants/common';
-import { PrismaClient as PrismaTenantClient } from '@/prisma/tenant/client';
-import { OrderStatus } from '@/src/types/order';
+import {
+  Order,
+  PrismaClient as PrismaTenantClient,
+} from '@/prisma/tenant/client';
+import { OrderEvents, OrderStatus } from '@/src/types/order';
 import { RequestUser } from '@/src/types/auth';
 import { ListOrdersBodyDto } from './dto/list-order.dto';
+import { OrderLoggingService } from './logging.service';
 
 @Injectable()
 export class OrderService {
   constructor(
     @Inject(TENANT_CONNECTION_PROVIDER)
     private prismaTenant: PrismaTenantClient,
+    private orderLoggingService: OrderLoggingService,
   ) {}
 
   private select = {
@@ -210,13 +215,12 @@ export class OrderService {
     } = createDto || {};
     const { id: existingCustomerId, ...customerData } = customer || {};
     const { id: existingAddressId, ...addressData } = address || {};
-    return this.prismaTenant.order.create({
+    const order = await this.prismaTenant.order.create({
       select: this.select,
       relationLoadStrategy: 'join',
       data: {
-        ...(user?.id
-          ? { user: { connect: { id: user.id } }, assignedAt: new Date() }
-          : {}),
+        user: { connect: { id: user.id } },
+        assignedAt: new Date(),
         status,
         remarks,
         totalAmount,
@@ -243,33 +247,25 @@ export class OrderService {
           },
         },
       },
-      // include: {
-      //   user: true,
-      //   items: true,
-      //   address: true,
-      //   payments: true,
-      //   customer: true,
-      //   channel: true,
-      // },
     });
+    await this.orderLoggingService.create(
+      user.id,
+      order.id,
+      OrderEvents.created,
+    );
+    return order;
   }
 
-  async update(user: RequestUser, id: number, updateDto: UpdateOrderDto) {
-    const existing = await this.prismaTenant.order.findUnique({
-      where: { id, deletedAt: { equals: null } },
-      select: { userId: true, status: true },
-    });
+  async update(user: RequestUser, orderId: number, updateDto: UpdateOrderDto) {
+    const order = await this.isOrderExist(orderId);
 
-    if (!existing) {
+    if (!order) {
       throw new NotFoundException('Order not found');
     }
 
     // TODO: how to handle this -> add a middleware that add user permisions in request and then pick permission from user obj
     // check if user has permission to "update-confirmed-order" then allow otherwise throw forbidden exception
-    if (
-      existing.status === OrderStatus.confirmed &&
-      user.id !== existing.userId
-    ) {
+    if (order.status === OrderStatus.confirmed && user.id !== order.userId) {
       throw new ForbiddenException('Order already confirmed');
     }
 
@@ -297,7 +293,7 @@ export class OrderService {
     const updated = await this.prismaTenant.order.update({
       select: this.select,
       relationLoadStrategy: 'join',
-      where: { id },
+      where: { id: orderId },
       data: {
         ...(user?.id
           ? { user: { connect: { id: user.id } }, assignedAt: new Date() }
@@ -318,7 +314,7 @@ export class OrderService {
           ? {
               payments: {
                 deleteMany: {
-                  orderId: id,
+                  orderId,
                   NOT: payments.filter((p) => p.id).map((p) => ({ id: p.id })),
                 },
                 upsert: payments.map((payment) => ({
@@ -345,7 +341,7 @@ export class OrderService {
           ? {
               comments: {
                 deleteMany: {
-                  orderId: id,
+                  orderId,
                   NOT: comments.filter((c) => c.id).map((c) => ({ id: c.id })),
                 },
                 upsert: comments.map((comment) => ({
@@ -364,7 +360,7 @@ export class OrderService {
           ? {
               items: {
                 deleteMany: {
-                  orderId: id,
+                  orderId,
                   NOT: items.filter((i) => i.id).map((i) => ({ id: i.id })),
                 },
                 upsert: items.map((item) => ({
@@ -426,29 +422,53 @@ export class OrderService {
             }
           : {}),
       },
-      // include: {
-      //   user: true,
-      //   items: true,
-      //   address: true,
-      //   payments: true,
-      //   customer: true,
-      //   channel: true,
-      // },
     });
-
+    await this.orderLoggingService.create(
+      user.id,
+      orderId,
+      OrderEvents.updated,
+    );
     return updated;
   }
 
-  async delete(id: number) {
-    const existing = await this.prismaTenant.order.findUnique({
-      where: { id },
+  async updateStatus(user: RequestUser, orderId: number, status: string) {
+    const order = await this.isOrderExist(orderId);
+    if (!order) throw new NotFoundException('Order not found');
+    const updated = this.prismaTenant.order.update({
+      where: { id: orderId },
+      data: { status },
+      select: { status: true },
     });
-    if (!existing || existing.deletedAt)
-      throw new NotFoundException('Order not found');
+    await this.orderLoggingService.create(
+      user.id,
+      orderId,
+      OrderEvents.statusUpdated
+        .replace('{to}', order.status)
+        .replace('{from}', status),
+    );
+    return updated;
+  }
 
-    return this.prismaTenant.order.update({
-      where: { id },
+  async delete(user: RequestUser, orderId: number) {
+    const order = await this.isOrderExist(orderId);
+    if (!order) throw new NotFoundException('Order not found');
+
+    const deleted = await this.prismaTenant.order.update({
+      where: { id: orderId },
       data: { deletedAt: new Date() },
+    });
+    await this.orderLoggingService.create(
+      user.id,
+      orderId,
+      OrderEvents.deleted,
+    );
+    return deleted;
+  }
+
+  isOrderExist(id: number) {
+    return this.prismaTenant.order.findUnique({
+      where: { id, deletedAt: null },
+      select: { userId: true, status: true },
     });
   }
 }

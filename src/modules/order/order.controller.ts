@@ -24,6 +24,7 @@ import { PostItemDto } from './dto/post-item.dto';
 import { OrderItemService } from './item.service';
 import { PostPaymentDto } from './dto/post-payment.dto';
 import { OrderPaymentService } from './payment.service';
+import { UpdateOrderStatusDto } from './dto/update-status.dto';
 
 @Controller('orders')
 @UseGuards(AuthenticationGuard)
@@ -63,9 +64,21 @@ export class OrderController {
     return this.ordersService.update(user, id, updateDto);
   }
 
+  @Patch(':id/status')
+  async status(
+    @RequestUserDeco() user: RequestUser,
+    @Param('id', ParseIntPipe) id: number,
+    @Body() { status }: UpdateOrderStatusDto,
+  ) {
+    return this.ordersService.updateStatus(user, id, status);
+  }
+
   @Delete(':id')
-  async remove(@Param('id', ParseIntPipe) id: number) {
-    return this.ordersService.delete(id);
+  async remove(
+    @RequestUserDeco() user: RequestUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.ordersService.delete(user, id);
   }
 
   // Full replace: expects complete data shape (similar shape to CreateOrderDto)

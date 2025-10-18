@@ -1,15 +1,17 @@
 import { TENANT_CONNECTION_PROVIDER } from '@/src/constants/common';
 import { Inject, Injectable } from '@nestjs/common';
 import { PrismaClient as PrismaTenantClient } from '@/prisma/tenant/client';
-import { PostCommentDto } from './dto/post-comment.dto';
 import { RequestUser } from '@/src/types/auth';
 import { PostItemDto } from './dto/post-item.dto';
+import { OrderLoggingService } from './logging.service';
+import { OrderEvents } from '@/src/types/order';
 
 @Injectable()
 export class OrderItemService {
   constructor(
     @Inject(TENANT_CONNECTION_PROVIDER)
     private prismaTenant: PrismaTenantClient,
+    private orderLoggingService: OrderLoggingService,
   ) {}
 
   async create(
@@ -37,13 +39,11 @@ export class OrderItemService {
         variantId: true,
       },
     });
-    await this.prismaTenant.orderLog.create({
-      data: {
-        event: 'New item added',
-        order: { connect: { id: orderId } },
-        user: { connect: { id: user.id } },
-      },
-    });
+    await this.orderLoggingService.create(
+      user.id,
+      orderId,
+      OrderEvents.itemAdded,
+    );
     return item;
   }
 }
