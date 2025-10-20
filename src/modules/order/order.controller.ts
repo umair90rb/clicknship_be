@@ -123,7 +123,6 @@ export class OrderController {
     @RequestUserDeco() user: RequestUser,
     @Param('id', ParseIntPipe) orderId: number,
     @Param('itemId', ParseIntPipe) itemId: number,
-    @Body() body: CreateItemDto,
   ) {
     return this.itemService.delete(orderId, itemId, user);
   }
