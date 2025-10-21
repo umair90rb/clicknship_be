@@ -4,8 +4,8 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
+import { CreateOrderDto } from '@/src/modules/order/dto/create-order.dto';
+import { UpdateOrderDto } from '@/src/modules/order/dto/update-order.dto';
 import { TENANT_CONNECTION_PROVIDER } from '@/src/constants/common';
 import {
   Order,
@@ -13,8 +13,8 @@ import {
 } from '@/prisma/tenant/client';
 import { OrderEvents, OrderStatus } from '@/src/types/order';
 import { RequestUser } from '@/src/types/auth';
-import { ListOrdersBodyDto } from './dto/list-order.dto';
-import { OrderLoggingService } from './logging.service';
+import { ListOrdersBodyDto } from '@/src/modules/order/dto/list-order.dto';
+import { OrderLoggingService } from '@/src/modules/order/services/logging.service';
 
 @Injectable()
 export class OrderService {

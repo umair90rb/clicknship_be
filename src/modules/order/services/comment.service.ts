@@ -1,7 +1,7 @@
 import { TENANT_CONNECTION_PROVIDER } from '@/src/constants/common';
 import { Inject, Injectable } from '@nestjs/common';
 import { PrismaClient as PrismaTenantClient } from '@/prisma/tenant/client';
-import { PostCommentDto } from './dto/post-comment.dto';
+import { PostCommentDto } from '@/src/modules/order/dto/post-comment.dto';
 import { RequestUser } from '@/src/types/auth';
 
 @Injectable()

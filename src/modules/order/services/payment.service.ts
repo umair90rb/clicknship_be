@@ -2,8 +2,8 @@ import { TENANT_CONNECTION_PROVIDER } from '@/src/constants/common';
 import { Inject, Injectable } from '@nestjs/common';
 import { PrismaClient as PrismaTenantClient } from '@/prisma/tenant/client';
 import { RequestUser } from '@/src/types/auth';
-import { PostPaymentDto } from './dto/post-payment.dto';
-import { OrderLoggingService } from './logging.service';
+import { PostPaymentDto } from '@/src/modules/order/dto/post-payment.dto';
+import { OrderLoggingService } from '@/src/modules/order/services/logging.service';
 import { OrderEvents } from '@/src/types/order';
 
 @Injectable()

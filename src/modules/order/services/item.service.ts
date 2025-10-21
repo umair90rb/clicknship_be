@@ -2,8 +2,8 @@ import { TENANT_CONNECTION_PROVIDER } from '@/src/constants/common';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaClient as PrismaTenantClient } from '@/prisma/tenant/client';
 import { RequestUser } from '@/src/types/auth';
-import { CreateItemDto, UpdateItemDto } from './dto/item.dto';
-import { OrderLoggingService } from './logging.service';
+import { CreateItemDto, UpdateItemDto } from '@/src/modules/order/dto/item.dto';
+import { OrderLoggingService } from '@/src/modules/order/services/logging.service';
 import { OrderEvents } from '@/src/types/order';
 
 @Injectable()

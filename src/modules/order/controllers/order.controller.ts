@@ -9,20 +9,20 @@ import {
   ParseIntPipe,
   UseGuards,
 } from '@nestjs/common';
-import { CreateOrderDto } from './dto/create-order.dto';
-import { UpdateOrderDto } from './dto/update-order.dto';
-import { ListOrdersBodyDto } from './dto/list-order.dto';
-import { OrderService } from './order.service';
-import { RequestWithUser, RequestUser } from '@/src/types/auth';
+import { CreateOrderDto } from '@/src/modules/order/dto/create-order.dto';
+import { UpdateOrderDto } from '@/src/modules/order/dto/update-order.dto';
+import { ListOrdersBodyDto } from '@/src/modules/order/dto/list-order.dto';
+import { RequestUser } from '@/src/types/auth';
 import { RequestUser as RequestUserDeco } from '@/src/decorators/user.decorator';
 import { AuthenticationGuard } from '@/src/guards/authentication.guard';
-import { PostCommentDto } from './dto/post-comment.dto';
-import { OrderCommentService } from './comment.service';
-import { CreateItemDto, UpdateItemDto } from './dto/item.dto';
-import { OrderItemService } from './item.service';
-import { PostPaymentDto } from './dto/post-payment.dto';
-import { OrderPaymentService } from './payment.service';
-import { UpdateOrderStatusDto } from './dto/update-status.dto';
+import { PostCommentDto } from '@/src/modules/order/dto/post-comment.dto';
+import { CreateItemDto, UpdateItemDto } from '@/src/modules/order/dto/item.dto';
+import { PostPaymentDto } from '@/src/modules/order/dto/post-payment.dto';
+import { UpdateOrderStatusDto } from '@/src/modules/order/dto/update-status.dto';
+import { OrderService } from '@/src/modules/order/services/order.service';
+import { OrderCommentService } from '@/src/modules/order/services/comment.service';
+import { OrderItemService } from '@/src/modules/order/services/item.service';
+import { OrderPaymentService } from '@/src/modules/order/services/payment.service';
 
 @Controller('orders')
 @UseGuards(AuthenticationGuard)
