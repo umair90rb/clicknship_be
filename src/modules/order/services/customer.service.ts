@@ -25,7 +25,6 @@ export class CustomerService {
       relationLoadStrategy: 'join',
       select: {
         id: true,
-        phone: true,
         email: true,
         name: true,
         ...(withAddress || withOrders
@@ -41,23 +40,21 @@ export class CustomerService {
       },
     });
     if (withAddress && customer && customer.orders.length) {
-      const address = await this.prismaTenant.address.findMany({
+      const addresses = await this.prismaTenant.address.findMany({
         select: {
           id: true,
           address: true,
           city: true,
           note: true,
-          order: { select: { id: true, status: true } },
         },
         where: { orderId: { in: customer.orders.map((o) => o.id) } },
       });
-      return { ...customer, address };
+      return { ...customer, addresses };
     }
     return customer;
   }
 
   create(body: any, user: RequestUser) {}
-
   update(user: RequestUser, id: number, body: any) {}
   delete(user: RequestUser, id: number) {}
 }

@@ -9,7 +9,9 @@ import { config } from './config/swagger';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('/api/v1');
-  app.useGlobalPipes(new ValidationPipe({ forbidNonWhitelisted: true }));
+  app.useGlobalPipes(
+    new ValidationPipe({ forbidNonWhitelisted: true, transform: true }),
+  );
   app.useGlobalInterceptors(new DbConnectionCleanupInterceptor());
   app.useGlobalFilters(new AllExceptionFilter());
   app.enableCors();
