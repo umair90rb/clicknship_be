@@ -71,6 +71,9 @@ model Address {
     orderId Int   @unique @map("order_id")
     order   Order @relation(fields: [orderId], references: [id])
 
+    customerId Int      @unique @map("customer_id")
+    customer   Customer @relation(fields: [customerId], references: [id])
+
     @@map("order_addresses")
 }
 
@@ -80,7 +83,8 @@ model Customer {
     email String?
     phone String?
 
-    orders Order[]
+    orders    Order[]
+    addresses Address[]
 
     @@map("customers")
 }
@@ -146,31 +150,6 @@ model OrderComment {
     @@map("order_comments")
 }
 
-model Channel {
-    id     Int     @id @default(autoincrement())
-    name   String
-    type   String?
-    source String?
-    active Boolean @default(true)
-
-    brandId Int?    @map("brand_id")
-    brand   Brand?  @relation(fields: [brandId], references: [id])
-    orders  Order[]
-
-    @@map("channels")
-}
-
-model Brand {
-    id     Int     @id @default(autoincrement())
-    name   String
-    active Boolean @default(true)
-
-    channels Channel[]
-    orders   Order[]
-
-    @@map("brands")
-}
-
 model ShopifyWebhookLog {
     id           String    @id @default(uuid())
     webhookId    String    @map("webhook_id")
@@ -192,10 +171,74 @@ model ShopifyWebhookLog {
     @@map("shopify_webhook_logs")
 }
 
+model Channel {
+    id     Int     @id @default(autoincrement())
+    name   String
+    type   String?
+    source String?
+    active Boolean @default(true)
+
+    brandId Int?   @map("brand_id")
+    brand   Brand? @relation(fields: [brandId], references: [id])
+
+    orders Order[]
+
+    @@map("channels")
+}
+
+model Brand {
+    id     Int     @id @default(autoincrement())
+    name   String
+    active Boolean @default(true)
+
+    channels Channel[]
+    orders   Order[]
+    category Category[]
+    Product  Product[]
+
+    @@map("brands")
+}
+
+model Category {
+    id          Int     @id @default(autoincrement())
+    name        String
+    description String?
+
+    brandId Int?      @map("brand_id")
+    brand   Brand?    @relation(fields: [brandId], references: [id])
+    Product Product[]
+
+    @@map("categories")
+}
+
+model UnitOfMeasure {
+    id          Int       @id @default(autoincrement())
+    name        String
+    description String?
+    Product     Product[]
+
+    @@map("unit_of_measures")
+}
+
 model Product {
-    id    Int    @id @default(autoincrement())
-    name  String
-    price Int
+    id          Int     @id @default(autoincrement())
+    name        String
+    description String
+    sku         String
+    barcode     String
+    unitPrice   Int     @map("unit_price")
+    costPrice   Int?    @map("cost_price")
+    weight      Int?
+    active      Boolean @default(true)
+
+    unitId Int?           @map("unit_id")
+    unit   UnitOfMeasure? @relation(fields: [unitId], references: [id])
+
+    categoryId Int?      @map("category_id")
+    category   Category? @relation(fields: [categoryId], references: [id])
+
+    brandId Int?   @map("brand_id")
+    brand   Brand? @relation(fields: [brandId], references: [id])
 
     @@map("products")
 }
