@@ -13,7 +13,7 @@ import { RequestUser } from '@/src/types/auth';
 import { RequestUser as RequestUserDeco } from '@/src/decorators/user.decorator';
 import { AuthenticationGuard } from '@/src/guards/authentication.guard';
 import { CustomerService } from '@/src/modules/order/services/customer.service';
-import { SearchCustomerDto } from '@/src/modules/order/dto/search-customer.dto';
+import { SearchCustomerDto } from '@/src/modules/order/dto/customer.dto';
 
 @Controller('customers')
 @UseGuards(AuthenticationGuard)

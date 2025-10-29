@@ -9,16 +9,19 @@ import {
   ParseIntPipe,
   UseGuards,
 } from '@nestjs/common';
-import { CreateOrderDto } from '@/src/modules/order/dto/create-order.dto';
-import { UpdateOrderDto } from '@/src/modules/order/dto/update-order.dto';
-import { ListOrdersBodyDto } from '@/src/modules/order/dto/list-order.dto';
+import {
+  CreateOrderDto,
+  UpdateOrderDto,
+  ListOrdersBodyDto,
+  CreateOrderPaymentDto,
+  CreateOrderCommentDto,
+  UpdateOrderStatusDto,
+  CreateOrderItemDto,
+  UpdateOrderItemDto,
+} from '@/src/modules/order/dto/order.dto';
 import { RequestUser } from '@/src/types/auth';
 import { RequestUser as RequestUserDeco } from '@/src/decorators/user.decorator';
 import { AuthenticationGuard } from '@/src/guards/authentication.guard';
-import { PostCommentDto } from '@/src/modules/order/dto/post-comment.dto';
-import { CreateItemDto, UpdateItemDto } from '@/src/modules/order/dto/item.dto';
-import { PostPaymentDto } from '@/src/modules/order/dto/post-payment.dto';
-import { UpdateOrderStatusDto } from '@/src/modules/order/dto/update-status.dto';
 import { OrderService } from '@/src/modules/order/services/order.service';
 import { OrderCommentService } from '@/src/modules/order/services/comment.service';
 import { OrderItemService } from '@/src/modules/order/services/item.service';
@@ -52,7 +55,6 @@ export class OrderController {
     return this.ordersService.create(user, createDto);
   }
 
-  // Partial update: update only provided fields
   @Patch(':id')
   async update(
     @RequestUserDeco() user: RequestUser,
@@ -71,30 +73,11 @@ export class OrderController {
     return this.ordersService.updateStatus(user, id, status);
   }
 
-  @Delete(':id')
-  async remove(
-    @RequestUserDeco() user: RequestUser,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
-    return this.ordersService.delete(user, id);
-  }
-
-  // Full replace: expects complete data shape (similar shape to CreateOrderDto)
-  //   @Put(':id')
-  //   @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
-  //   async replace(
-  //     @Param('id', ParseIntPipe) id: number,
-  //     @Body() updateDto: CreateOrderDto, // full
-  //   ) {
-  //     return this.ordersService.update(id, updateDto);
-  //   }
-
-  // Partial update: update only provided fields
   @Post(':id/comment')
   async comment(
     @RequestUserDeco() user: RequestUser,
     @Param('id', ParseIntPipe) orderId: number,
-    @Body() body: PostCommentDto,
+    @Body() body: CreateOrderCommentDto,
   ) {
     return this.commentService.create(orderId, body, user);
   }
@@ -103,7 +86,7 @@ export class OrderController {
   async item(
     @RequestUserDeco() user: RequestUser,
     @Param('id', ParseIntPipe) orderId: number,
-    @Body() body: CreateItemDto,
+    @Body() body: CreateOrderItemDto,
   ) {
     return this.itemService.create(orderId, body, user);
   }
@@ -113,7 +96,7 @@ export class OrderController {
     @RequestUserDeco() user: RequestUser,
     @Param('id', ParseIntPipe) orderId: number,
     @Param('itemId', ParseIntPipe) itemId: number,
-    @Body() body: UpdateItemDto,
+    @Body() body: UpdateOrderItemDto,
   ) {
     return this.itemService.update(orderId, itemId, body, user);
   }
@@ -131,8 +114,16 @@ export class OrderController {
   async payment(
     @RequestUserDeco() user: RequestUser,
     @Param('id', ParseIntPipe) orderId: number,
-    @Body() body: PostPaymentDto,
+    @Body() body: CreateOrderPaymentDto,
   ) {
     return this.paymentService.create(orderId, body, user);
+  }
+
+  @Delete(':id')
+  async remove(
+    @RequestUserDeco() user: RequestUser,
+    @Param('id', ParseIntPipe) id: number,
+  ) {
+    return this.ordersService.delete(user, id);
   }
 }

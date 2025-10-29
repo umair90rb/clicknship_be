@@ -71,7 +71,7 @@ model Address {
     orderId Int   @unique @map("order_id")
     order   Order @relation(fields: [orderId], references: [id])
 
-    customerId Int      @unique @map("customer_id")
+    customerId Int      @map("customer_id")
     customer   Customer @relation(fields: [customerId], references: [id])
 
     @@map("order_addresses")

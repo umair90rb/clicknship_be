@@ -168,6 +168,7 @@ export class WebhookOrderCreateConsumer extends WorkerHost {
         zip: adderssData?.zip,
         latitude: adderssData?.latitude,
         longitude: adderssData?.longitude,
+        customerId: customer.id,
       },
     });
 

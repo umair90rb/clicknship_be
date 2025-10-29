@@ -7,7 +7,6 @@ import { TenantMiddleware } from './middlewares/tenant.middleware';
 import { AuthModule } from './modules/auth/auth.module';
 import { OnboardModule } from './modules/onboard/onboard.module';
 import { OrderModule } from './modules/order/order.module';
-import { ProductModule } from './modules/product/product.module';
 import { RoleModule } from './modules/role/role.module';
 import { WebhookModule } from './modules/webhook/webhook.module';
 
@@ -17,7 +16,6 @@ import { WebhookModule } from './modules/webhook/webhook.module';
     ConfigModule.forRoot(),
     BullModule.forRoot({ connection: { url: process.env.REDIS_URL } }),
     AuthModule,
-    ProductModule,
     OnboardModule,
     RoleModule,
     OrderModule,

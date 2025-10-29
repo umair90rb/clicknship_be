@@ -4,16 +4,15 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateOrderDto } from '@/src/modules/order/dto/create-order.dto';
-import { UpdateOrderDto } from '@/src/modules/order/dto/update-order.dto';
-import { TENANT_CONNECTION_PROVIDER } from '@/src/constants/common';
 import {
-  Order,
-  PrismaClient as PrismaTenantClient,
-} from '@/prisma/tenant/client';
+  CreateOrderDto,
+  UpdateOrderDto,
+  ListOrdersBodyDto,
+} from '@/src/modules/order/dto/order.dto';
+import { TENANT_CONNECTION_PROVIDER } from '@/src/constants/common';
+import { PrismaClient as PrismaTenantClient } from '@/prisma/tenant/client';
 import { OrderEvents, OrderStatus } from '@/src/types/order';
 import { RequestUser } from '@/src/types/auth';
-import { ListOrdersBodyDto } from '@/src/modules/order/dto/list-order.dto';
 import { OrderLoggingService } from '@/src/modules/order/services/logging.service';
 
 @Injectable()
@@ -215,6 +214,16 @@ export class OrderService {
     } = createDto || {};
     const { id: existingCustomerId, ...customerData } = customer || {};
     const { id: existingAddressId, ...addressData } = address || {};
+    let upsertCustomer = await this.prismaTenant.customer.findFirst({
+      where: {
+        OR: [{ id: existingCustomerId || 0 }, { phone: customer.phone }],
+      },
+    });
+    if (!upsertCustomer) {
+      upsertCustomer = await this.prismaTenant.customer.create({
+        data: customerData,
+      });
+    }
     const order = await this.prismaTenant.order.create({
       select: this.select,
       relationLoadStrategy: 'join',
@@ -235,17 +244,12 @@ export class OrderService {
           ? { courerService: { connect: { id: courierServiceId } } }
           : {}),
         address: {
-          connectOrCreate: {
-            where: { id: existingAddressId ?? 0 },
-            create: addressData,
+          create: {
+            ...addressData,
+            customer: { connect: { id: upsertCustomer.id } },
           },
         },
-        customer: {
-          connectOrCreate: {
-            where: { id: existingCustomerId ?? 0 },
-            create: customerData,
-          },
-        },
+        customer: { connect: { id: upsertCustomer.id } },
       },
     });
     await this.orderLoggingService.create(

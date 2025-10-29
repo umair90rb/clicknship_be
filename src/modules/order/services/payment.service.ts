@@ -2,9 +2,9 @@ import { TENANT_CONNECTION_PROVIDER } from '@/src/constants/common';
 import { Inject, Injectable } from '@nestjs/common';
 import { PrismaClient as PrismaTenantClient } from '@/prisma/tenant/client';
 import { RequestUser } from '@/src/types/auth';
-import { PostPaymentDto } from '@/src/modules/order/dto/post-payment.dto';
 import { OrderLoggingService } from '@/src/modules/order/services/logging.service';
 import { OrderEvents } from '@/src/types/order';
+import { CreateOrderPaymentDto } from '../dto/order.dto';
 
 @Injectable()
 export class OrderPaymentService {
@@ -14,7 +14,11 @@ export class OrderPaymentService {
     private orderLoggingService: OrderLoggingService,
   ) {}
 
-  async create(orderId: number, body: PostPaymentDto, user: RequestUser) {
+  async create(
+    orderId: number,
+    body: CreateOrderPaymentDto,
+    user: RequestUser,
+  ) {
     const payment = await this.prismaTenant.orderPayment.create({
       data: { ...body, order: { connect: { id: orderId } } },
       relationLoadStrategy: 'join',

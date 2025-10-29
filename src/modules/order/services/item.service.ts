@@ -2,7 +2,10 @@ import { TENANT_CONNECTION_PROVIDER } from '@/src/constants/common';
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaClient as PrismaTenantClient } from '@/prisma/tenant/client';
 import { RequestUser } from '@/src/types/auth';
-import { CreateItemDto, UpdateItemDto } from '@/src/modules/order/dto/item.dto';
+import {
+  CreateOrderItemDto,
+  UpdateOrderItemDto,
+} from '@/src/modules/order/dto/order.dto';
 import { OrderLoggingService } from '@/src/modules/order/services/logging.service';
 import { OrderEvents } from '@/src/types/order';
 
@@ -16,7 +19,7 @@ export class OrderItemService {
 
   async create(
     orderId: number,
-    { id, productId, total, ...body }: CreateItemDto,
+    { id, productId, total, ...body }: CreateOrderItemDto,
     user: RequestUser,
   ) {
     let item = await this.prismaTenant.orderItem.findFirst({
@@ -65,7 +68,7 @@ export class OrderItemService {
   async update(
     orderId: number,
     itemId: number,
-    body: UpdateItemDto,
+    body: UpdateOrderItemDto,
     user: RequestUser,
   ) {
     const item = await this.prismaTenant.orderItem.update({

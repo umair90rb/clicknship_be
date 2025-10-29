@@ -1,9 +1,8 @@
 import { TENANT_CONNECTION_PROVIDER } from '@/src/constants/common';
 import { Inject, Injectable } from '@nestjs/common';
 import { PrismaClient as PrismaTenantClient } from '@/prisma/tenant/client';
-import { PostCommentDto } from '@/src/modules/order/dto/post-comment.dto';
 import { RequestUser } from '@/src/types/auth';
-import { SearchCustomerDto } from '../dto/search-customer.dto';
+import { SearchCustomerDto } from '../dto/customer.dto';
 
 @Injectable()
 export class CustomerService {
@@ -16,18 +15,27 @@ export class CustomerService {
   get(id: number) {}
 
   async find(body: SearchCustomerDto) {
-    const { name, phone, withAddress, withOrders } = body;
-    const customer = await this.prismaTenant.customer.findFirst({
-      where: {
-        ...(phone ? { phone } : {}),
-        ...(name ? { name } : {}),
-      },
+    const { withAddress, withOrders, ...nameOrPhone } = body;
+    return this.prismaTenant.customer.findFirst({
+      where: nameOrPhone,
       relationLoadStrategy: 'join',
       select: {
         id: true,
         email: true,
         name: true,
-        ...(withAddress || withOrders
+        ...(withAddress
+          ? {
+              addresses: {
+                select: {
+                  id: true,
+                  address: true,
+                  city: true,
+                  note: true,
+                },
+              },
+            }
+          : {}),
+        ...(withOrders
           ? {
               orders: {
                 select: {
@@ -39,19 +47,6 @@ export class CustomerService {
           : {}),
       },
     });
-    if (withAddress && customer && customer.orders.length) {
-      const addresses = await this.prismaTenant.address.findMany({
-        select: {
-          id: true,
-          address: true,
-          city: true,
-          note: true,
-        },
-        where: { orderId: { in: customer.orders.map((o) => o.id) } },
-      });
-      return { ...customer, addresses };
-    }
-    return customer;
   }
 
   create(body: any, user: RequestUser) {}

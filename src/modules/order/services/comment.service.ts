@@ -1,8 +1,8 @@
 import { TENANT_CONNECTION_PROVIDER } from '@/src/constants/common';
 import { Inject, Injectable } from '@nestjs/common';
 import { PrismaClient as PrismaTenantClient } from '@/prisma/tenant/client';
-import { PostCommentDto } from '@/src/modules/order/dto/post-comment.dto';
 import { RequestUser } from '@/src/types/auth';
+import { CreateOrderCommentDto } from '../dto/order.dto';
 
 @Injectable()
 export class OrderCommentService {
@@ -11,7 +11,7 @@ export class OrderCommentService {
     private prismaTenant: PrismaTenantClient,
   ) {}
 
-  create(orderId: number, body: PostCommentDto, user: RequestUser) {
+  create(orderId: number, body: CreateOrderCommentDto, user: RequestUser) {
     return this.prismaTenant.orderComment.create({
       data: { comment: body.comment, orderId, userId: user.id },
       relationLoadStrategy: 'join',

@@ -10,10 +10,12 @@ import { OrderPaymentService } from '@/src/modules/order/services/payment.servic
 import { OrderLoggingService } from '@/src/modules/order/services/logging.service';
 import { CustomerService } from '@/src/modules/order/services/customer.service';
 import { CustomerController } from '@/src/modules/order/controllers/customer.controller';
+import { ProductService } from '@/src/modules/order/services/product.service';
+import { ProductController } from '@/src/modules/order/controllers/product.controller';
 
 @Module({
   imports: [AuthModule],
-  controllers: [OrderController, CustomerController],
+  controllers: [OrderController, CustomerController, ProductController],
   providers: [
     OrderService,
     OrderCommentService,
@@ -21,8 +23,9 @@ import { CustomerController } from '@/src/modules/order/controllers/customer.con
     OrderPaymentService,
     OrderLoggingService,
     CustomerService,
-    tenantConnectionProvider,
     WebhookOrderCreateConsumer,
+    ProductService,
+    tenantConnectionProvider,
   ],
 })
 export class OrderModule {}
