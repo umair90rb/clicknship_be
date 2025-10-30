@@ -1,4 +1,4 @@
-import { IsOptional, IsNumber, IsNumberString } from 'class-validator';
+import { IsOptional, IsNumber } from 'class-validator';
 
 export class PaginationBodyDto {
   @IsOptional()
