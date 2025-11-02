@@ -1,9 +1,27 @@
 import { PaginationBodyDto } from '@/src/dtos/pagination.dto';
 import { PartialType } from '@nestjs/mapped-types';
-import { IsBoolean, IsNumber, IsOptional, IsString } from 'class-validator';
+import {
+  IsArray,
+  IsBoolean,
+  IsNumber,
+  IsObject,
+  IsOptional,
+  IsString,
+} from 'class-validator';
 
 export class ListProductBodyDto extends PaginationBodyDto {
-  categoryId: number;
+  @IsOptional()
+  @IsObject()
+  unitPrice?: { min?: string; max?: string };
+  @IsOptional()
+  @IsObject()
+  costPrice?: { min?: string; max?: string };
+  @IsOptional()
+  @IsObject()
+  weight?: { min?: string; max?: string };
+  @IsOptional()
+  @IsObject()
+  incentive?: { min?: string; max?: string };
 }
 
 export class CreateProductDto {

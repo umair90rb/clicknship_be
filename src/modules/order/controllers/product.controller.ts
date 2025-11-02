@@ -15,6 +15,7 @@ import { AuthenticationGuard } from '@/src/guards/authentication.guard';
 import { ProductService } from '@/src/modules/order/services/product.service';
 import {
   CreateProductDto,
+  ListProductBodyDto,
   SearchProductDto,
   UpdateProductDto,
 } from '../dto/product.dto';
@@ -25,8 +26,8 @@ export class ProductController {
   constructor(private readonly productService: ProductService) {}
 
   @Post()
-  async list() {
-    return this.productService.list();
+  async list(@Body() body: ListProductBodyDto) {
+    return this.productService.list(body);
   }
 
   @Get(':id')

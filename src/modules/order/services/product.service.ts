@@ -4,6 +4,7 @@ import { PrismaClient as PrismaTenantClient } from '@/prisma/tenant/client';
 import { RequestUser } from '@/src/types/auth';
 import {
   CreateProductDto,
+  ListProductBodyDto,
   SearchProductDto,
   UpdateProductDto,
 } from '../dto/product.dto';
@@ -12,7 +13,16 @@ import { NotFoundError } from 'rxjs';
 @Injectable()
 export class ProductService {
   private select = {
-    brand: true,
+    id: true,
+    name: true,
+    description: true,
+    sku: true,
+    barcode: true,
+    unitPrice: true,
+    costPrice: true,
+    incentive: true,
+    weight: true,
+    brand: { select: { id: true, name: true } },
     unit: { select: { id: true, name: true } },
     category: {
       select: {
@@ -26,7 +36,69 @@ export class ProductService {
     private prismaTenant: PrismaTenantClient,
   ) {}
 
-  list() {}
+  async list(body: ListProductBodyDto) {
+    const { skip, take, ...filters } = body;
+    const where: any = {};
+
+    if (filters.unitPrice) {
+      const { min, max } = filters.unitPrice;
+      where.unitPrice = {};
+      if (min !== undefined && min !== null && min !== '') {
+        where.unitPrice.gte = Number(min);
+      }
+      if (max !== undefined && max !== null && max !== '') {
+        where.unitPrice.lte = Number(max);
+      }
+    }
+    if (filters.costPrice) {
+      const { min, max } = filters.costPrice;
+      where.costPrice = {};
+      if (min !== undefined && min !== null && min !== '') {
+        where.costPrice.gte = Number(min);
+      }
+      if (max !== undefined && max !== null && max !== '') {
+        where.costPrice.lte = Number(max);
+      }
+    }
+
+    if (filters.weight) {
+      const { min, max } = filters.weight;
+      where.weight = {};
+      if (min !== undefined && min !== null && min !== '') {
+        where.weight.gte = Number(min);
+      }
+      if (max !== undefined && max !== null && max !== '') {
+        where.weight.lte = Number(max);
+      }
+    }
+
+    if (filters.incentive) {
+      const { min, max } = filters.incentive;
+      where.incentive = {};
+      if (min !== undefined && min !== null && min !== '') {
+        where.incentive.gte = Number(min);
+      }
+      if (max !== undefined && max !== null && max !== '') {
+        where.incentive.lte = Number(max);
+      }
+    }
+
+    const [products, total] = await Promise.all([
+      this.prismaTenant.product.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { name: 'asc' },
+        select: this.select,
+      }),
+      this.prismaTenant.product.count({ where }),
+    ]);
+
+    return {
+      data: products,
+      meta: { total, skip, take, ...filters },
+    };
+  }
   get(id: number) {
     return this.prismaTenant.product.findFirst({
       where: { id },
