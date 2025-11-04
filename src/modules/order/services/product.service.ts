@@ -1,5 +1,5 @@
 import { TENANT_CONNECTION_PROVIDER } from '@/src/constants/common';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaClient as PrismaTenantClient } from '@/prisma/tenant/client';
 import { RequestUser } from '@/src/types/auth';
 import {
@@ -8,7 +8,6 @@ import {
   SearchProductDto,
   UpdateProductDto,
 } from '../dto/product.dto';
-import { NotFoundError } from 'rxjs';
 
 @Injectable()
 export class ProductService {
@@ -83,7 +82,8 @@ export class ProductService {
       }
     }
 
-    const [products, total] = await Promise.all([
+    const [total, products] = await Promise.all([
+      this.prismaTenant.product.count({ where }),
       this.prismaTenant.product.findMany({
         where,
         skip,
@@ -91,7 +91,6 @@ export class ProductService {
         orderBy: { name: 'asc' },
         select: this.select,
       }),
-      this.prismaTenant.product.count({ where }),
     ]);
 
     return {
@@ -145,7 +144,7 @@ export class ProductService {
       where: { id },
     });
     if (!product) {
-      throw new NotFoundError('Product no found');
+      throw new NotFoundException('Product not found');
     }
     return await this.prismaTenant.product.delete({ where: { id } });
   }
