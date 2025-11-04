@@ -1,5 +1,10 @@
 import { TENANT_CONNECTION_PROVIDER } from '@/src/constants/common';
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaClient as PrismaTenantClient } from '@/prisma/tenant/client';
 import { RequestUser } from '@/src/types/auth';
 import { CreateUnitDto, UpdateUnitDto } from '../dto/unit.dto';
@@ -14,12 +19,18 @@ export class UnitService {
   private select = { id: true, name: true };
 
   list() {
-    return this.prismaTenant.unitOfMeasure.findMany();
+    return this.prismaTenant.unitOfMeasure.findMany({ select: this.select });
   }
   get(id: number) {
     return this.prismaTenant.unitOfMeasure.findFirst({ where: { id } });
   }
-  create(user: RequestUser, body: CreateUnitDto) {
+  async create(user: RequestUser, body: CreateUnitDto) {
+    const exited = await this.prismaTenant.unitOfMeasure.findFirst({
+      where: { name: body.name },
+    });
+    if (exited) {
+      throw new BadRequestException('Unit with this name already existed');
+    }
     return this.prismaTenant.unitOfMeasure.create({
       data: body,
       select: this.select,

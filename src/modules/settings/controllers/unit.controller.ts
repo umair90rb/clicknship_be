@@ -20,7 +20,7 @@ import { CreateUnitDto, UpdateUnitDto } from '../dto/unit.dto';
 export class UnitController {
   constructor(private readonly unitService: UnitService) {}
 
-  @Post()
+  @Get('all')
   async list() {
     return this.unitService.list();
   }
