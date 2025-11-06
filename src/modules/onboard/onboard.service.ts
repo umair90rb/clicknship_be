@@ -5,7 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { nanoid } from 'nanoid';
 import { SUPER_ADMIN_ROLE } from 'src/constants/common';
 import encrypt from 'src/utils/encrypt';
-import { RESOURCES_PERMISSIONS_LIST } from '../role/constant/permission-list';
+import { RESOURCES_PERMISSIONS_LIST } from '../auth/constants/permission-list';
 import { OnboardTenantDto } from './dtos/onboard.dto';
 import { MigrationService } from './migration.service';
 import { User } from './onboard.types';

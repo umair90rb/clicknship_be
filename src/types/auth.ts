@@ -1,16 +1,15 @@
 import { type Request } from 'express';
 import { Tenant } from './tenant';
 
-export class JwtTokenPayload {
-  email: string;
+export interface JwtTokenPayload {
   id: number;
 }
 
-export class RequestWithUser extends Request {
+export interface IRequestWithUser extends Request {
   user: JwtTokenPayload;
 }
 
-export class User {
+export interface User {
   id: number;
   email?: string;
   name?: string;
@@ -19,7 +18,7 @@ export class User {
 
 export type RequestUser = Pick<User, 'id' | 'email'>;
 
-export class RequestWithTenantAndUser extends Request {
+export interface RequestWithTenantAndUser extends Request {
   user: JwtTokenPayload;
   tenant: Tenant;
 }

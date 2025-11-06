@@ -1,0 +1,2 @@
+if a migration failed then we have to delete the failed migration entry from migration table and then fix the issue causing migration to be failed
+and rerun migrations

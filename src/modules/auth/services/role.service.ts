@@ -14,7 +14,7 @@ import {
   Permission,
   PermissionWithId,
   UpdateRoleDto,
-} from './dtos/role.dto';
+} from '../dtos/role.dto';
 
 @Injectable()
 export class RoleService {

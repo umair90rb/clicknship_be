@@ -54,9 +54,9 @@ export class CreateProductDto {
   @IsOptional()
   weight?: number;
 
-  @IsNumber()
+  @IsString()
   @IsOptional()
-  unitId?: number;
+  unit?: string;
 
   @IsNumber()
   @IsOptional()

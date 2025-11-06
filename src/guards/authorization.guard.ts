@@ -7,8 +7,8 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { PERMISSION_KEY } from 'src/decorators/permission.decorator';
-import { AuthService } from 'src/modules/auth/auth.service';
-import { Permission } from 'src/modules/role/dtos/role.dto';
+import { AuthService } from '@/src/modules/auth/services/auth.service';
+import { Permission } from '@/src/modules/auth/dtos/role.dto';
 import { USER_ID_NOT_FOUND } from '../constants/errors';
 
 @Injectable()

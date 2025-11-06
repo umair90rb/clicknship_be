@@ -194,7 +194,7 @@ model Brand {
     channels Channel[]
     orders   Order[]
     category Category[]
-    Product  Product[]
+    products Product[]
 
     @@map("brands")
 }
@@ -204,18 +204,17 @@ model Category {
     name        String
     description String?
 
-    brandId Int?      @map("brand_id")
-    brand   Brand?    @relation(fields: [brandId], references: [id])
-    Product Product[]
+    brandId  Int?      @map("brand_id")
+    brand    Brand?    @relation(fields: [brandId], references: [id])
+    products Product[]
 
     @@map("categories")
 }
 
 model UnitOfMeasure {
-    id          Int       @id @default(autoincrement())
+    id          Int     @id @default(autoincrement())
     name        String
     description String?
-    Product     Product[]
 
     @@map("unit_of_measures")
 }
@@ -231,9 +230,7 @@ model Product {
     incentive   Int?
     weight      Int?
     active      Boolean @default(true)
-
-    unitId Int?           @map("unit_id")
-    unit   UnitOfMeasure? @relation(fields: [unitId], references: [id])
+    unit        String?
 
     categoryId Int?      @map("category_id")
     category   Category? @relation(fields: [categoryId], references: [id])

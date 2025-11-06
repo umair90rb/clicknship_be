@@ -7,11 +7,12 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { JwtTokenPayload, RequestWithUser } from 'src/types/auth';
+import * as uuid from 'uuid';
+import { JwtTokenPayload, IRequestWithUser } from 'src/types/auth';
 import decrypt from 'src/utils/dcrypt';
-import { RoleService } from '../role/role.service';
-import { LoginDto } from './dtos/auth.dto';
-import { TENANT_CONNECTION_PROVIDER } from '../../constants/common';
+import { LoginDto, RefreshDto } from '../dtos/auth.dto';
+import { TENANT_CONNECTION_PROVIDER } from '../../../constants/common';
+import { RoleService } from './role.service';
 
 @Injectable()
 export class AuthService {
@@ -22,7 +23,9 @@ export class AuthService {
     private roleService: RoleService,
   ) {}
 
-  async login(credentials: LoginDto): Promise<{ access_token: string }> {
+  async login(
+    credentials: LoginDto,
+  ): Promise<{ access_token: string; refresh_token: string }> {
     const { email, password } = credentials;
     const user = await this.prismaTenant.user.findFirst({ where: { email } });
 
@@ -34,18 +37,50 @@ export class AuthService {
     if (!passwordMatched) {
       throw new UnauthorizedException('Invalid credentials');
     }
-    return this.generateToken({ email: user.email, id: user.id });
+    const access_token = await this.generateAccessToken({
+      id: user.id,
+    });
+    const refresh_token = await this.generateRefreshToken(user.id);
+
+    return { access_token, refresh_token };
   }
 
-  async generateToken(
-    payload: JwtTokenPayload,
-  ): Promise<{ access_token: string }> {
+  async refresh(body: RefreshDto) {
+    const { refreshToken } = body;
+    const token = await this.prismaTenant.refreshToken.findFirst({
+      where: { token: refreshToken, expiry: { gte: new Date() } },
+    });
+
+    if (!token) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+    const access_token = await this.generateAccessToken({
+      id: token.userId,
+    });
+    const refresh_token = await this.generateRefreshToken(token.userId);
+
+    return { access_token, refresh_token };
+  }
+
+  async generateAccessToken(payload: JwtTokenPayload): Promise<string> {
     const secret = await this.getTenantJwtSecret();
-    const access_token = this.jwtService.sign(payload, {
+    const token = this.jwtService.sign(payload, {
       expiresIn: '12h',
       secret,
     });
-    return { access_token };
+    return token;
+  }
+
+  async generateRefreshToken(userId: number): Promise<string> {
+    const token = uuid.v4();
+    const expiry = new Date();
+    expiry.setDate(expiry.getDate() + 3);
+    await this.prismaTenant.refreshToken.upsert({
+      where: { userId },
+      create: { token, userId, expiry },
+      update: { token, expiry },
+    });
+    return token;
   }
 
   async verifyToken(token: string): Promise<JwtTokenPayload> {
@@ -79,7 +114,7 @@ export class AuthService {
     return this.roleService.getRolePermissions(userRoleId);
   }
 
-  async profile(user: RequestWithUser) {
+  async profile(user: IRequestWithUser) {
     return user;
   }
 }

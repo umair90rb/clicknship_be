@@ -21,8 +21,8 @@ export class ProductService {
     costPrice: true,
     incentive: true,
     weight: true,
+    unit: true,
     brand: { select: { id: true, name: true } },
-    unit: { select: { id: true, name: true } },
     category: {
       select: {
         id: true,
@@ -115,27 +115,25 @@ export class ProductService {
   }
 
   create(user: RequestUser, body: CreateProductDto) {
-    const { unitId, brandId, categoryId, ...product } = body;
+    const { brandId, categoryId, ...product } = body;
     return this.prismaTenant.product.create({
       select: this.select,
       data: {
         ...product,
-        ...(unitId ? { unit: { connect: { id: unitId } } } : {}),
-        ...(brandId ? { unit: { connect: { id: brandId } } } : {}),
-        ...(categoryId ? { unit: { connect: { id: categoryId } } } : {}),
+        ...(brandId ? { brandId } : {}),
+        ...(categoryId ? { categoryId } : {}),
       },
     });
   }
   update(user: RequestUser, id: number, body: UpdateProductDto) {
-    const { unitId, brandId, categoryId, ...product } = body;
+    const { brandId, categoryId, ...product } = body;
     return this.prismaTenant.product.update({
       where: { id },
       select: this.select,
       data: {
         ...product,
-        ...(unitId ? { unit: { connect: { id: unitId } } } : {}),
-        ...(brandId ? { unit: { connect: { id: brandId } } } : {}),
-        ...(categoryId ? { unit: { connect: { id: categoryId } } } : {}),
+        ...(brandId ? { brandId } : {}),
+        ...(categoryId ? { categoryId } : {}),
       },
     });
   }

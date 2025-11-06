@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { AuthController } from './auth.controller';
-import { AuthService } from './auth.service';
+import { AuthController } from './controllers/auth.controller';
+import { AuthService } from './services/auth.service';
 import { OnboardModule } from '../onboard/onboard.module';
 import { JwtService } from '@nestjs/jwt';
 import { tenantConnectionProvider } from 'src/providers/tenant-connection.provider';
-import { RoleService } from '../role/role.service';
-import { RoleController } from '../role/role.controller';
+import { RoleController } from './controllers/role.controller';
+import { RoleService } from './services/role.service';
 
 @Module({
   imports: [OnboardModule],

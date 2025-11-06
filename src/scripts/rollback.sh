@@ -22,7 +22,7 @@ if [[ -z "$MIGRATION_NAME" ]]; then
     exit 1
 fi
 
-echo "Master DB: ${DATABASE_URI}"
+echo "Master DB: ${MASTER_DATABASE_URL}"
 echo "Server Connection String: ${TENANT_DATABASE_SERVER_URL}"
 echo "Attempting to roll back migration: ${MIGRATION_NAME}"
 
@@ -31,7 +31,7 @@ QUERY="select db_name from public.tenants;"
 
 echo "Getting a list of databases to process..."
 # Execute the query and store the results in a comma-separated string.
-DB_LIST=$(psql ${DATABASE_URI} -t -A -R ',' -c "${QUERY}") 
+DB_LIST=$(psql ${MASTER_DATABASE_URL} -t -A -R ',' -c "${QUERY}") 
 echo "Databases found: ${DB_LIST}"
 
 # Temporarily change the Internal Field Separator to a comma for looping.
@@ -43,9 +43,9 @@ SCHEMA_PATH=$(pwd)/prisma/tenant/schema/
 # Loop through each database name in the list.
 for DB_NAME in $DB_LIST; do
   # Construct the full database URI for the current tenant.
-  DB="${TENANT_DATABASE_SERVER_URL}/${DB_NAME}"
+  DB=$(echo "$TENANT_DATABASE_SERVER_URL" | sed "s/{database}/$DB_NAME/g")
   
-  echo "Processing database: ${DB_NAME}"
+  echo "Processing database: ${DB}"
   
   # Temporarily set the DATABASE_URI environment variable for the `prisma migrate` command.
   export DATABASE_URI=$DB

@@ -18,9 +18,10 @@ model User {
   role     Role?  @relation(fields: [roleId], references: [id])
   roleId   Int?   @map("role_id")
 
-  orders   Order[]
-  logs     OrderLog[]
-  comments OrderComment[]
+  orders       Order[]
+  logs         OrderLog[]
+  comments     OrderComment[]
+  refreshToken RefreshToken?
 
   @@map("users")
 }
@@ -32,6 +33,17 @@ model Secret {
   value String
 
   @@map("secrets")
+}
+
+model RefreshToken {
+  id     Int      @id @default(autoincrement())
+  token  String   @unique
+  expiry DateTime @default(now())
+
+  userId Int  @unique @map("user_id")
+  user   User @relation(fields: [userId], references: [id])
+
+  @@map("refresh_tokens")
 }
 
 model Role {

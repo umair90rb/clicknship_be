@@ -12,10 +12,10 @@ import {
 import { Permissions } from 'src/decorators/permission.decorator';
 import { AuthenticationGuard } from 'src/guards/authentication.guard';
 import { AuthorizationGuard } from 'src/guards/authorization.guard';
-import { CreateRoleDto } from './dtos/role.dto';
-import { Actions } from './enums/actions.enum';
-import { Resources } from './enums/resources.enum';
-import { RoleService } from './role.service';
+import { CreateRoleDto } from '../dtos/role.dto';
+import { Actions } from '../enums/actions.enum';
+import { Resources } from '../enums/resources.enum';
+import { RoleService } from '../services/role.service';
 
 @UseGuards(AuthenticationGuard, AuthorizationGuard)
 @Controller('role')
