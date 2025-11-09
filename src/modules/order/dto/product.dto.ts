@@ -1,8 +1,9 @@
 import { PaginationBodyDto } from '@/src/dtos/pagination.dto';
 import { PartialType } from '@nestjs/mapped-types';
+import { Transform } from 'class-transformer';
 import {
-  IsArray,
   IsBoolean,
+  IsNotEmpty,
   IsNumber,
   IsObject,
   IsOptional,
@@ -26,15 +27,19 @@ export class ListProductBodyDto extends PaginationBodyDto {
 
 export class CreateProductDto {
   @IsString()
+  @IsNotEmpty()
   name: string;
 
+  @Transform(({ value }) => (value === '' ? null : value))
   @IsString()
   @IsOptional()
   description?: string;
 
   @IsString()
+  @IsNotEmpty()
   sku: string;
 
+  @Transform(({ value }) => (value === '' ? null : value))
   @IsString()
   @IsOptional()
   barcode: string;
@@ -43,17 +48,35 @@ export class CreateProductDto {
   @IsOptional()
   active: boolean;
 
+  @Transform(({ value }) =>
+    value !== '' && value != null ? Number(value) : value,
+  )
   @IsNumber()
+  @IsNotEmpty()
   unitPrice: number;
 
-  @IsNumber()
+  @Transform(({ value }) =>
+    value !== '' && value != null ? Number(value) : null,
+  )
   @IsOptional()
+  @IsNumber()
   costPrice?: number;
 
-  @IsNumber()
+  @Transform(({ value }) =>
+    value !== '' && value != null ? Number(value) : null,
+  )
   @IsOptional()
+  @IsNumber()
   weight?: number;
 
+  @Transform(({ value }) =>
+    value !== '' && value != null ? Number(value) : null,
+  )
+  @IsOptional()
+  @IsNumber()
+  incentive?: number;
+
+  @Transform(({ value }) => (value === '' ? null : value))
   @IsString()
   @IsOptional()
   unit?: string;

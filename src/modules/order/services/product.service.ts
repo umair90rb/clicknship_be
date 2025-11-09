@@ -1,5 +1,10 @@
 import { TENANT_CONNECTION_PROVIDER } from '@/src/constants/common';
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaClient as PrismaTenantClient } from '@/prisma/tenant/client';
 import { RequestUser } from '@/src/types/auth';
 import {
@@ -88,7 +93,7 @@ export class ProductService {
         where,
         skip,
         take,
-        orderBy: { name: 'asc' },
+        orderBy: { id: 'desc' },
         select: this.select,
       }),
     ]);
@@ -114,12 +119,19 @@ export class ProductService {
     });
   }
 
-  create(user: RequestUser, body: CreateProductDto) {
-    const { brandId, categoryId, ...product } = body;
+  async create(user: RequestUser, body: CreateProductDto) {
+    const { brandId, categoryId, sku, ...product } = body;
+    const skuAlreadyExit = await this.prismaTenant.product.findFirst({
+      where: { sku },
+    });
+    if (skuAlreadyExit) {
+      throw new BadRequestException('Duplicate SKU is not allowed.');
+    }
     return this.prismaTenant.product.create({
       select: this.select,
       data: {
         ...product,
+        sku,
         ...(brandId ? { brandId } : {}),
         ...(categoryId ? { categoryId } : {}),
       },
