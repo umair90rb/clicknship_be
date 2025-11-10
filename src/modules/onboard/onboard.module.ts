@@ -1,9 +1,9 @@
 import { PrismaMasterClient } from '@/src/services/master-connection.server';
 import { Module } from '@nestjs/common';
-import { MigrationService } from './migration.service';
-import { OnboardController } from './onboard.controller';
-import { OnboardService } from './onboard.service';
-import { TenantService } from './tenant.service';
+import { MigrationService } from '@/src/modules/onboard/services/migration.service';
+import { OnboardController } from '@/src/modules/onboard/onboard.controller';
+import { OnboardService } from '@/src/modules/onboard/services/onboard.service';
+import { TenantService } from '@/src/modules/onboard/services/tenant.service';
 
 @Module({
   controllers: [OnboardController],

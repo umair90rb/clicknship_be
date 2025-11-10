@@ -4,7 +4,7 @@ import {
   NestMiddleware,
   NotFoundException,
 } from '@nestjs/common';
-import { TenantService } from 'src/modules/onboard/tenant.service';
+import { TenantService } from '@/src/modules/onboard/services/tenant.service';
 import { TENANT_NOT_EXIST, TENANT_NOT_PROVIDED } from '../constants/errors';
 
 @Injectable()

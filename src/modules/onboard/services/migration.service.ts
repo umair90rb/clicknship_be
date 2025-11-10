@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { exec } from 'child_process';
 import { promisify } from 'util';
-import { getDbUrl } from './utils';
+import { getDbUrl } from '../utils';
 
 const execAsync = promisify(exec);
 

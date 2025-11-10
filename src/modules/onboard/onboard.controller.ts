@@ -1,5 +1,5 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { OnboardService } from './onboard.service';
+import { OnboardService } from './services/onboard.service';
 import { OnboardTenantDto } from './dtos/onboard.dto';
 
 @Controller('onboard')

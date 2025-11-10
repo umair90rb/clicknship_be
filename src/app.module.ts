@@ -9,6 +9,7 @@ import { OnboardModule } from './modules/onboard/onboard.module';
 import { OrderModule } from './modules/order/order.module';
 import { WebhookModule } from './modules/webhook/webhook.module';
 import { SettingsModule } from './modules/settings/settings.module';
+import { LogisticModule } from './modules/logistic/logistic.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { SettingsModule } from './modules/settings/settings.module';
     OrderModule,
     WebhookModule,
     SettingsModule,
+    LogisticModule,
   ],
   controllers: [AppController],
   providers: [],
