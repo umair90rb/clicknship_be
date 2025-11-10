@@ -15,12 +15,12 @@ import { AuthenticationGuard } from '@/src/guards/authentication.guard';
 import { CategoryService } from '../services/category.service';
 import { CreateCategoryDto, UpdateCategoryDto } from '../dto/category.dto';
 
-@Controller('category')
+@Controller('categories')
 @UseGuards(AuthenticationGuard)
 export class CategoryController {
   constructor(private readonly categoryService: CategoryService) {}
 
-  @Get('all')
+  @Get()
   async list() {
     return this.categoryService.list();
   }

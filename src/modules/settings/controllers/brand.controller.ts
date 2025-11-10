@@ -20,7 +20,7 @@ import { CreateBrandDto, UpdateBrandDto } from '../dto/brand.dto';
 export class BrandController {
   constructor(private readonly brandService: BrandService) {}
 
-  @Get('all')
+  @Get()
   async list() {
     return this.brandService.list();
   }

@@ -13,7 +13,10 @@ import { RequestUser } from '@/src/types/auth';
 import { RequestUser as RequestUserDeco } from '@/src/decorators/user.decorator';
 import { AuthenticationGuard } from '@/src/guards/authentication.guard';
 import { CustomerService } from '@/src/modules/order/services/customer.service';
-import { SearchCustomerDto } from '@/src/modules/order/dto/customer.dto';
+import {
+  ListCustomerBodyDto,
+  SearchCustomerDto,
+} from '@/src/modules/order/dto/customer.dto';
 
 @Controller('customers')
 @UseGuards(AuthenticationGuard)
@@ -21,8 +24,8 @@ export class CustomerController {
   constructor(private readonly customerService: CustomerService) {}
 
   @Post()
-  async list() {
-    return this.customerService.list();
+  async list(@Body() body: ListCustomerBodyDto) {
+    return this.customerService.list(body);
   }
 
   @Get(':id')
