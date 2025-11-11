@@ -20,7 +20,7 @@ import { SalesChannelService } from '../services/sales-channel.service';
 
 @Controller('sales-channel')
 @UseGuards(AuthenticationGuard)
-export class UnitController {
+export class SalesChannelController {
   constructor(private readonly salesChannelService: SalesChannelService) {}
 
   @Get()

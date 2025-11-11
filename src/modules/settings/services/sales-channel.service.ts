@@ -19,7 +19,13 @@ export class SalesChannelService {
     private prismaTenant: PrismaTenantClient,
   ) {}
 
-  private select = { id: true, name: true, source: true, type: true };
+  private select = {
+    id: true,
+    name: true,
+    source: true,
+    type: true,
+    brand: { select: { name: true } },
+  };
 
   list() {
     return this.prismaTenant.channel.findMany({ select: this.select });
