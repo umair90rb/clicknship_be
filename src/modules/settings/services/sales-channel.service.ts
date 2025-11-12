@@ -11,6 +11,7 @@ import {
   CreateSalesChannelDto,
   UpdateSalesChannelDto,
 } from '../dto/sales-channel.dto';
+import { SalesChannelTypeEnum } from '../settings.type';
 
 @Injectable()
 export class SalesChannelService {
@@ -36,16 +37,26 @@ export class SalesChannelService {
   }
 
   async create(user: RequestUser, body: CreateSalesChannelDto) {
+    const { type, source, ...rest } = body;
+    let channelSource = source;
+    if (type === SalesChannelTypeEnum.SHOPIFY) {
+      if (channelSource.includes(' ')) {
+        throw new BadRequestException(
+          'Invalid source, empty spaces not allowed',
+        );
+      }
+      channelSource = channelSource.includes('myshopify.com')
+        ? channelSource
+        : `${channelSource}.myshopify.com`;
+    }
     const exited = await this.prismaTenant.channel.findFirst({
-      where: { name: body.source },
+      where: { source: channelSource },
     });
     if (exited) {
-      throw new BadRequestException(
-        'Sales channel with this name already existed',
-      );
+      throw new BadRequestException('Duplicate source not allowed');
     }
     return this.prismaTenant.channel.create({
-      data: body,
+      data: { ...rest, type, source: channelSource },
       select: this.select,
     });
   }
