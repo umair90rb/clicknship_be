@@ -12,6 +12,10 @@ export const RESOURCES_PERMISSIONS_LIST: ResourcesPermissionsList[] = [
     actions: [Actions.read, Actions.write, Actions.delete],
   },
   {
+    resource: Resources.orders,
+    actions: [Actions.read, Actions.write, Actions.delete, Actions.export],
+  },
+  {
     resource: Resources.settings,
     actions: [Actions.read, Actions.write, Actions.delete],
   },

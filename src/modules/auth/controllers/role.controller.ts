@@ -16,6 +16,7 @@ import { CreateRoleDto } from '../dtos/role.dto';
 import { Actions } from '../enums/actions.enum';
 import { Resources } from '../enums/resources.enum';
 import { RoleService } from '../services/role.service';
+import { RESOURCES_PERMISSIONS_LIST } from '../constants/permission-list';
 
 @UseGuards(AuthenticationGuard, AuthorizationGuard)
 @Controller('role')
@@ -23,7 +24,13 @@ export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
   @Permissions([{ resource: Resources.roles, actions: [Actions.read] }])
-  @Get('all')
+  @Get('permissions')
+  async permissions() {
+    return RESOURCES_PERMISSIONS_LIST;
+  }
+
+  @Permissions([{ resource: Resources.roles, actions: [Actions.read] }])
+  @Get('')
   async getAll() {
     return this.roleService.getAllRole();
   }
