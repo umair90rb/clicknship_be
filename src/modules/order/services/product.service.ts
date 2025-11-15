@@ -156,6 +156,6 @@ export class ProductService {
     if (!product) {
       throw new NotFoundException('Product not found');
     }
-    return await this.prismaTenant.product.delete({ where: { id } });
+    return this.prismaTenant.product.delete({ where: { id } });
   }
 }

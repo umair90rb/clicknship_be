@@ -19,12 +19,12 @@ import { RoleService } from '../services/role.service';
 import { RESOURCES_PERMISSIONS_LIST } from '../constants/permission-list';
 
 @UseGuards(AuthenticationGuard, AuthorizationGuard)
-@Controller('role')
+@Controller('roles')
 export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 
   @Permissions([{ resource: Resources.roles, actions: [Actions.read] }])
-  @Get('permissions')
+  @Get('available-permissions-list')
   async permissions() {
     return RESOURCES_PERMISSIONS_LIST;
   }
@@ -32,13 +32,13 @@ export class RoleController {
   @Permissions([{ resource: Resources.roles, actions: [Actions.read] }])
   @Get('')
   async getAll() {
-    return this.roleService.getAllRole();
+    return this.roleService.getAll();
   }
 
   @Permissions([{ resource: Resources.roles, actions: [Actions.read] }])
   @Get(':roleId')
   async get(@Param('roleId', ParseIntPipe) roleId: number) {
-    return this.roleService.getRole(roleId);
+    return this.roleService.get(roleId);
   }
 
   @Permissions([{ resource: Resources.roles, actions: [Actions.read] }])
@@ -50,7 +50,7 @@ export class RoleController {
   @Permissions([{ resource: Resources.roles, actions: [Actions.write] }])
   @Post()
   async create(@Body() role: CreateRoleDto) {
-    return this.roleService.createRole(role);
+    return this.roleService.create(role);
   }
 
   @Permissions([{ resource: Resources.roles, actions: [Actions.write] }])
@@ -59,12 +59,12 @@ export class RoleController {
     @Param('roleId', ParseIntPipe) roleId,
     @Body() role: CreateRoleDto,
   ) {
-    return this.roleService.updateRole(roleId, role);
+    return this.roleService.update(roleId, role);
   }
 
   @Permissions([{ resource: Resources.roles, actions: [Actions.delete] }])
   @Delete(':roleId')
   async delete(@Param('roleId', ParseIntPipe) roleId) {
-    return this.roleService.deleteRole(roleId);
+    return this.roleService.delete(roleId);
   }
 }

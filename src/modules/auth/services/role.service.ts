@@ -23,7 +23,7 @@ export class RoleService {
     private prismaTenant: PrismaTenantClient,
   ) {}
 
-  async getAllRole() {
+  async getAll() {
     return this.prismaTenant.role.findMany({
       include: {
         permissions: {
@@ -36,7 +36,7 @@ export class RoleService {
     });
   }
 
-  async getRole(roleId: number) {
+  async get(roleId: number) {
     const role = await this.prismaTenant.role.findFirst({
       where: { id: roleId },
       include: {
@@ -68,7 +68,13 @@ export class RoleService {
     });
   }
 
-  async createRole(role: CreateRoleDto) {
+  async create(role: CreateRoleDto) {
+    const existed = await this.prismaTenant.role.findFirst({
+      where: { name: role.name },
+    });
+    if (existed) {
+      throw new BadRequestException('Duplicate role name not allowed');
+    }
     return this.prismaTenant.role.create({
       include: {
         permissions: {
@@ -90,8 +96,8 @@ export class RoleService {
     });
   }
 
-  async updateRole(roleId: number, role: UpdateRoleDto) {
-    this.isRoleSuperAdmin(roleId);
+  async update(roleId: number, role: UpdateRoleDto) {
+    this.isSuperAdmin(roleId);
     const newPermissions: Permission[] = [],
       existingPermissions: PermissionWithId[] = [];
     for (let index = 0; index < role.permissions.length; index++) {
@@ -125,19 +131,20 @@ export class RoleService {
     });
   }
 
-  async deleteRole(roleId: number) {
-    this.isRoleSuperAdmin(roleId);
+  async delete(roleId: number) {
+    this.isSuperAdmin(roleId);
     const role = await this.prismaTenant.role.findFirst({
       where: { id: roleId },
     });
     if (!role) {
-      throw new NotFoundException();
+      throw new NotFoundException('Role not found');
     }
+    await this.prismaTenant.permission.deleteMany({ where: { roleId } });
     await this.prismaTenant.role.delete({ where: { id: role.id } });
     return role;
   }
 
-  isRoleSuperAdmin(roleId: number): void {
+  isSuperAdmin(roleId: number): void {
     if (roleId === 1) {
       throw new BadRequestException(
         `${SUPER_ADMIN_ROLE} can't be deleted or updated`,
