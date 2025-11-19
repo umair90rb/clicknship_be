@@ -70,6 +70,7 @@ export class UserService {
     data.password = await bcrypt.hash(password, 10);
     return this.prismaTenant.user.create({ data, select: this.select });
   }
+
   update(id: number, body: UpdateUserDto, user: RequestUser) {}
   delete(id: number, user: RequestUser) {}
 }
