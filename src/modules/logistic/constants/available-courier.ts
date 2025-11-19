@@ -1,176 +1,50 @@
-interface Field {
-  name: string;
-  type: string;
-  isOptional?: boolean;
-}
-
 export type AvailableCourierIntegrationList = {
-  courier: string;
-  requiredFields: Field[];
+  [key: string]: { name: string; fields: string[] };
 };
 
-export const AVAILABLE_COURIER_INTEGRATION_LIST: AvailableCourierIntegrationList[] =
-  [
-    {
-      courier: 'Leopard',
-      requiredFields: [
-        {
-          name: 'API Key',
-          type: 'string',
-        },
-        {
-          name: 'API Password',
-          type: 'string',
-        },
-        {
-          name: 'Pickup Address Id',
-          type: 'string',
-        },
+export const AVAILABLE_COURIER_INTEGRATION_LIST: AvailableCourierIntegrationList =
+  {
+    leopard: {
+      name: 'Leopard',
+      fields: ['API Key', 'Api Password', 'Pickup Address Id'],
+    },
+    deawoo: {
+      name: 'Deawoo',
+      fields: ['API Key', 'API Username', 'API Password', 'Pickup Address Id'],
+    },
+    postex: {
+      name: 'PostEx',
+      fields: ['API Key'],
+    },
+    tcs: {
+      name: 'TCS',
+      fields: [
+        'API Key',
+        'API ID',
+        'API Username',
+        'API Password',
+        'Pickup Address',
       ],
     },
-    {
-      courier: 'Deawoo',
-      requiredFields: [
-        {
-          name: 'API Key',
-          type: 'string',
-        },
-        {
-          name: 'API Username',
-          type: 'string',
-        },
-        {
-          name: 'API Password',
-          type: 'string',
-        },
-        {
-          name: 'Pickup Address Id',
-          type: 'string',
-        },
+    callcourier: { name: 'Call Courier', fields: ['API Key'] },
+    trax: { name: 'Trax', fields: ['API Key'] },
+    mnp: { name: 'M&P', fields: ['Username', 'Password'] },
+    digi: {
+      name: 'Digi',
+      fields: ['Username', 'Password', 'Pickup Address ID'],
+    },
+    ahl: {
+      name: 'AHL',
+      fields: [
+        'API Key',
+        'Account ID',
+        'Username',
+        'Password',
+        'Pickup Address ID',
       ],
     },
-    {
-      courier: 'PostEx',
-      requiredFields: [
-        {
-          name: 'API Key',
-          type: 'string',
-        },
-      ],
+    tranzo: {
+      name: 'Tranzo',
+      fields: ['API Key', 'Account ID', 'Pickup Address ID'],
     },
-    {
-      courier: 'TCS',
-      requiredFields: [
-        {
-          name: 'API Key',
-          type: 'string',
-        },
-        {
-          name: 'API Id',
-          type: 'string',
-        },
-        {
-          name: 'Username',
-          type: 'string',
-        },
-        {
-          name: 'Password',
-          type: 'string',
-        },
-        {
-          name: 'Pickup Address',
-          type: 'string',
-        },
-      ],
-    },
-    {
-      courier: 'Call Courier',
-      requiredFields: [
-        {
-          name: 'API Key',
-          type: 'string',
-        },
-      ],
-    },
-    {
-      courier: 'Trax',
-      requiredFields: [
-        {
-          name: 'API Key',
-          type: 'string',
-        },
-      ],
-    },
-    {
-      courier: 'M&P',
-      requiredFields: [
-        {
-          name: 'Username',
-          type: 'string',
-        },
-        {
-          name: 'Password',
-          type: 'string',
-        },
-      ],
-    },
-    {
-      courier: 'Digi',
-      requiredFields: [
-        {
-          name: 'Username',
-          type: 'string',
-        },
-        {
-          name: 'Password',
-          type: 'string',
-        },
-        {
-          name: 'Pickup Address Id',
-          type: 'string',
-        },
-      ],
-    },
-    {
-      courier: 'AHL',
-      requiredFields: [
-        {
-          name: 'API Key',
-          type: 'string',
-        },
-        {
-          name: 'Account ID',
-          type: 'string',
-        },
-        {
-          name: 'Username',
-          type: 'string',
-        },
-        {
-          name: 'Password',
-          type: 'string',
-        },
-        {
-          name: 'Pickup Address Id',
-          type: 'string',
-        },
-      ],
-    },
-    {
-      courier: 'AHL',
-      requiredFields: [
-        {
-          name: 'API Key',
-          type: 'string',
-        },
-        {
-          name: 'Account ID',
-          type: 'string',
-        },
-        {
-          name: 'Pickup Address Id',
-          type: 'string',
-        },
-      ],
-    },
-  ];
+  };
