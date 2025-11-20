@@ -14,6 +14,10 @@ import { RequestUser as RequestUserDeco } from '@/src/decorators/user.decorator'
 import { AuthenticationGuard } from '@/src/guards/authentication.guard';
 import { CourierService } from '../services/courier.service';
 import { AVAILABLE_COURIER_INTEGRATION_LIST } from '../constants/available-courier';
+import {
+  CreateCourierIntegrationDto,
+  UpdateCourierIntegrationDto,
+} from '../dtos/courier.dto';
 
 @Controller('couriers')
 @UseGuards(AuthenticationGuard)
@@ -36,7 +40,10 @@ export class CourierController {
   }
 
   @Post('create')
-  async create(@RequestUserDeco() user: RequestUser, @Body() createDto: any) {
+  async create(
+    @RequestUserDeco() user: RequestUser,
+    @Body() createDto: CreateCourierIntegrationDto,
+  ) {
     return this.courierService.create(createDto, user);
   }
 
@@ -44,7 +51,7 @@ export class CourierController {
   async update(
     @RequestUserDeco() user: RequestUser,
     @Param('id', ParseIntPipe) id: number,
-    @Body() updateDto: any,
+    @Body() updateDto: UpdateCourierIntegrationDto,
   ) {
     return this.courierService.update(id, updateDto, user);
   }

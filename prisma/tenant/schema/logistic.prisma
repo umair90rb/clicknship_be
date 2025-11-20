@@ -1,8 +1,25 @@
 model CourierService {
-    id   Int    @id @default(autoincrement())
-    name String
+    id              Int     @id @default(autoincrement())
+    name            String
+    courier         String
+    dispatchAddress String  @map("dispatch_address")
+    returnAddress   String  @map("return_address")
+    active          Boolean @default(true)
 
-    orders Order[]
+    orders               Order[]
+    courierServiceFields CourierServiceField[]
 
     @@map("courier_services")
+}
+
+model CourierServiceField {
+    id    Int    @id @default(autoincrement())
+    field String
+    value String
+
+    courierServiceId Int            @map("courier_service_id")
+    courierService   CourierService @relation(fields: [courierServiceId], references: [id])
+
+    @@unique([field, courierServiceId])
+    @@map("courier_service_fields")
 }

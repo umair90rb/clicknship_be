@@ -6,6 +6,16 @@ import { CreateOrderCommentDto } from '../dto/order.dto';
 
 @Injectable()
 export class OrderCommentService {
+  private select = {
+    user: {
+      select: { id: true, name: true },
+    },
+    userId: false,
+    orderId: false,
+    comment: true,
+    createdAt: true,
+    id: true,
+  };
   constructor(
     @Inject(TENANT_CONNECTION_PROVIDER)
     private prismaTenant: PrismaTenantClient,
@@ -15,16 +25,7 @@ export class OrderCommentService {
     return this.prismaTenant.orderComment.create({
       data: { comment: body.comment, orderId, userId: user.id },
       relationLoadStrategy: 'join',
-      select: {
-        user: {
-          select: { id: true, name: true },
-        },
-        userId: false,
-        orderId: false,
-        comment: true,
-        createdAt: true,
-        id: true,
-      },
+      select: this.select,
     });
   }
 }
