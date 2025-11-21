@@ -16,6 +16,7 @@ import { CourierService } from '../services/courier.service';
 import { AVAILABLE_COURIER_INTEGRATION_LIST } from '../constants/available-courier';
 import {
   CreateCourierIntegrationDto,
+  ListCourierIntegrationDto,
   UpdateCourierIntegrationDto,
 } from '../dtos/courier.dto';
 
@@ -30,7 +31,7 @@ export class CourierController {
   }
 
   @Post()
-  async list(@Body() body: any) {
+  async list(@Body() body: ListCourierIntegrationDto) {
     return this.courierService.list(body);
   }
 

@@ -4,6 +4,7 @@ import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { RequestUser } from '@/src/types/auth';
 import {
   CreateCourierIntegrationDto,
+  ListCourierIntegrationDto,
   UpdateCourierIntegrationDto,
 } from '../dtos/courier.dto';
 
@@ -14,6 +15,7 @@ export class CourierService {
     name: true,
     courier: true,
     active: true,
+    courierServiceFields: false,
     returnAddress: true,
     dispatchAddress: true,
   };
@@ -22,9 +24,37 @@ export class CourierService {
     private prismaTenant: PrismaTenantClient,
   ) {}
 
-  async list(body: any) {}
+  async list(body: ListCourierIntegrationDto) {
+    const { skip, take, active, courier } = body;
+    const where: any = { active: active === 'false' ? false : true };
 
-  get(id: number) {}
+    if (courier) {
+      where.courier = courier;
+    }
+
+    const [total, data] = await Promise.all([
+      this.prismaTenant.courierService.count({ where }),
+      this.prismaTenant.courierService.findMany({
+        where,
+        skip,
+        take,
+        orderBy: { id: 'desc' },
+        select: this.select,
+      }),
+    ]);
+
+    return {
+      data,
+      meta: { total, skip, take, active, courier },
+    };
+  }
+
+  get(id: number) {
+    return this.prismaTenant.courierService.findFirst({
+      where: { id },
+      select: { ...this.select, courierServiceFields: true },
+    });
+  }
 
   async create(body: CreateCourierIntegrationDto, user: RequestUser) {
     const { fields, ...integrationData } = body;
@@ -79,5 +109,11 @@ export class CourierService {
     //   select: this.select,
     // });
   }
-  delete(id: number, user: RequestUser) {}
+  delete(id: number, user: RequestUser) {
+    return this.prismaTenant.courierService.update({
+      where: { id },
+      data: { active: false },
+      select: this.select,
+    });
+  }
 }

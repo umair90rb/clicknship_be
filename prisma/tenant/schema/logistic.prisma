@@ -20,6 +20,5 @@ model CourierServiceField {
     courierServiceId Int            @map("courier_service_id")
     courierService   CourierService @relation(fields: [courierServiceId], references: [id])
 
-    @@unique([field, courierServiceId])
     @@map("courier_service_fields")
 }
