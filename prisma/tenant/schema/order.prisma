@@ -1,242 +1,242 @@
 model Order {
-    id              Int       @id @default(autoincrement())
-    orderNumber     String?   @map("order_number")
-    totalAmount     Float?    @default(0) @map("total_amount")
-    totalTax        Float?    @default(0) @map("total_tax")
-    totalDiscount   Float?    @default(0) @map("total_discounts")
-    shippingCharges Float?    @default(0) @map("shipping_charges")
-    tags            String[]  @map("tags")
-    status          String    @default("Received") @map("status")
-    remarks         String?   @map("remarks")
-    createdAt       DateTime? @default(now()) @map("created_at")
-    deletedAt       DateTime? @map("deleted_at")
+  id              Int       @id @default(autoincrement())
+  orderNumber     String?   @map("order_number")
+  totalAmount     Float?    @default(0) @map("total_amount")
+  totalTax        Float?    @default(0) @map("total_tax")
+  totalDiscount   Float?    @default(0) @map("total_discounts")
+  shippingCharges Float?    @default(0) @map("shipping_charges")
+  tags            String[]  @map("tags")
+  status          String    @default("Received") @map("status")
+  remarks         String?   @map("remarks")
+  createdAt       DateTime? @default(now()) @map("created_at")
+  deletedAt       DateTime? @map("deleted_at")
 
-    customerId Int?      @map("customer_id")
-    customer   Customer? @relation(fields: [customerId], references: [id])
+  customerId Int?      @map("customer_id")
+  customer   Customer? @relation(fields: [customerId], references: [id])
 
-    channelId Int?     @map("channel_id")
-    channel   Channel? @relation(fields: [channelId], references: [id])
+  channelId Int?     @map("channel_id")
+  channel   Channel? @relation(fields: [channelId], references: [id])
 
-    brandId Int?   @map("brand_id")
-    brand   Brand? @relation(fields: [brandId], references: [id])
+  brandId Int?   @map("brand_id")
+  brand   Brand? @relation(fields: [brandId], references: [id])
 
-    courierServiceId Int?            @map("courier_service_id")
-    courerService    CourierService? @relation(fields: [courierServiceId], references: [id])
+  courierServiceId Int?            @map("courier_service_id")
+  courerService    CourierService? @relation(fields: [courierServiceId], references: [id])
 
-    address Address?
+  address Address?
 
-    user       User?     @relation(fields: [userId], references: [id])
-    userId     Int?      @map("user_id")
-    assignedAt DateTime? @map("assigned_at")
+  user       User?     @relation(fields: [userId], references: [id])
+  userId     Int?      @map("user_id")
+  assignedAt DateTime? @map("assigned_at")
 
-    delivery OrderDelivery?
-    items    OrderItem[]
-    logs     OrderLog[]
-    comments OrderComment[]
-    payments OrderPayment[]
+  delivery OrderDelivery?
+  items    OrderItem[]
+  logs     OrderLog[]
+  comments OrderComment[]
+  payments OrderPayment[]
 
-    @@index([orderNumber])
-    @@map("orders")
+  @@index([orderNumber])
+  @@map("orders")
 }
 
 model OrderItem {
-    id        Int     @id @default(autoincrement())
-    name      String?
-    unitPrice Float?  @map("unit_price")
-    grams     Float?
-    quantity  Float?
-    discount  Float?
-    sku       String?
-    productId String? @map("product_id")
-    variantId String? @map("variant_id")
+  id        Int     @id @default(autoincrement())
+  name      String?
+  unitPrice Float?  @map("unit_price")
+  grams     Float?
+  quantity  Float?
+  discount  Float?
+  sku       String?
+  productId String? @map("product_id")
+  variantId String? @map("variant_id")
 
-    orderId Int   @map("order_id")
-    order   Order @relation(fields: [orderId], references: [id])
+  orderId Int   @map("order_id")
+  order   Order @relation(fields: [orderId], references: [id])
 
-    @@map("order_items")
+  @@map("order_items")
 }
 
 model Address {
-    id        Int     @id @default(autoincrement())
-    address   String?
-    note      String?
-    city      String?
-    phone     String?
-    zip       Float?
-    province  String?
-    country   String?
-    longitude Float?
-    latitude  Float?
+  id        Int     @id @default(autoincrement())
+  address   String?
+  note      String?
+  city      String?
+  phone     String?
+  zip       Float?
+  province  String?
+  country   String?
+  longitude Float?
+  latitude  Float?
 
-    orderId Int   @unique @map("order_id")
-    order   Order @relation(fields: [orderId], references: [id])
+  orderId Int   @unique @map("order_id")
+  order   Order @relation(fields: [orderId], references: [id])
 
-    customerId Int      @map("customer_id")
-    customer   Customer @relation(fields: [customerId], references: [id])
+  customerId Int      @map("customer_id")
+  customer   Customer @relation(fields: [customerId], references: [id])
 
-    @@map("order_addresses")
+  @@map("order_addresses")
 }
 
 model Customer {
-    id    Int     @id @default(autoincrement())
-    name  String?
-    email String?
-    phone String?
+  id    Int     @id @default(autoincrement())
+  name  String?
+  email String?
+  phone String?
 
-    orders    Order[]
-    addresses Address[]
+  orders    Order[]
+  addresses Address[]
 
-    @@map("customers")
+  @@map("customers")
 }
 
 model OrderPayment {
-    id     Int     @id @default(autoincrement())
-    type   String
-    bank   String
-    tId    String  @map("t_id")
-    amount Float
-    note   String?
+  id     Int     @id @default(autoincrement())
+  type   String
+  bank   String
+  tId    String  @map("t_id")
+  amount Float
+  note   String?
 
-    orderId Int   @map("order_id")
-    order   Order @relation(fields: [orderId], references: [id])
+  orderId Int   @map("order_id")
+  order   Order @relation(fields: [orderId], references: [id])
 
-    @@map("order_payments")
+  @@map("order_payments")
 }
 
 model OrderDelivery {
-    id             Int       @id @default(autoincrement())
-    cn             String?
-    status         String?
-    trackingStatus String?   @map("tracking_status")
-    trackedAt      DateTime? @map("tracked_at")
-    tracking       String?
+  id             Int       @id @default(autoincrement())
+  cn             String?
+  status         String?
+  trackingStatus String?   @map("tracking_status")
+  trackedAt      DateTime? @map("tracked_at")
+  tracking       String?
 
-    orderId Int   @unique() @map("order_id")
-    order   Order @relation(fields: [orderId], references: [id])
+  orderId Int   @unique() @map("order_id")
+  order   Order @relation(fields: [orderId], references: [id])
 
-    courierServiceId      Int     @map("courier_service_id")
-    courierServiceCompany String? @map("courier_service_company")
+  courierServiceId      Int     @map("courier_service_id")
+  courierServiceCompany String? @map("courier_service_company")
 
-    @@index([cn])
-    @@index([orderId])
-    @@map("order_deliveries")
+  @@index([cn])
+  @@index([orderId])
+  @@map("order_deliveries")
 }
 
 model OrderLog {
-    id        Int      @id @default(autoincrement())
-    event     String
-    createdAt DateTime @default(now()) @map("created_at")
+  id        Int      @id @default(autoincrement())
+  event     String
+  createdAt DateTime @default(now()) @map("created_at")
 
-    userId Int?  @map("user_id")
-    user   User? @relation(fields: [userId], references: [id])
+  userId Int?  @map("user_id")
+  user   User? @relation(fields: [userId], references: [id])
 
-    orderId Int   @map("order_id")
-    order   Order @relation(fields: [orderId], references: [id])
+  orderId Int   @map("order_id")
+  order   Order @relation(fields: [orderId], references: [id])
 
-    @@map("order_logs")
+  @@map("order_logs")
 }
 
 model OrderComment {
-    id        Int      @id @default(autoincrement())
-    comment   String
-    createdAt DateTime @default(now()) @map("created_at")
+  id        Int      @id @default(autoincrement())
+  comment   String
+  createdAt DateTime @default(now()) @map("created_at")
 
-    userId Int?  @map("user_id")
-    user   User? @relation(fields: [userId], references: [id])
+  userId Int?  @map("user_id")
+  user   User? @relation(fields: [userId], references: [id])
 
-    orderId Int   @map("order_id")
-    order   Order @relation(fields: [orderId], references: [id])
+  orderId Int   @map("order_id")
+  order   Order @relation(fields: [orderId], references: [id])
 
-    @@map("order_comments")
+  @@map("order_comments")
 }
 
 model ShopifyWebhookLog {
-    id           String    @id @default(uuid())
-    webhookId    String    @map("webhook_id")
-    eventId      String    @map("event_id")
-    identifier   String?
-    domain       String
-    topic        String
-    apiVersion   String    @map("api_version")
-    triggeredAt  DateTime  @map("triggered_at")
-    receivedAt   DateTime  @map("received_at")
-    processedAt  DateTime? @map("processed_at")
-    status       String    @default("received")
-    error        String?
-    payload      Json
-    retries      Int       @default(0)
-    itemQuantity Int?      @map("item_quantity")
-    amount       Float?
+  id           String    @id @default(uuid())
+  webhookId    String    @map("webhook_id")
+  eventId      String    @map("event_id")
+  identifier   String?
+  domain       String
+  topic        String
+  apiVersion   String    @map("api_version")
+  triggeredAt  DateTime  @map("triggered_at")
+  receivedAt   DateTime  @map("received_at")
+  processedAt  DateTime? @map("processed_at")
+  status       String    @default("received")
+  error        String?
+  payload      Json
+  retries      Int       @default(0)
+  itemQuantity Int?      @map("item_quantity")
+  amount       Float?
 
-    @@map("shopify_webhook_logs")
+  @@map("shopify_webhook_logs")
 }
 
 model Channel {
-    id     Int     @id @default(autoincrement())
-    name   String
-    type   String?
-    source String?
-    active Boolean @default(true)
+  id     Int     @id @default(autoincrement())
+  name   String
+  type   String?
+  source String?
+  active Boolean @default(true)
 
-    brandId Int?   @map("brand_id")
-    brand   Brand? @relation(fields: [brandId], references: [id])
+  brandId Int?   @map("brand_id")
+  brand   Brand? @relation(fields: [brandId], references: [id])
 
-    orders Order[]
+  orders Order[]
 
-    @@map("channels")
+  @@map("channels")
 }
 
 model Brand {
-    id     Int     @id @default(autoincrement())
-    name   String
-    active Boolean @default(true)
+  id     Int     @id @default(autoincrement())
+  name   String
+  active Boolean @default(true)
 
-    channels Channel[]
-    orders   Order[]
-    category Category[]
-    products Product[]
+  channels Channel[]
+  orders   Order[]
+  category Category[]
+  products Product[]
 
-    @@map("brands")
+  @@map("brands")
 }
 
 model Category {
-    id          Int     @id @default(autoincrement())
-    name        String
-    description String?
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
 
-    brandId  Int?      @map("brand_id")
-    brand    Brand?    @relation(fields: [brandId], references: [id])
-    products Product[]
+  brandId  Int?      @map("brand_id")
+  brand    Brand?    @relation(fields: [brandId], references: [id])
+  products Product[]
 
-    @@map("categories")
+  @@map("categories")
 }
 
 model UnitOfMeasure {
-    id          Int     @id @default(autoincrement())
-    name        String
-    description String?
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
 
-    @@map("unit_of_measures")
+  @@map("unit_of_measures")
 }
 
 model Product {
-    id          Int     @id @default(autoincrement())
-    name        String
-    description String?
-    sku         String  @unique
-    barcode     String?
-    unitPrice   Int     @map("unit_price")
-    costPrice   Int?    @map("cost_price")
-    incentive   Int?
-    weight      Int?
-    active      Boolean @default(true)
-    unit        String?
+  id          Int     @id @default(autoincrement())
+  name        String
+  description String?
+  sku         String  @unique
+  barcode     String?
+  unitPrice   Int     @map("unit_price")
+  costPrice   Int?    @map("cost_price")
+  incentive   Int?
+  weight      Int?
+  active      Boolean @default(true)
+  unit        String?
 
-    categoryId Int?      @map("category_id")
-    category   Category? @relation(fields: [categoryId], references: [id])
+  categoryId Int?      @map("category_id")
+  category   Category? @relation(fields: [categoryId], references: [id])
 
-    brandId Int?   @map("brand_id")
-    brand   Brand? @relation(fields: [brandId], references: [id])
+  brandId Int?   @map("brand_id")
+  brand   Brand? @relation(fields: [brandId], references: [id])
 
-    @@map("products")
+  @@map("products")
 }

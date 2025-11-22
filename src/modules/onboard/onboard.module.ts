@@ -1,4 +1,4 @@
-import { PrismaMasterClient } from '@/src/services/master-connection.server';
+import { PrismaMasterClient } from '@/src/services/master-connection.service';
 import { Module } from '@nestjs/common';
 import { MigrationService } from '@/src/modules/onboard/services/migration.service';
 import { OnboardController } from '@/src/modules/onboard/onboard.controller';

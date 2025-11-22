@@ -1,4 +1,4 @@
-import { PrismaMasterClient } from '@/src/services/master-connection.server';
+import { PrismaMasterClient } from '@/src/services/master-connection.service';
 import { Injectable } from '@nestjs/common';
 import { Tenant } from 'src/types/tenant';
 

@@ -5,10 +5,16 @@ import { CourierController } from './controllers/courier.controller';
 import { tenantConnectionProvider } from '@/src/providers/tenant-connection.provider';
 import { CityService } from './services/city.service';
 import { CourierService } from './services/courier.service';
+import { PrismaMasterClient } from '@/src/services/master-connection.service';
 
 @Module({
   imports: [AuthModule],
   controllers: [CityController, CourierController],
-  providers: [tenantConnectionProvider, CityService, CourierService],
+  providers: [
+    tenantConnectionProvider,
+    CityService,
+    CourierService,
+    PrismaMasterClient,
+  ],
 })
 export class LogisticModule {}

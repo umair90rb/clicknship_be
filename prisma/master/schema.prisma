@@ -16,3 +16,24 @@ model Tenant {
 
   @@map("tenants")
 }
+
+model City {
+  id                  Int                 @id() @default(autoincrement())
+  city                String              @unique()
+  courierMappedCities CourierMappedCity[]
+
+  @@map("cities")
+}
+
+model CourierMappedCity {
+  id            Int     @id() @default(autoincrement())
+  courier       String
+  mapped        String
+  courierCityId String? @map("courier_city_id")
+  code          String?
+
+  cityId Int  @map("city_id")
+  city   City @relation(fields: [cityId], references: [id])
+
+  @@map("courier_mapped_cities")
+}

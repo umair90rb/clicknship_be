@@ -1,5 +1,5 @@
 import { PrismaClient, Role } from '@/prisma/tenant/client';
-import { PrismaMasterClient } from '@/src/services/master-connection.server';
+import { PrismaMasterClient } from '@/src/services/master-connection.service';
 import { BadRequestException, Injectable } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { nanoid } from 'nanoid';

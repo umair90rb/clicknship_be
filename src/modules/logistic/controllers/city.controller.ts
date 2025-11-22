@@ -13,6 +13,7 @@ import { RequestUser } from '@/src/types/auth';
 import { RequestUser as RequestUserDeco } from '@/src/decorators/user.decorator';
 import { AuthenticationGuard } from '@/src/guards/authentication.guard';
 import { CityService } from '../services/city.service';
+import { ListCityDto } from '../dtos/city.dto';
 
 @Controller('cities')
 @UseGuards(AuthenticationGuard)
@@ -20,7 +21,7 @@ export class CityController {
   constructor(private readonly cityService: CityService) {}
 
   @Post()
-  async list(@Body() body: any) {
+  async list(@Body() body: ListCityDto) {
     return this.cityService.list(body);
   }
 

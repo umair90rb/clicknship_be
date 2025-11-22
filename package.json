@@ -15,6 +15,7 @@
     "start:prod": "node dist/main",
 
     "prisma:format": "npx prisma format --schema prisma/master/schema.prisma && npx prisma format --schema prisma/tenant/schema/ ",
+    
     "migrate:master": "npx prisma migrate dev --schema prisma/master/schema.prisma",
 
     "generate": "npx prisma generate --schema prisma/master/schema.prisma && npx prisma generate --schema prisma/tenant/schema/ ",
