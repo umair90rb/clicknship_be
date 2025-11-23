@@ -6,6 +6,9 @@ import { tenantConnectionProvider } from '@/src/providers/tenant-connection.prov
 import { CityService } from './services/city.service';
 import { CourierService } from './services/courier.service';
 import { PrismaMasterClient } from '@/src/services/master-connection.service';
+import { CourierFactory } from './factories/courier.factory';
+import { AVAILABLE_COURIER_INTEGRATION_LIST } from './constants/available-courier';
+import { TcsCourier } from './integrations/tcs.courier';
 
 @Module({
   imports: [AuthModule],
@@ -15,6 +18,17 @@ import { PrismaMasterClient } from '@/src/services/master-connection.service';
     CityService,
     CourierService,
     PrismaMasterClient,
+    CourierFactory,
+    {
+      provide: AVAILABLE_COURIER_INTEGRATION_LIST.tcs.providerName,
+      useClass: TcsCourier,
+    },
+    {
+      provide: AVAILABLE_COURIER_INTEGRATION_LIST.leopard.providerName,
+      useClass: TcsCourier,
+    },
   ],
+
+  exports: [CourierFactory],
 })
 export class LogisticModule {}
