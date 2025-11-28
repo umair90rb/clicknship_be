@@ -12,6 +12,8 @@ export class CourierFactory {
     private readonly tcs: ICourierService,
     @Inject(AVAILABLE_COURIER_INTEGRATION_LIST.leopard.providerName)
     private readonly leopard: ICourierService,
+    @Inject(AVAILABLE_COURIER_INTEGRATION_LIST.dev.providerName)
+    private readonly dev: ICourierService,
     // @Inject(AVAILABLE_COURIER_INTEGRATION_LIST.postex.providerName)
     // private readonly postex: ICourierService,
     // @Inject(AVAILABLE_COURIER_INTEGRATION_LIST.digi.providerName)

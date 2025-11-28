@@ -9,6 +9,7 @@ import { PrismaMasterClient } from '@/src/services/master-connection.service';
 import { CourierFactory } from './factories/courier.factory';
 import { AVAILABLE_COURIER_INTEGRATION_LIST } from './constants/available-courier';
 import { TcsCourier } from './integrations/tcs.courier';
+import DevCourier from './integrations/dev.courier';
 
 @Module({
   imports: [AuthModule],
@@ -19,6 +20,10 @@ import { TcsCourier } from './integrations/tcs.courier';
     CourierService,
     PrismaMasterClient,
     CourierFactory,
+    {
+      provide: AVAILABLE_COURIER_INTEGRATION_LIST.dev.providerName,
+      useClass: DevCourier,
+    },
     {
       provide: AVAILABLE_COURIER_INTEGRATION_LIST.tcs.providerName,
       useClass: TcsCourier,

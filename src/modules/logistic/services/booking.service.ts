@@ -13,11 +13,11 @@ export class BookingService {
     return courier.checkParcelStatus(cn, deliveryAccount);
   }
 
-  async create(createBookingDto: CreateBookingDto) {
+  async create(createBookingDto: CreateBookingDto, user: RequestUser) {
     // add booking to queue
   }
 
-  async cancel(cns: string[]) {
+  async cancel(cns: string[], user: RequestUser) {
     const deliveryAccount = { service: 'abc' }; //get delivery account
     const courier = this.courierFactory.getCourier(deliveryAccount.service);
     return courier.cancelBooking(cns[0], deliveryAccount);

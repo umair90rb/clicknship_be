@@ -427,20 +427,20 @@ export default class DaewooCourier implements ICourierService {
    *
    * NOTE: if the API returns binary PDF you may call http.get with responseType 'arraybuffer' and return the buffer.
    */
-  //   async downloadReceipt(trackingNumber: string, deliveryAccount: any) {
-  //     try {
-  //       // There is no explicit PDF endpoint in the v1.3 doc; return a best-effort public URL (adjust if wrong).
-  //       const publicSlipUrl = `${this.baseUrl}Booking/AfterSavePublic/${encodeURIComponent(String(trackingNumber))}`;
-  //       return {
-  //         isSuccess: true,
-  //         url: publicSlipUrl,
-  //         response: 'Public slip url (verify with Daewoo if available)',
-  //       };
-  //     } catch (err) {
-  //       this.logger.error('downloadReceipt error', err?.message ?? err);
-  //       return { isSuccess: false, error: err?.message ?? err };
-  //     }
-  //   }
+  async downloadReceipt(trackingNumber: string[], deliveryAccount: any) {
+    try {
+      // There is no explicit PDF endpoint in the v1.3 doc; return a best-effort public URL (adjust if wrong).
+      const publicSlipUrl = `${this.baseUrl}Booking/AfterSavePublic/${encodeURIComponent(String(trackingNumber))}`;
+      return {
+        isSuccess: true,
+        url: publicSlipUrl,
+        response: 'Public slip url (verify with Daewoo if available)',
+      };
+    } catch (err) {
+      this.logger.error('downloadReceipt error', err?.message ?? err);
+      return { isSuccess: false, error: err?.message ?? err };
+    }
+  }
 
   // ----------------------------- Optional, convenience wrappers -----------------------------
 

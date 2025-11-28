@@ -4,6 +4,11 @@ export type AvailableCourierIntegrationList = {
 
 export const AVAILABLE_COURIER_INTEGRATION_LIST: AvailableCourierIntegrationList =
   {
+    dev: {
+      name: 'Dev Courier',
+      providerName: 'DEV_COURIER',
+      fields: [],
+    },
     leopard: {
       name: 'Leopard',
       providerName: 'LEOPARD_COURIER',

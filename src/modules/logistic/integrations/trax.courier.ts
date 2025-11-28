@@ -2,7 +2,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
-import { AxiosResponse } from 'axios';
 import { ICourierService } from '../types/courier.interface'; // adjust path if needed
 
 /**
