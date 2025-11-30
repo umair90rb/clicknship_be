@@ -1,23 +1,28 @@
 import { Injectable } from '@nestjs/common';
 import { CourierFactory } from '../factories/courier.factory';
-import { RequestUser } from '@/src/types/auth';
+import { RequestUser, RequestWithTenantAndUser } from '@/src/types/auth';
 import { CreateBookingDto } from '../dtos/booking.dto';
 
 @Injectable()
 export class BookingService {
   constructor(private readonly courierFactory: CourierFactory) {}
 
-  async status(cn: string, user: RequestUser) {
+  async status(cn: string, req: RequestWithTenantAndUser) {
     const deliveryAccount = { service: 'abc' }; //get delivery account
     const courier = this.courierFactory.getCourier(deliveryAccount.service);
     return courier.checkParcelStatus(cn, deliveryAccount);
   }
 
-  async create(createBookingDto: CreateBookingDto, user: RequestUser) {
-    // add booking to queue
+  async create(
+    createBookingDto: CreateBookingDto,
+    req: RequestWithTenantAndUser,
+  ) {
+    const { orderIds, courierId } = createBookingDto;
+    console.log(orderIds, courierId, req.user, req.tenant);
+    return true;
   }
 
-  async cancel(cns: string[], user: RequestUser) {
+  async cancel(cns: string[], req: RequestWithTenantAndUser) {
     const deliveryAccount = { service: 'abc' }; //get delivery account
     const courier = this.courierFactory.getCourier(deliveryAccount.service);
     return courier.cancelBooking(cns[0], deliveryAccount);

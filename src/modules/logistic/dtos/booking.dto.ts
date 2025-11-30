@@ -1,20 +1,12 @@
-import { Type } from 'class-transformer';
-import {
-  IsArray,
-  IsNotEmpty,
-  IsNumber,
-  Min,
-  ValidateNested,
-} from 'class-validator';
+import { ArrayMinSize, IsArray, IsNotEmpty, IsNumber } from 'class-validator';
 
 export class CreateBookingDto {
   @IsArray()
-  @Type(() => Number)
-  @ValidateNested({ each: true })
-  @Min(1)
-  orderIds: Number[];
+  @IsNumber({}, { each: true })
+  @ArrayMinSize(1)
+  orderIds: number[];
 
   @IsNumber()
   @IsNotEmpty()
-  courierId: Number;
+  courierId: number;
 }

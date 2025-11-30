@@ -1,6 +1,13 @@
-import { Controller, Post, Body, Get, UseGuards, Param } from '@nestjs/common';
-import { RequestUser } from '@/src/types/auth';
-import { RequestUser as RequestUserDeco } from '@/src/decorators/user.decorator';
+import {
+  Controller,
+  Post,
+  Body,
+  Get,
+  UseGuards,
+  Param,
+  Req,
+} from '@nestjs/common';
+import { RequestWithTenantAndUser } from '@/src/types/auth';
 import { AuthenticationGuard } from '@/src/guards/authentication.guard';
 import { BookingService } from '../services/booking.service';
 import { CreateBookingDto } from '../dtos/booking.dto';
@@ -11,44 +18,47 @@ export class BookingController {
   constructor(private readonly bookingService: BookingService) {}
 
   @Get('status/:cn')
-  async status(@RequestUserDeco() user: RequestUser, @Param('cn') cn: string) {
-    return this.bookingService.status(cn, user);
+  async status(@Req() req: RequestWithTenantAndUser, @Param('cn') cn: string) {
+    return this.bookingService.status(cn, req);
   }
 
   @Post('create')
   async create(
-    @RequestUserDeco() user: RequestUser,
+    @Req() req: RequestWithTenantAndUser,
     @Body() createDto: CreateBookingDto,
   ) {
-    return this.bookingService.create(createDto, user);
+    return this.bookingService.create(createDto, req);
   }
 
   @Post('cancel')
   async cancel(
-    @RequestUserDeco() user: RequestUser,
+    @Req() req: RequestWithTenantAndUser,
     @Body('cns') cns: string[],
   ) {
-    return this.bookingService.cancel(cns, user);
+    return this.bookingService.cancel(cns, req);
   }
 
   @Post('download-receipt')
-  async receipt(@RequestUserDeco() user: RequestUser, @Body() createDto: any) {
-    return this.bookingService.downloadReceipt(createDto, user);
+  async receipt(
+    @Req() req: RequestWithTenantAndUser,
+    @Body('cns') cns: string[],
+  ) {
+    return this.bookingService.downloadReceipt(cns, req);
   }
 
   @Get('shipper-advice/:cn')
   async getShipperAdvice(
-    @RequestUserDeco() user: RequestUser,
-    @Body() createDto: any,
+    @Req() req: RequestWithTenantAndUser,
+    @Param('cn') cn: string,
   ) {
-    return this.bookingService.getShipperAdvice(createDto, user);
+    return this.bookingService.getShipperAdvice(cn, req);
   }
 
-  @Post('shipper-advice')
+  @Post('shipper-advice/create')
   async addShipperAdvice(
-    @RequestUserDeco() user: RequestUser,
+    @Req() req: RequestWithTenantAndUser,
     @Body() createDto: any,
   ) {
-    return this.bookingService.addShipperAdvice(createDto, user);
+    return this.bookingService.addShipperAdvice(createDto, req);
   }
 }

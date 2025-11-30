@@ -16,7 +16,7 @@ export interface User {
   phone?: string;
 }
 
-export type RequestUser = Pick<User, 'id' | 'email'>;
+export type RequestUser = JwtTokenPayload;
 
 export interface RequestWithTenantAndUser extends Request {
   user: JwtTokenPayload;

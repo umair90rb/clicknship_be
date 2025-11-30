@@ -10,14 +10,17 @@ import { CourierFactory } from './factories/courier.factory';
 import { AVAILABLE_COURIER_INTEGRATION_LIST } from './constants/available-courier';
 import { TcsCourier } from './integrations/tcs.courier';
 import DevCourier from './integrations/dev.courier';
+import { BookingController } from './controllers/booking.controller';
+import { BookingService } from './services/booking.service';
 
 @Module({
   imports: [AuthModule],
-  controllers: [CityController, CourierController],
+  controllers: [CityController, CourierController, BookingController],
   providers: [
     tenantConnectionProvider,
     CityService,
     CourierService,
+    BookingService,
     PrismaMasterClient,
     CourierFactory,
     {
