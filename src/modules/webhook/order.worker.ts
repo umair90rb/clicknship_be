@@ -15,11 +15,12 @@ import {
 
 import { CreateOrderJobData } from './order.types';
 import { tenantWithPrefix } from '@/src/utils/tenant';
-import { OrderStatus } from '@/src/types/order';
+import { OrderEvents, OrderStatus } from '@/src/types/order';
 import { getDbUrl } from '../onboard/utils';
+import { normalizeCustomerName } from '@/src/utils/order';
 
 @Processor(WEBHOOK_ORDER_CREATE_QUEUE, {})
-export class WebhookOrderCreateConsumer extends WorkerHost {
+export class WebhookOrderCreateQueueConsumer extends WorkerHost {
   private prismaTenantConnection: PrismaClient = null;
 
   constructor() {
@@ -66,12 +67,12 @@ export class WebhookOrderCreateConsumer extends WorkerHost {
     //   return;
     // }
 
-    let chanel: { id: number; brandId: number } | null =
+    let chanel: { id: number; name: string; brandId: number } | null =
       await this.prismaTenantConnection.channel.findFirst({
         where: {
           source: domain,
         },
-        select: { id: true, brandId: true },
+        select: { id: true, brandId: true, name: true },
       });
 
     //create received order in db
@@ -124,77 +125,149 @@ export class WebhookOrderCreateConsumer extends WorkerHost {
       customerData['phone'] = formatPhoneNumber(adderssData?.phone);
     }
 
-    let customer: { id: number } =
-      await this.prismaTenantConnection.customer.findFirst({
-        where: { phone: customerData.phone },
-        select: { id: true },
-      });
+    // let customer: { id: number } =
+    //   await this.prismaTenantConnection.customer.findFirst({
+    //     where: { phone: customerData.phone },
+    //     select: { id: true },
+    //   });
 
-    if (!customer) {
-      customer = await this.prismaTenantConnection.customer.create({
-        data: {
-          name: `${customerData.first_name} ${customerData.last_name || ''}`.trimEnd(),
-          email: customerData?.email,
-          phone: customerData?.phone,
-        },
-        select: { id: true },
-      });
-    }
+    // if (!customer) {
+    //   customer = await this.prismaTenantConnection.customer.create({
+    //     data: {
+    //       name: `${customerData.first_name} ${customerData.last_name || ''}`.trimEnd(),
+    //       email: customerData?.email,
+    //       phone: customerData?.phone,
+    //     },
+    //     select: { id: true },
+    //   });
+    // }
 
-    let order: { id: number } = await this.prismaTenantConnection.order.create({
+    // let order: { id: number } = await this.prismaTenantConnection.order.create({
+    //   data: {
+    //     orderNumber: orderData?.name,
+    //     totalAmount: parseFloat(orderData?.total_price),
+    //     totalTax: parseFloat(orderData?.total_tax),
+    //     totalDiscount: orderData?.total_discount,
+    //     createdAt: new Date(),
+    //     channelId: chanel?.id,
+    //     brandId: chanel?.brandId,
+    //     customerId: customer?.id,
+    //     status: OrderStatus.received,
+    //   },
+    //   select: { id: true },
+    // });
+
+    // await this.prismaTenantConnection.address.create({
+    //   data: {
+    //     address: adderssData?.address1,
+    //     note: adderssData?.address2,
+    //     city: adderssData?.city,
+    //     country: adderssData?.country,
+    //     phone: adderssData?.phone,
+    //     province: adderssData?.province,
+    //     zip: adderssData?.zip,
+    //     latitude: adderssData?.latitude,
+    //     longitude: adderssData?.longitude,
+    //     customer: { connect: { id: customer.id } },
+    //     order: { connect: { id: order.id } },
+    //   },
+    // });
+
+    // const orderItemsData = payload.line_items.map((item) => {
+    //   const itemData = extractKeysFromObj(item, ITEM_DATA_KEYS);
+    //   return {
+    //     name: itemData?.name,
+    //     unitPrice: parseFloat(itemData?.price),
+    //     grams: itemData?.grams,
+    //     quantity: itemData?.quantity,
+    //     discount: itemData?.discount,
+    //     sku: itemData?.sku,
+    //     productId: itemData?.productId,
+    //     variantId: itemData?.variantId,
+    //     orderId: order?.id,
+    //   };
+    // });
+
+    // await this.prismaTenantConnection.orderItem.createMany({
+    //   data: orderItemsData,
+    // });
+
+    // await this.prismaTenantConnection.orderLog.create({
+    //   data: {
+    //     orderId: order.id,
+    //     event: 'order received from shopify store via web hook',
+    //   },
+    // });
+
+    await this.prismaTenantConnection.order.create({
+      select: { id: true },
       data: {
         orderNumber: orderData?.name,
         totalAmount: parseFloat(orderData?.total_price),
         totalTax: parseFloat(orderData?.total_tax),
         totalDiscount: orderData?.total_discount,
         createdAt: new Date(),
-        channelId: chanel?.id,
-        brandId: chanel?.brandId,
-        customerId: customer?.id,
+        ...(chanel
+          ? {
+              channel: { connect: { id: chanel?.id } },
+              brand: { connect: { id: chanel?.brandId } },
+            }
+          : {}),
         status: OrderStatus.received,
-      },
-      select: { id: true },
-    });
-
-    await this.prismaTenantConnection.address.create({
-      data: {
-        address: adderssData?.address1,
-        note: adderssData?.address2,
-        city: adderssData?.city,
-        country: adderssData?.country,
-        phone: adderssData?.phone,
-        orderId: order.id,
-        province: adderssData?.province,
-        zip: adderssData?.zip,
-        latitude: adderssData?.latitude,
-        longitude: adderssData?.longitude,
-        customerId: customer.id,
-      },
-    });
-
-    const orderItemsData = payload.line_items.map((item) => {
-      const itemData = extractKeysFromObj(item, ITEM_DATA_KEYS);
-      return {
-        name: itemData?.name,
-        unitPrice: parseFloat(itemData?.price),
-        grams: itemData?.grams,
-        quantity: itemData?.quantity,
-        discount: itemData?.discount,
-        sku: itemData?.sku,
-        productId: itemData?.productId,
-        variantId: itemData?.variantId,
-        orderId: order?.id,
-      };
-    });
-
-    await this.prismaTenantConnection.orderItem.createMany({
-      data: orderItemsData,
-    });
-
-    await this.prismaTenantConnection.orderLog.create({
-      data: {
-        orderId: order.id,
-        event: 'order received from shopify store via web hook',
+        customer: {
+          connectOrCreate: {
+            where: { phone: customerData.phone },
+            create: {
+              name: normalizeCustomerName(
+                customerData.first_name,
+                customerData.last_name,
+              ),
+              email: customerData?.email,
+              phone: customerData?.phone,
+            },
+          },
+        },
+        address: {
+          create: {
+            address: adderssData?.address1,
+            note: adderssData?.address2,
+            city: adderssData?.city,
+            country: adderssData?.country,
+            phone: adderssData?.phone,
+            province: adderssData?.province,
+            zip: adderssData?.zip,
+            latitude: adderssData?.latitude,
+            longitude: adderssData?.longitude,
+            customer: {
+              connect: { phone: customerData.phone },
+            },
+          },
+        },
+        items: {
+          createMany: {
+            data: payload.line_items.map((item) => {
+              const itemData = extractKeysFromObj(item, ITEM_DATA_KEYS);
+              return {
+                name: itemData?.name,
+                unitPrice: parseFloat(itemData?.price),
+                grams: itemData?.grams,
+                quantity: itemData?.quantity,
+                discount: itemData?.discount,
+                sku: itemData?.sku,
+                productId: itemData?.productId,
+                variantId: itemData?.variantId,
+              };
+            }),
+          },
+        },
+        logs: {
+          create: {
+            event: OrderEvents.received.replace(
+              '{store}',
+              chanel ? chanel.name : '',
+            ),
+          },
+        },
       },
     });
 
@@ -225,6 +298,9 @@ export class WebhookOrderCreateConsumer extends WorkerHost {
   @OnWorkerEvent('failed')
   async onFailed(job: Job) {
     const { logId }: CreateOrderJobData = job.data;
+    // if(!this.prismaTenantConnection) {
+    //   await this.openTenantDbConnection(tenantId)
+    // }
     await this.prismaTenantConnection.shopifyWebhookLog.update({
       where: { id: logId },
       data: {

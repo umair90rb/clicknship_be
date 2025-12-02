@@ -15,13 +15,14 @@ export class OrderLoggingService {
     });
   }
 
-  create(userId: number, orderId: number, event: string) {
-    return this.prismaTenant.orderLog.create({
-      data: {
+  create(userId: number, orderIds: number[], event: string) {
+    return this.prismaTenant.orderLog.createMany({
+      data: orderIds.map((orderId) => ({
         event,
-        order: { connect: { id: orderId } },
-        user: { connect: { id: userId } },
-      },
+        orderId,
+        userId,
+      })),
+      skipDuplicates: true,
     });
   }
 }

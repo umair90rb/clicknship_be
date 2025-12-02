@@ -34,7 +34,7 @@ export class OrderPaymentService {
     });
     await this.orderLoggingService.create(
       user.id,
-      orderId,
+      [orderId],
       OrderEvents.paymentAdded,
     );
 

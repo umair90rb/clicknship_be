@@ -8,12 +8,15 @@ export enum OrderStatus {
   paymentPending = 'payment pending',
   noPick = 'no pick',
   cancel = 'cancel',
+  inBookingQueue = 'in booking queue',
 }
 
 export enum OrderEvents {
+  received = 'order received from shopify store {store}',
   created = 'order created',
   updated = 'order updated',
-  statusUpdated = 'order status updated, {from} -> {to}',
+  statusUpdatedFromTo = 'order status updated, {from} -> {to}',
+  statusUpdatedTo = 'order status updated to {status}',
   paymentAdded = 'payment added',
   itemAdded = 'new item added',
   itemUpdated = 'item updated',

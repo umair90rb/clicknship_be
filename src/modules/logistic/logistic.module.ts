@@ -12,9 +12,18 @@ import { TcsCourier } from './integrations/tcs.courier';
 import DevCourier from './integrations/dev.courier';
 import { BookingController } from './controllers/booking.controller';
 import { BookingService } from './services/booking.service';
+import { BullModule } from '@nestjs/bullmq';
+import { CREATE_BOOKING_QUEUE } from './constants';
+import { OrderModule } from '../order/order.module';
 
 @Module({
-  imports: [AuthModule],
+  imports: [
+    AuthModule,
+    OrderModule,
+    BullModule.registerQueue({
+      name: CREATE_BOOKING_QUEUE,
+    }),
+  ],
   controllers: [CityController, CourierController, BookingController],
   providers: [
     tenantConnectionProvider,

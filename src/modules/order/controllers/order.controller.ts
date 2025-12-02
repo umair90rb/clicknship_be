@@ -70,7 +70,7 @@ export class OrderController {
     @Param('id', ParseIntPipe) id: number,
     @Body() { status }: UpdateOrderStatusDto,
   ) {
-    return this.ordersService.updateStatus(user, id, status);
+    return this.ordersService.updateStatus(user, [id], status);
   }
 
   @Post(':id/comment')

@@ -58,7 +58,7 @@ export class OrderItemService {
       });
       await this.orderLoggingService.create(
         user.id,
-        orderId,
+        [orderId],
         OrderEvents.itemAdded,
       );
       return item;
@@ -89,7 +89,7 @@ export class OrderItemService {
     });
     await this.orderLoggingService.create(
       user.id,
-      orderId,
+      [orderId],
       OrderEvents.itemUpdated,
     );
     return item;
@@ -109,7 +109,7 @@ export class OrderItemService {
     });
     await this.orderLoggingService.create(
       user.id,
-      orderId,
+      [orderId],
       OrderEvents.itemDeleted,
     );
     return item;

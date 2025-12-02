@@ -254,7 +254,7 @@ export class OrderService {
     });
     await this.orderLoggingService.create(
       user.id,
-      order.id,
+      [order.id],
       OrderEvents.created,
     );
     return order;
@@ -429,26 +429,24 @@ export class OrderService {
     });
     await this.orderLoggingService.create(
       user.id,
-      orderId,
+      [orderId],
       OrderEvents.updated,
     );
     return updated;
   }
 
-  async updateStatus(user: RequestUser, orderId: number, status: string) {
-    const order = await this.isOrderExist(orderId);
-    if (!order) throw new NotFoundException('Order not found');
-    const updated = this.prismaTenant.order.update({
-      where: { id: orderId },
+  async updateStatus(user: RequestUser, orderIds: number[], status: string) {
+    // const order = await this.isOrderExist(orderId);
+    // if (!order) throw new NotFoundException('Order not found');
+    const updated = this.prismaTenant.order.updateManyAndReturn({
+      where: { id: { in: orderIds } },
       data: { status },
       select: { status: true },
     });
     await this.orderLoggingService.create(
       user.id,
-      orderId,
-      OrderEvents.statusUpdated
-        .replace('{to}', order.status)
-        .replace('{from}', status),
+      orderIds,
+      OrderEvents.statusUpdatedTo.replace('{status}', status),
     );
     return updated;
   }
@@ -463,7 +461,7 @@ export class OrderService {
     });
     await this.orderLoggingService.create(
       user.id,
-      orderId,
+      [orderId],
       OrderEvents.deleted,
     );
     return deleted;
