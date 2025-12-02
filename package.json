@@ -4,6 +4,9 @@
   "description": "",
   "author": "",
   "private": true,
+  "engines": {
+    "node": "v22.5.1"
+  },
   "license": "UNLICENSED",
   "scripts": {
     "build": "nest build",
