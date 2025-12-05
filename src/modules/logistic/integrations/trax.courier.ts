@@ -31,14 +31,14 @@ private readonly metadata = {
 
   private async get<T = any>(
     path: string,
-    deliveryAccount?: any,
+    courierAccount?: any,
     params?: Record<string, any>,
   ) {
     const url = this.baseUrl + path;
     try {
       const config: any = { headers: {}, params: params || {} };
-      if (deliveryAccount?.key)
-        config.headers['Authorization'] = deliveryAccount.key;
+      if (courierAccount?.key)
+        config.headers['Authorization'] = courierAccount.key;
       this.logger.debug(`GET ${url} params=${JSON.stringify(config.params)}`);
       const resp = await firstValueFrom(this.http.get<T>(url, config));
       return resp;
@@ -54,7 +54,7 @@ private readonly metadata = {
   private async post<T = any>(
     path: string,
     body: any = {},
-    deliveryAccount?: any,
+    courierAccount?: any,
     params?: Record<string, any>,
     requestConfig: any = {},
   ) {
@@ -65,8 +65,8 @@ private readonly metadata = {
         params: params || {},
         ...requestConfig,
       };
-      if (deliveryAccount?.key)
-        config.headers['Authorization'] = deliveryAccount.key;
+      if (courierAccount?.key)
+        config.headers['Authorization'] = courierAccount.key;
       this.logger.debug(`POST ${url} body=${JSON.stringify(body)}`);
       const resp = await firstValueFrom(this.http.post<T>(url, body, config));
       return resp;
@@ -98,14 +98,14 @@ private readonly metadata = {
    * Uses endpoint: POST /shipment/book
    * Refer: Sonic API doc - Book a Shipment. :contentReference[oaicite:3]{index=3}
    */
-  async bookParcel(order: any, deliveryAccount: any) {
+  async bookParcel(order: any, courierAccount: any) {
     try {
       // Build payload consistent with PDF & your JS example.
-      // You will add DB city mapping later; here we assume order.address.city_id or deliveryAccount provides city ids.
+      // You will add DB city mapping later; here we assume order.address.city_id or courierAccount provides city ids.
       const body = {
         service_type_id: order.service_type_id ?? 1,
         pickup_address_id:
-          deliveryAccount?.cost_center ?? order.pickup_address_id ?? 0,
+          courierAccount?.cost_center ?? order.pickup_address_id ?? 0,
         information_display: order.information_display ?? 1,
         consignee_city_id:
           order.destination_city_id ??
@@ -141,7 +141,7 @@ private readonly metadata = {
         shipper_reference_number_1: order.shipper_reference_number_1 ?? '',
       };
 
-      const resp = await this.post('shipment/book', body, deliveryAccount);
+      const resp = await this.post('shipment/book', body, courierAccount);
       const data = resp.data ?? {};
 
       // Sonic returns { status: 0, message: "Shipment has been Booked!", "tracking number": "..." }
@@ -181,14 +181,14 @@ private readonly metadata = {
    */
   async checkParcelStatus(
     trackingNumber: string | string[],
-    deliveryAccount?: any,
+    courierAccount?: any,
   ) {
     try {
       const tn = Array.isArray(trackingNumber)
         ? trackingNumber.join(',')
         : String(trackingNumber);
       const params = { tracking_number: tn, type: 0 };
-      const resp = await this.get('shipment/status', deliveryAccount, params);
+      const resp = await this.get('shipment/status', courierAccount, params);
       const data = resp.data ?? {};
       const normalized = this.normalizeStatusResponse(data);
       return {
@@ -218,13 +218,13 @@ private readonly metadata = {
    * Tracking details (full)
    * GET /shipment/track?tracking_number=...&type=0
    */
-  async trackParcel(trackingNumber: string | string[], deliveryAccount?: any) {
+  async trackParcel(trackingNumber: string | string[], courierAccount?: any) {
     try {
       const tn = Array.isArray(trackingNumber)
         ? trackingNumber.join(',')
         : String(trackingNumber);
       const params = { tracking_number: tn, type: 0 };
-      const resp = await this.get('shipment/track', deliveryAccount, params);
+      const resp = await this.get('shipment/track', courierAccount, params);
       const data = resp.data ?? {};
       const details = data?.details ?? {};
       const history = details?.tracking_history ?? [];
@@ -258,7 +258,7 @@ private readonly metadata = {
    */
   async cancelBooking(
     trackingNumber: string | string[],
-    deliveryAccount?: any,
+    courierAccount?: any,
   ) {
     try {
       const body = {
@@ -266,7 +266,7 @@ private readonly metadata = {
           ? trackingNumber.join(',')
           : String(trackingNumber),
       };
-      const resp = await this.post('shipment/cancel', body, deliveryAccount);
+      const resp = await this.post('shipment/cancel', body, courierAccount);
       const data = resp.data ?? {};
       const normalized = this.normalizeStatusResponse(data);
       return {
@@ -294,7 +294,7 @@ private readonly metadata = {
    */
   async downloadReceipt(
     trackingNumber: string | string[],
-    deliveryAccount: any,
+    courierAccount: any,
     type: 1 | 0 = 1,
   ) {
     try {
@@ -306,8 +306,8 @@ private readonly metadata = {
       const resp = await firstValueFrom(
         this.http.get(this.baseUrl + 'shipment/air_waybill', {
           params,
-          headers: deliveryAccount?.key
-            ? { Authorization: deliveryAccount.key }
+          headers: courierAccount?.key
+            ? { Authorization: courierAccount.key }
             : {},
           responseType: type === 1 ? 'arraybuffer' : 'json',
         }),
@@ -334,13 +334,13 @@ private readonly metadata = {
    * Get charges for a shipment
    * GET /shipment/charges?tracking_number=...
    */
-  async getCharges(trackingNumber: string | string[], deliveryAccount?: any) {
+  async getCharges(trackingNumber: string | string[], courierAccount?: any) {
     try {
       const tn = Array.isArray(trackingNumber)
         ? trackingNumber.join(',')
         : String(trackingNumber);
       const params = { tracking_number: tn };
-      const resp = await this.get('shipment/charges', deliveryAccount, params);
+      const resp = await this.get('shipment/charges', courierAccount, params);
       const data = resp.data ?? {};
       return {
         isSuccess: Number(data?.status) === 0,
@@ -365,7 +365,7 @@ private readonly metadata = {
    */
   async getPaymentStatus(
     trackingNumber: string | string[],
-    deliveryAccount?: any,
+    courierAccount?: any,
   ) {
     try {
       const tn = Array.isArray(trackingNumber)
@@ -374,7 +374,7 @@ private readonly metadata = {
       const params = { tracking_number: tn };
       const resp = await this.get(
         'shipment/payment_status',
-        deliveryAccount,
+        courierAccount,
         params,
       );
       const data = resp.data ?? {};
@@ -399,7 +399,7 @@ private readonly metadata = {
    * Multiple payments details
    * GET /payments?tracking_number[]=...
    */
-  async getPayments(trackingNumbers: string[] | string, deliveryAccount?: any) {
+  async getPayments(trackingNumbers: string[] | string, courierAccount?: any) {
     try {
       const params: any = {};
       if (Array.isArray(trackingNumbers)) {
@@ -408,7 +408,7 @@ private readonly metadata = {
       } else {
         params['tracking_number[]'] = [trackingNumbers];
       }
-      const resp = await this.get('payments', deliveryAccount, params);
+      const resp = await this.get('payments', courierAccount, params);
       const data = resp.data ?? {};
       return {
         isSuccess: Number(data?.status) === 0,
@@ -430,10 +430,10 @@ private readonly metadata = {
    * Get invoice / payment by id & type
    * GET /invoice?id=...&type=1
    */
-  async getInvoice(id: number, type: 1 | 2, deliveryAccount?: any) {
+  async getInvoice(id: number, type: 1 | 2, courierAccount?: any) {
     try {
       const params = { id, type };
-      const resp = await this.get('invoice', deliveryAccount, params);
+      const resp = await this.get('invoice', courierAccount, params);
       const data = resp.data ?? {};
       return {
         isSuccess: Number(data?.status) === 0,
@@ -455,12 +455,12 @@ private readonly metadata = {
    * Charges calculator
    * POST /charges_calculate
    */
-  async calculateCharges(payload: any, deliveryAccount?: any) {
+  async calculateCharges(payload: any, courierAccount?: any) {
     try {
       const resp = await this.post(
         'charges_calculate',
         payload,
-        deliveryAccount,
+        courierAccount,
       );
       const data = resp.data ?? {};
       return {
@@ -482,13 +482,13 @@ private readonly metadata = {
   /**
    * Create receiving sheet - POST /receiving_sheet/create
    */
-  async createReceivingSheet(trackingNumbers: string[], deliveryAccount?: any) {
+  async createReceivingSheet(trackingNumbers: string[], courierAccount?: any) {
     try {
       const body = { tracking_numbers: trackingNumbers };
       const resp = await this.post(
         'receiving_sheet/create',
         body,
-        deliveryAccount,
+        courierAccount,
       );
       const data = resp.data ?? {};
       return {
@@ -513,7 +513,7 @@ private readonly metadata = {
   async viewReceivingSheet(
     receivingSheetId: number,
     type: 0 | 1 = 0,
-    deliveryAccount?: any,
+    courierAccount?: any,
   ) {
     try {
       const params = { receiving_sheet_id: receivingSheetId, type };
@@ -521,8 +521,8 @@ private readonly metadata = {
       const resp = await firstValueFrom(
         this.http.get(this.baseUrl + 'receiving_sheet/view', {
           params,
-          headers: deliveryAccount?.key
-            ? { Authorization: deliveryAccount.key }
+          headers: courierAccount?.key
+            ? { Authorization: courierAccount.key }
             : {},
           responseType: type === 1 ? 'arraybuffer' : 'json',
         }),
@@ -544,14 +544,14 @@ private readonly metadata = {
    */
   async trackByOrderId(
     orderId: string | number,
-    deliveryAccount?: any,
+    courierAccount?: any,
     type: 0 | 1 = 0,
   ) {
     try {
       const params = { order_id: orderId, type };
       const resp = await this.get(
         'shipment/track/order_id',
-        deliveryAccount,
+        courierAccount,
         params,
       );
       const data = resp.data ?? {};
@@ -576,14 +576,14 @@ private readonly metadata = {
    */
   async statusByOrderId(
     orderId: string | number,
-    deliveryAccount?: any,
+    courierAccount?: any,
     type: 0 | 1 = 0,
   ) {
     try {
       const params = { order_id: orderId, type };
       const resp = await this.get(
         'shipment/status/order_id',
-        deliveryAccount,
+        courierAccount,
         params,
       );
       const data = resp.data ?? {};
@@ -607,9 +607,9 @@ private readonly metadata = {
    * Request RCP (Return Confirm / Re-attempt / Intercept & rebook)
    * POST /request/rcp
    */
-  async requestRcp(payload: any, deliveryAccount?: any) {
+  async requestRcp(payload: any, courierAccount?: any) {
     try {
-      const resp = await this.post('request/rcp', payload, deliveryAccount);
+      const resp = await this.post('request/rcp', payload, courierAccount);
       const data = resp.data ?? {};
       return {
         isSuccess: Number(data?.status) === 0,
@@ -631,9 +631,9 @@ private readonly metadata = {
    * CRM request (complaint/service/claim)
    * POST /request/crm
    */
-  async createCrmRequest(payload: any, deliveryAccount?: any) {
+  async createCrmRequest(payload: any, courierAccount?: any) {
     try {
-      const resp = await this.post('request/crm', payload, deliveryAccount);
+      const resp = await this.post('request/crm', payload, courierAccount);
       const data = resp.data ?? {};
       return {
         isSuccess: Number(data?.status) === 0,
@@ -655,8 +655,8 @@ private readonly metadata = {
   /**
    * Create claim (same endpoint /request/crm with claim params per doc)
    */
-  async createClaim(payload: any, deliveryAccount?: any) {
-    return this.createCrmRequest(payload, deliveryAccount);
+  async createClaim(payload: any, courierAccount?: any) {
+    return this.createCrmRequest(payload, courierAccount);
   }
 
   // ---------------- Pickup address helpers ----------------
@@ -664,12 +664,12 @@ private readonly metadata = {
   /**
    * Add pickup address - POST /pickup_address/add
    */
-  async addPickupAddress(payload: any, deliveryAccount?: any) {
+  async addPickupAddress(payload: any, courierAccount?: any) {
     try {
       const resp = await this.post(
         'pickup_address/add',
         payload,
-        deliveryAccount,
+        courierAccount,
       );
       const data = resp.data ?? {};
       return {
@@ -692,9 +692,9 @@ private readonly metadata = {
   /**
    * List pickup addresses - GET /pickup_addresses
    */
-  async getPickupAddresses(deliveryAccount?: any) {
+  async getPickupAddresses(courierAccount?: any) {
     try {
-      const resp = await this.get('pickup_addresses', deliveryAccount);
+      const resp = await this.get('pickup_addresses', courierAccount);
       const data = resp.data ?? {};
       return {
         isSuccess: Number(data?.status) === 0,
@@ -715,9 +715,9 @@ private readonly metadata = {
   /**
    * Cities - GET /cities
    */
-  async getCities(deliveryAccount?: any) {
+  async getCities(courierAccount?: any) {
     try {
-      const resp = await this.get('cities', deliveryAccount);
+      const resp = await this.get('cities', courierAccount);
       const data = resp.data ?? {};
       return {
         isSuccess: Number(data?.status) === 0,
@@ -742,13 +742,13 @@ private readonly metadata = {
    */
   async downloadLoadSheet(
     loadSheetId: number,
-    deliveryAccount?: any,
+    courierAccount?: any,
     responseType: 'PDF' | 'JSON' = 'JSON',
   ) {
     return this.viewReceivingSheet(
       loadSheetId,
       responseType === 'PDF' ? 1 : 0,
-      deliveryAccount,
+      courierAccount,
     );
   }
 

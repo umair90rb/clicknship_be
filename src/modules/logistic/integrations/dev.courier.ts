@@ -20,10 +20,12 @@ export default class DevCourier implements ICourierService {
   }
 
 
-  async bookParcel(order: any, deliveryAccount: any) {
+  async bookParcel(order: any, courierAccount: any) {
     try {
       await this.wait();
       return {
+        courierAccount,
+        order,
         success: true,
         cn: Math.random().toString().split('.')[1],
         error: null,
@@ -41,12 +43,12 @@ export default class DevCourier implements ICourierService {
     }
   }
 
-  async batchBookParcels(orders, deliveryAccount) {
+  async batchBookParcels(orders, courierAccount) {
     try {
       await this.wait(2000);
       return orders.map(order => ({
-        id: order.id, 
-        order_number: order.order_number,
+        courierAccount,
+        order,
         success: true,
         cn: Math.random().toString().split('.')[1],
         error: null,
@@ -66,13 +68,13 @@ export default class DevCourier implements ICourierService {
 
   async checkParcelStatus(
     trackingNumber: string | string[],
-    deliveryAccount?: any,
+    courierAccount?: any,
   ) {}
 
   /**
    * Cancel booking - quickCancel
    */
-  async cancelBooking(trackingNumber: string | string[], deliveryAccount: any) {
+  async cancelBooking(trackingNumber: string | string[], courierAccount: any) {
     try {
       return {
         success: true,
@@ -95,22 +97,22 @@ export default class DevCourier implements ICourierService {
   /**
    * Get all locations (terminals) allowed for booking: /api/cargo/getLocations
    */
-  async getLocations(deliveryAccount: any) {}
+  async getLocations(courierAccount: any) {}
 
   /**
    * Calculate tariff / service charges: quickCalculateRate
    * Expects payload { destination_terminal_id, qty, weight, ... }
    */
-  async quickCalculateRate(payload: any, deliveryAccount: any) {}
+  async quickCalculateRate(payload: any, courierAccount: any) {}
 
   /**
    * Get booking detail (if available in API). The PDF doesn't give a single canonical endpoint name for all details;
    * we'll attempt to call a plausible endpoint path. If your real API has a different route, change accordingly.
    */
-  async getBookingDetail(trackingNumber: string, deliveryAccount: any) {
+  async getBookingDetail(trackingNumber: string, courierAccount: any) {
     try {
       // The doc uses quickTrack for tracking details. We'll reuse quickTrack result as booking detail.
-      return await this.checkParcelStatus(trackingNumber, deliveryAccount);
+      return await this.checkParcelStatus(trackingNumber, courierAccount);
     } catch (err) {
       this.logger.error(
         'getBookingDetail error',
@@ -120,7 +122,7 @@ export default class DevCourier implements ICourierService {
     }
   }
 
-  async downloadReceipt(trackingNumber: string[], deliveryAccount: any) {
+  async downloadReceipt(trackingNumber: string[], courierAccount: any) {
     try {
       // There is no explicit PDF endpoint in the v1.3 doc; return a best-effort public URL (adjust if wrong).
       const publicSlipUrl = `${this.baseUrl}/Booking/AfterSavePublic/${encodeURIComponent(String(trackingNumber))}`;
@@ -136,7 +138,7 @@ export default class DevCourier implements ICourierService {
   }
   async downloadLoadSheet(
     loadSheetId: number,
-    deliveryAccount: any,
+    courierAccount: any,
     responseType: 'JSON' | 'PDF' = 'JSON',
   ) {
     return {

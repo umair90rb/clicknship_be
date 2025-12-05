@@ -9,6 +9,8 @@ export enum OrderStatus {
   noPick = 'no pick',
   cancel = 'cancel',
   inBookingQueue = 'in booking queue',
+  booked = 'booked',
+  bookingError = 'booking error'
 }
 
 export enum OrderEvents {

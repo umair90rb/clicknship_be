@@ -76,30 +76,30 @@ export class LeopardCourier implements ICourierService {
    * Book single packet.
    * Mirrors legacy behavior: posts to bookPacket/format/json.
    * @param order object containing order data (format you use in clicknship)
-   * @param deliveryAccount { key, password, cost_center, dispatch_address, return_address, service, ... }
+   * @param courierAccount { key, password, cost_center, dispatch_address, return_address, service, ... }
    */
-  async bookParcel(order: any, deliveryAccount: any) {
+  async bookParcel(order: any, courierAccount: any) {
     let body: any;
     let response;
     try {
       // NOTE: user requested to skip DB lookups; consumer must provide destination_city id if required.
       body = {
-        api_key: deliveryAccount.key,
-        api_password: deliveryAccount.password,
+        api_key: courierAccount.key,
+        api_password: courierAccount.password,
         booked_packet_weight: order.weightInGrams ?? 250,
         booked_packet_no_piece: order.pieces ?? 1,
         booked_packet_collect_amount: order.total_price ?? 0,
         booked_packet_order_id: order.order_number
           ? `${order.order_number}`
           : null,
-        origin_city: deliveryAccount.cost_center || 'self',
+        origin_city: courierAccount.cost_center || 'self',
         destination_city:
           order.destination_city || order.address?.city || 'self',
         shipment_id: null,
-        shipment_name_eng: deliveryAccount.shipment_name || 'Sukooon Wellness',
-        shipment_email: deliveryAccount.shipment_email || undefined,
-        shipment_phone: deliveryAccount.shipment_phone || undefined,
-        shipment_address: deliveryAccount.dispatch_address || undefined,
+        shipment_name_eng: courierAccount.shipment_name || 'Sukooon Wellness',
+        shipment_email: courierAccount.shipment_email || undefined,
+        shipment_phone: courierAccount.shipment_phone || undefined,
+        shipment_address: courierAccount.dispatch_address || undefined,
         consignment_name_eng:
           `${order.customer?.first_name || ''} ${order.customer?.last_name || ''}`.trim(),
         consignment_phone: order.customer?.phone
@@ -111,8 +111,8 @@ export class LeopardCourier implements ICourierService {
           ? order.items.map((it) => `${it.name}/${it.quantity}`).join(' - ')
           : order.special_instructions || '',
         shipment_type: order.shipment_type || 'overnight',
-        return_address: deliveryAccount.return_address || '',
-        return_city: deliveryAccount.cost_center || 'self',
+        return_address: courierAccount.return_address || '',
+        return_city: courierAccount.cost_center || 'self',
       };
 
       response = await this.post<LeopardResponse>(
@@ -149,11 +149,11 @@ export class LeopardCourier implements ICourierService {
    * Batch bookPacket
    * Expects an array `packets` in `payload`.
    */
-  async batchBookParcels(orders: any[], deliveryAccount: any) {
+  async batchBookParcels(orders: any[], courierAccount: any) {
     try {
       const body = {
-        api_key: deliveryAccount.apiKey,
-        api_password: deliveryAccount.apiPassword,
+        api_key: courierAccount.apiKey,
+        api_password: courierAccount.apiPassword,
         packets: orders,
       };
       const response = await this.post<LeopardResponse>(
@@ -174,12 +174,12 @@ export class LeopardCourier implements ICourierService {
    */
   async checkParcelStatus(
     trackingNumber: string | string[],
-    deliveryAccount: any,
+    courierAccount: any,
   ) {
     try {
       const body = {
-        api_key: deliveryAccount.key,
-        api_password: deliveryAccount.password,
+        api_key: courierAccount.key,
+        api_password: courierAccount.password,
         track_numbers: trackingNumber,
       };
       const response = await this.post<LeopardResponse>(
@@ -225,11 +225,11 @@ export class LeopardCourier implements ICourierService {
    * Cancel booked packet(s)
    * `trackingNumber` can be a single CN or comma-separated list.
    */
-  async cancelBooking(trackingNumber: string | string[], deliveryAccount: any) {
+  async cancelBooking(trackingNumber: string | string[], courierAccount: any) {
     try {
       const body = {
-        api_key: deliveryAccount.key,
-        api_password: deliveryAccount.password,
+        api_key: courierAccount.key,
+        api_password: courierAccount.password,
         cn_numbers: Array.isArray(trackingNumber)
           ? trackingNumber.join(',')
           : trackingNumber,
@@ -263,7 +263,7 @@ export class LeopardCourier implements ICourierService {
    */
   async downloadReceipt(
     trackingNumber: string | string[],
-    deliveryAccount: any,
+    courierAccount: any,
   ) {}
 
   /**
@@ -272,14 +272,14 @@ export class LeopardCourier implements ICourierService {
    */
   async generateLoadSheet(
     cnNumbers: string[],
-    deliveryAccount: any,
+    courierAccount: any,
     courierName?: string,
     courierCode?: string,
   ) {
     try {
       const body = {
-        api_key: deliveryAccount.key,
-        api_password: deliveryAccount.password,
+        api_key: courierAccount.key,
+        api_password: courierAccount.password,
         cn_numbers: cnNumbers,
         courier_name: courierName,
         courier_code: courierCode,
@@ -302,13 +302,13 @@ export class LeopardCourier implements ICourierService {
    */
   async downloadLoadSheet(
     loadSheetId: number,
-    deliveryAccount: any,
+    courierAccount: any,
     responseType: 'PDF' | 'JSON' = 'JSON',
   ) {
     try {
       const body = {
-        api_key: deliveryAccount.key,
-        api_password: deliveryAccount.password,
+        api_key: courierAccount.key,
+        api_password: courierAccount.password,
         load_sheet_id: loadSheetId,
         response_type: responseType,
       };
@@ -362,12 +362,12 @@ export class LeopardCourier implements ICourierService {
    */
   async getShipmentDetailsByOrderIDs(
     orderIds: string[] | string,
-    deliveryAccount: any,
+    courierAccount: any,
   ) {
     try {
       const body = {
-        api_key: deliveryAccount.key,
-        api_password: deliveryAccount.password,
+        api_key: courierAccount.key,
+        api_password: courierAccount.password,
         order_id: Array.isArray(orderIds) ? orderIds.join(',') : orderIds,
       };
       const response = await this.post<LeopardResponse>(
@@ -388,11 +388,11 @@ export class LeopardCourier implements ICourierService {
   /**
    * Get all Banks
    */
-  async getAllBanks(deliveryAccount: any) {
+  async getAllBanks(courierAccount: any) {
     try {
       const body = {
-        api_key: deliveryAccount.key,
-        api_password: deliveryAccount.password,
+        api_key: courierAccount.key,
+        api_password: courierAccount.password,
       };
       const response = await this.post<LeopardResponse>(
         'getAllBanks/format/json',
@@ -409,11 +409,11 @@ export class LeopardCourier implements ICourierService {
   /**
    * Create shipper
    */
-  async createShipper(payload: any, deliveryAccount: any) {
+  async createShipper(payload: any, courierAccount: any) {
     try {
       const body = {
-        api_key: deliveryAccount.key,
-        api_password: deliveryAccount.password,
+        api_key: courierAccount.key,
+        api_password: courierAccount.password,
         ...payload,
       };
       const response = await this.post<LeopardResponse>(
@@ -431,11 +431,11 @@ export class LeopardCourier implements ICourierService {
   /**
    * Get Payment Details by CN numbers
    */
-  async getPaymentDetails(cnNumbers: string[] | string, deliveryAccount: any) {
+  async getPaymentDetails(cnNumbers: string[] | string, courierAccount: any) {
     try {
       const body = {
-        api_key: deliveryAccount.key,
-        api_password: deliveryAccount.password,
+        api_key: courierAccount.key,
+        api_password: courierAccount.password,
         cn_numbers: Array.isArray(cnNumbers) ? cnNumbers.join(',') : cnNumbers,
       };
       const response = await this.post<LeopardResponse>(
@@ -459,12 +459,12 @@ export class LeopardCourier implements ICourierService {
     origin_city: number | string;
     destination_city: number | string;
     cod_amount?: number;
-    deliveryAccount: any;
+    courierAccount: any;
   }) {
     try {
       const qs = new URLSearchParams({
-        api_key: params.deliveryAccount.key,
-        api_password: params.deliveryAccount.password,
+        api_key: params.courierAccount.key,
+        api_password: params.courierAccount.password,
         packet_weight: String(params.packet_weight),
         shipment_type: String(params.shipment_type),
         origin_city: String(params.origin_city),
@@ -487,11 +487,11 @@ export class LeopardCourier implements ICourierService {
   /**
    * Get Shipping Charges (GET)
    */
-  async getShippingCharges(cnNumbers: string[] | string, deliveryAccount: any) {
+  async getShippingCharges(cnNumbers: string[] | string, courierAccount: any) {
     try {
       const qs = new URLSearchParams({
-        api_key: deliveryAccount.key,
-        api_password: deliveryAccount.password,
+        api_key: courierAccount.key,
+        api_password: courierAccount.password,
         cn_numbers: Array.isArray(cnNumbers) ? cnNumbers.join(',') : cnNumbers,
       }).toString();
       const endpoint = `getShippingCharges/format/json/?${qs}`;
@@ -511,12 +511,12 @@ export class LeopardCourier implements ICourierService {
   async getShipperDetails(
     requestParam: string,
     requestValue: string,
-    deliveryAccount: any,
+    courierAccount: any,
   ) {
     try {
       const qs = new URLSearchParams({
-        api_key: deliveryAccount.key,
-        api_password: deliveryAccount.password,
+        api_key: courierAccount.key,
+        api_password: courierAccount.password,
         request_param: requestParam,
         request_value: requestValue,
       }).toString();
@@ -535,11 +535,11 @@ export class LeopardCourier implements ICourierService {
   /**
    * Electronic Proof Of Delivery (POD)
    */
-  async proofOfDelivery(cnNumbers: string[] | string, deliveryAccount: any) {
+  async proofOfDelivery(cnNumbers: string[] | string, courierAccount: any) {
     try {
       const body = {
-        api_key: deliveryAccount.key,
-        api_password: deliveryAccount.password,
+        api_key: courierAccount.key,
+        api_password: courierAccount.password,
         cn_numbers: Array.isArray(cnNumbers) ? cnNumbers.join(',') : cnNumbers,
       };
       const response = await this.post<LeopardResponse>(
@@ -557,11 +557,11 @@ export class LeopardCourier implements ICourierService {
   /**
    * Shipper Advice List
    */
-  async shipperAdviceList(query: any, deliveryAccount: any) {
+  async shipperAdviceList(query: any, courierAccount: any) {
     try {
       const body = {
-        api_key: deliveryAccount.key,
-        api_password: deliveryAccount.password,
+        api_key: courierAccount.key,
+        api_password: courierAccount.password,
         ...query,
       };
       const response = await this.post<LeopardResponse>(
@@ -579,11 +579,11 @@ export class LeopardCourier implements ICourierService {
   /**
    * Update Shipper Advice (Add Shipper Advice)
    */
-  async updateShipperAdvice(data: any[], deliveryAccount: any) {
+  async updateShipperAdvice(data: any[], courierAccount: any) {
     try {
       const body = {
-        api_key: deliveryAccount.key,
-        api_password: deliveryAccount.password,
+        api_key: courierAccount.key,
+        api_password: courierAccount.password,
         data,
       };
       const response = await this.post<LeopardResponse>(
@@ -604,11 +604,11 @@ export class LeopardCourier implements ICourierService {
   /**
    * Activity Log
    */
-  async activityLog(query: any, deliveryAccount: any) {
+  async activityLog(query: any, courierAccount: any) {
     try {
       const body = {
-        api_key: deliveryAccount.key,
-        api_password: deliveryAccount.password,
+        api_key: courierAccount.key,
+        api_password: courierAccount.password,
         ...query,
       };
       const response = await this.post<LeopardResponse>(
@@ -626,11 +626,11 @@ export class LeopardCourier implements ICourierService {
   /**
    * Get all cities
    */
-  async getAllCities(deliveryAccount: any) {
+  async getAllCities(courierAccount: any) {
     try {
       const body = {
-        api_key: deliveryAccount.key,
-        api_password: deliveryAccount.password,
+        api_key: courierAccount.key,
+        api_password: courierAccount.password,
       };
       const response = await this.post<LeopardResponse>(
         'getAllCities/format/json',

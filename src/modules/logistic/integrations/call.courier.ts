@@ -89,15 +89,15 @@ export class CallCourier implements ICourierService {
    * Legacy JS used GET query string for SaveBooking. Doc supports SaveBooking via query.
    *
    * order: expected order object (your app format)
-   * deliveryAccount: { key/loginId, ... } - you can adjust keys per your deliveryAccount shape
+   * courierAccount: { key/loginId, ... } - you can adjust keys per your courierAccount shape
    */
-  async bookParcel(order: any, deliveryAccount: any) {
+  async bookParcel(order: any, courierAccount: any) {
     // Build query parameters based on API doc and legacy JS
     try {
       const loginId =
-        deliveryAccount.key ||
-        deliveryAccount.loginId ||
-        deliveryAccount.loginID;
+        courierAccount.key ||
+        courierAccount.loginId ||
+        courierAccount.loginID;
       const consigneeName =
         `${order.customer?.first_name || ''} ${order.customer?.last_name || ''}`.trim();
       const consigneeRefNo = order.order_number ?? '';
@@ -105,17 +105,17 @@ export class CallCourier implements ICourierService {
         ? `0${order.customer.phone}`
         : '';
       const address = order.address?.address1 ?? '';
-      // origin and service type should be provided by deliveryAccount or order
+      // origin and service type should be provided by courierAccount or order
       const origin =
-        deliveryAccount.origin || deliveryAccount.branch || 'Origin';
+        courierAccount.origin || courierAccount.branch || 'Origin';
       const destCityId =
         order.destination_city ||
         order.address?.city_id ||
-        (deliveryAccount.destCityId ?? '');
+        (courierAccount.destCityId ?? '');
       const serviceTypeId =
-        deliveryAccount.service_type_id ||
-        deliveryAccount.serviceTypeId ||
-        deliveryAccount.serviceType ||
+        courierAccount.service_type_id ||
+        courierAccount.serviceTypeId ||
+        courierAccount.serviceType ||
         '7';
       const pcs = order.items?.length
         ? String(order.items.length).padStart(2, '0')
@@ -130,30 +130,30 @@ export class CallCourier implements ICourierService {
       const selOrigin = order.selOrigin || 'Domestic';
       const codAmount = String(order.total_price ?? 0);
       const specialHandling = order.specialHandling ?? false;
-      const myBoxId = deliveryAccount.myBoxId ?? 1;
+      const myBoxId = courierAccount.myBoxId ?? 1;
       const holiday = order.holiday ?? false;
       const remarks = order.remarks ?? 'Booked via Clicknship';
       const shipperName =
-        deliveryAccount.shipper_name ||
-        deliveryAccount.shipperName ||
+        courierAccount.shipper_name ||
+        courierAccount.shipperName ||
         'Clicknship';
       const shipperCell =
-        deliveryAccount.shipper_cell_no ||
-        deliveryAccount.shipperCellNo ||
-        deliveryAccount.shipperCell ||
+        courierAccount.shipper_cell_no ||
+        courierAccount.shipperCellNo ||
+        courierAccount.shipperCell ||
         '';
       const shipperArea =
-        deliveryAccount.shipper_area || deliveryAccount.shipperArea || '';
+        courierAccount.shipper_area || courierAccount.shipperArea || '';
       const shipperCity =
-        deliveryAccount.shipper_city || deliveryAccount.shipperCity || '';
+        courierAccount.shipper_city || courierAccount.shipperCity || '';
       const shipperAddress =
-        deliveryAccount.shipper_address || deliveryAccount.shipperAddress || '';
+        courierAccount.shipper_address || courierAccount.shipperAddress || '';
       const shipperLandLineNo =
-        deliveryAccount.shipper_landline ||
-        deliveryAccount.shipperLandLine ||
+        courierAccount.shipper_landline ||
+        courierAccount.shipperLandLine ||
         '';
       const shipperEmail =
-        deliveryAccount.shipper_email || deliveryAccount.shipperEmail || '';
+        courierAccount.shipper_email || courierAccount.shipperEmail || '';
 
       // Build query string parameters according to documentation
       const params = {
@@ -223,7 +223,7 @@ export class CallCourier implements ICourierService {
    */
   async checkParcelStatus(
     trackingNumber: string | string[],
-    deliveryAccount: any,
+    courierAccount: any,
   ) {
     try {
       const cn = Array.isArray(trackingNumber)
@@ -273,7 +273,7 @@ export class CallCourier implements ICourierService {
    * Cancel booking - CallCourier may or may not support cancellation via API.
    * Doc doesn't explicitly show CancelBooking endpoint; implement a safe stub or try endpoint name 'CancelBooking'
    */
-  async cancelBooking(trackingNumber: string | string[], deliveryAccount: any) {
+  async cancelBooking(trackingNumber: string | string[], courierAccount: any) {
     try {
       // Try calling CancelBooking if available
       const cnNumbers = Array.isArray(trackingNumber)
@@ -281,7 +281,7 @@ export class CallCourier implements ICourierService {
         : trackingNumber;
       const resp = await this.get<any>('CancelBooking', {
         cn: cnNumbers,
-        loginId: deliveryAccount.key,
+        loginId: courierAccount.key,
       });
       const data = resp?.data ?? {};
       const normalized = this.normalizeStatus(data);
@@ -314,7 +314,7 @@ export class CallCourier implements ICourierService {
    */
   async downloadReceipt(
     trackingNumber: string | string[],
-    deliveryAccount: any,
+    courierAccount: any,
   ) {
     try {
       const cn = Array.isArray(trackingNumber)
@@ -406,16 +406,16 @@ export class CallCourier implements ICourierService {
     origin_city: string | number;
     destination_city: string | number;
     cod_amount?: number;
-    deliveryAccount?: any;
+    courierAccount?: any;
   }) {
     // According to doc: getTariffDetails / get rates via query string
     try {
       const qsParams: AnyObject = {
         api_key:
-          params.deliveryAccount?.key ?? params.deliveryAccount?.apiKey ?? '',
+          params.courierAccount?.key ?? params.courierAccount?.apiKey ?? '',
         api_password:
-          params.deliveryAccount?.password ??
-          params.deliveryAccount?.apiPassword ??
+          params.courierAccount?.password ??
+          params.courierAccount?.apiPassword ??
           '',
         packet_weight: String(params.packet_weight),
         shipment_type: String(params.shipment_type),
@@ -434,14 +434,14 @@ export class CallCourier implements ICourierService {
     }
   }
 
-  async getShippingCharges(cnNumbers: string[] | string, deliveryAccount: any) {
+  async getShippingCharges(cnNumbers: string[] | string, courierAccount: any) {
     try {
       const cn_numbers = Array.isArray(cnNumbers)
         ? cnNumbers.join(',')
         : cnNumbers;
       const qs = {
-        api_key: deliveryAccount.key,
-        api_password: deliveryAccount.password,
+        api_key: courierAccount.key,
+        api_password: courierAccount.password,
         cn_numbers,
       };
       const resp = await this.get<any>('getShippingCharges/format/json/', qs);
@@ -454,7 +454,7 @@ export class CallCourier implements ICourierService {
 
   async getBookingDetail(
     trackNumber: string | string[],
-    deliveryAccount?: any,
+    courierAccount?: any,
   ) {
     try {
       const track_number = Array.isArray(trackNumber)
@@ -462,7 +462,7 @@ export class CallCourier implements ICourierService {
         : trackNumber;
       const resp = await this.get<any>('GetBookingDetail', {
         cn: track_number,
-        loginId: deliveryAccount?.key,
+        loginId: courierAccount?.key,
       });
       this.logger.debug('getBookingDetail', resp?.data);
       return this.normalizeStatus(resp?.data);
@@ -568,10 +568,10 @@ export class CallCourier implements ICourierService {
    * For endpoints that require POST body (e.g., some reporting endpoints),
    * call this.post(...) accordingly. Example below:
    */
-  async shipperAdviceList(query: AnyObject, deliveryAccount: any) {
+  async shipperAdviceList(query: AnyObject, courierAccount: any) {
     try {
       const body = {
-        loginId: deliveryAccount.key,
+        loginId: courierAccount.key,
         ...query,
       };
       const resp = await this.post<any>('shipperAdviceList', body);
@@ -582,9 +582,9 @@ export class CallCourier implements ICourierService {
     }
   }
 
-  async updateShipperAdvice(payload: AnyObject[], deliveryAccount: any) {
+  async updateShipperAdvice(payload: AnyObject[], courierAccount: any) {
     try {
-      const body = { loginId: deliveryAccount.key, data: payload };
+      const body = { loginId: courierAccount.key, data: payload };
       const resp = await this.post<any>('updateShipperAdvice', body);
       return this.normalizeStatus(resp?.data);
     } catch (err) {
@@ -596,9 +596,9 @@ export class CallCourier implements ICourierService {
     }
   }
 
-  async activityLog(query: AnyObject, deliveryAccount: any) {
+  async activityLog(query: AnyObject, courierAccount: any) {
     try {
-      const body = { loginId: deliveryAccount.key, ...query };
+      const body = { loginId: courierAccount.key, ...query };
       const resp = await this.post<any>('activityLog', body);
       return this.normalizeStatus(resp?.data);
     } catch (err) {
@@ -607,10 +607,10 @@ export class CallCourier implements ICourierService {
     }
   }
 
-  async getAllCities(deliveryAccount: any) {
+  async getAllCities(courierAccount: any) {
     try {
       const resp = await this.get<any>('GetAllCities', {
-        loginId: deliveryAccount.key,
+        loginId: courierAccount.key,
       });
       return this.normalizeStatus(resp?.data);
     } catch (err) {

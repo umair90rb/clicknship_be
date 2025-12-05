@@ -3,33 +3,40 @@ interface Metadata {
   allowBulkBooking: boolean;
 }
 
+interface BookParcelResponse {
+  cn: string;
+  success: boolean;
+  message: string;
+  order: any;
+}
+
 export interface IBaseCourierService {
   get getMetadata(): Metadata;
-  bookParcel(orderDetails: any, deliveryAccount: any): Promise<any>;
-  cancelBooking(cn: string, deliveryAccount: any): Promise<any>;
-  checkParcelStatus(cn: string, deliveryAccount: any): Promise<any>;
-  downloadReceipt(cns: string[], deliveryAccount: any): Promise<any>;
+  bookParcel(
+    orderDetails: any,
+    courierAccount: any,
+  ): Promise<any>;
+  cancelBooking(cn: string, courierAccount: any): Promise<any>;
+  checkParcelStatus(cn: string, courierAccount: any): Promise<any>;
+  downloadReceipt(cns: string[], courierAccount: any): Promise<any>;
 }
 
 // src/modules/logistics/types/courier.interface.ts
 
 export interface ICourierService extends IBaseCourierService {
-  
-  batchBookParcels?(orders: any[], deliveryAccount: any): Promise<any>;
-
+  batchBookParcels?(orders: any[], courierAccount: any): Promise<any>;
 
   downloadLoadSheet?(
     loadSheetId: number,
-    deliveryAccount: any,
+    courierAccount: any,
     responseType?: 'PDF' | 'JSON',
   ): Promise<any>;
 
   /* ------------------- Leopard-Specific Full API Implementation ------------------- */
 
-
   generateLoadSheet?(
     cnNumbers: string[],
-    deliveryAccount: any,
+    courierAccount: any,
     courierName?: string,
     courierCode?: string,
   ): Promise<any>;
@@ -43,16 +50,16 @@ export interface ICourierService extends IBaseCourierService {
 
   getShipmentDetailsByOrderIDs?(
     orderIds: string[] | string,
-    deliveryAccount: any,
+    courierAccount: any,
   ): Promise<any>;
 
-  getAllBanks?(deliveryAccount: any): Promise<any>;
+  getAllBanks?(courierAccount: any): Promise<any>;
 
-  createShipper?(payload: any, deliveryAccount: any): Promise<any>;
+  createShipper?(payload: any, courierAccount: any): Promise<any>;
 
   getPaymentDetails?(
     cnNumbers: string[] | string,
-    deliveryAccount: any,
+    courierAccount: any,
   ): Promise<any>;
 
   getTariffDetails?(params: {
@@ -61,30 +68,30 @@ export interface ICourierService extends IBaseCourierService {
     origin_city: number | string;
     destination_city: number | string;
     cod_amount?: number;
-    deliveryAccount: any;
+    courierAccount: any;
   }): Promise<any>;
 
   getShippingCharges?(
     cnNumbers: string[] | string,
-    deliveryAccount: any,
+    courierAccount: any,
   ): Promise<any>;
 
   getShipperDetails?(
     requestParam: string,
     requestValue: string,
-    deliveryAccount: any,
+    courierAccount: any,
   ): Promise<any>;
 
   proofOfDelivery?(
     cnNumbers: string[] | string,
-    deliveryAccount: any,
+    courierAccount: any,
   ): Promise<any>;
 
-  shipperAdviceList?(query: any, deliveryAccount: any): Promise<any>;
+  shipperAdviceList?(query: any, courierAccount: any): Promise<any>;
 
-  updateShipperAdvice?(data: any[], deliveryAccount: any): Promise<any>;
+  updateShipperAdvice?(data: any[], courierAccount: any): Promise<any>;
 
-  activityLog?(query: any, deliveryAccount: any): Promise<any>;
+  activityLog?(query: any, courierAccount: any): Promise<any>;
 
-  getAllCities?(deliveryAccount: any): Promise<any>;
+  getAllCities?(courierAccount: any): Promise<any>;
 }

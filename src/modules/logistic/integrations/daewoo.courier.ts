@@ -35,11 +35,11 @@ private readonly metadata = {
 
   // ----------------------------- Helpers -----------------------------
 
-  private getUrlWithApiCred(path: string, deliveryAccount: any) {
-    const apiKey = deliveryAccount?.key || deliveryAccount?.apiKey || '';
-    const apiUser = deliveryAccount?.username || deliveryAccount?.apiUser || '';
+  private getUrlWithApiCred(path: string, courierAccount: any) {
+    const apiKey = courierAccount?.key || courierAccount?.apiKey || '';
+    const apiUser = courierAccount?.username || courierAccount?.apiUser || '';
     const apiPassword =
-      deliveryAccount?.password || deliveryAccount?.apiPassword || '';
+      courierAccount?.password || courierAccount?.apiPassword || '';
     // trim slashes
     const p = path.startsWith('/') ? path.slice(1) : path;
     return `${this.baseUrl}${p}?apiKey=${encodeURIComponent(apiKey)}&apiUser=${encodeURIComponent(apiUser)}&apiPassword=${encodeURIComponent(apiPassword)}`;
@@ -101,23 +101,23 @@ private readonly metadata = {
 
   /**
    * Book a single parcel using Daewoo quickBook.
-   * Uses deliveryAccount for credentials and uses fields commonly provided by your system.
+   * Uses courierAccount for credentials and uses fields commonly provided by your system.
    *
-   * NOTE: we skip DB city lookup here (you said you'll add it). So ensure deliveryAccount or order contains
+   * NOTE: we skip DB city lookup here (you said you'll add it). So ensure courierAccount or order contains
    * `source_terminal_id` and `destination_terminal_id` (terminal IDs) if you want booking to succeed.
    */
-  async bookParcel(order: any, deliveryAccount: any) {
+  async bookParcel(order: any, courierAccount: any) {
     try {
       // Build body similar to production JS; but skip CityNameMaping lookup
       const body = {
         order_no: `${order.order_number ?? ''}`,
         source_terminal_id:
-          deliveryAccount?.cost_center ??
-          deliveryAccount?.source_terminal_id ??
+          courierAccount?.cost_center ??
+          courierAccount?.source_terminal_id ??
           '0',
         destination_terminal_id:
           order.destination_terminal_id ??
-          deliveryAccount?.destination_terminal_id ??
+          courierAccount?.destination_terminal_id ??
           '0',
         receiver_name:
           `${order.customer?.first_name ?? ''} ${order.customer?.last_name ?? ''}`.trim(),
@@ -146,7 +146,7 @@ private readonly metadata = {
 
       const url = this.getUrlWithApiCred(
         'api/booking/quickBook',
-        deliveryAccount,
+        courierAccount,
       );
       const resp = await this.post<any>(url, body);
       const data = resp.data ?? {};
@@ -192,17 +192,17 @@ private readonly metadata = {
   /**
    * quickBookV3 - book from multiple locations (if you need to book with specific source terminal)
    */
-  async bookParcelV3(order: any, deliveryAccount: any) {
+  async bookParcelV3(order: any, courierAccount: any) {
     try {
       const body = {
         order_no: `${order.order_number ?? ''}`,
         // when multiple source terminals are supported, you must provide correct source_terminal_id
-        source_terminal_id: deliveryAccount?.cost_center ?? '0',
+        source_terminal_id: courierAccount?.cost_center ?? '0',
         destinations: order.destinations ?? [
           {
             destination_terminal_id:
               order.destination_terminal_id ??
-              deliveryAccount?.destination_terminal_id ??
+              courierAccount?.destination_terminal_id ??
               '0',
             receiver_name:
               `${order.customer?.first_name ?? ''} ${order.customer?.last_name ?? ''}`.trim(),
@@ -223,7 +223,7 @@ private readonly metadata = {
 
       const url = this.getUrlWithApiCred(
         'api/booking/quickBookV3',
-        deliveryAccount,
+        courierAccount,
       );
       const resp = await this.post<any>(url, body);
       const data = resp.data ?? {};
@@ -268,7 +268,7 @@ private readonly metadata = {
    */
   async checkParcelStatus(
     trackingNumber: string | string[],
-    deliveryAccount?: any,
+    courierAccount?: any,
   ) {
     try {
       const tn = Array.isArray(trackingNumber)
@@ -323,13 +323,13 @@ private readonly metadata = {
   /**
    * Cancel booking - quickCancel
    */
-  async cancelBooking(trackingNumber: string | string[], deliveryAccount: any) {
+  async cancelBooking(trackingNumber: string | string[], courierAccount: any) {
     try {
       const tn = Array.isArray(trackingNumber)
         ? trackingNumber.join(',')
         : trackingNumber;
       const url =
-        this.getUrlWithApiCred('api/booking/quickCancel', deliveryAccount) +
+        this.getUrlWithApiCred('api/booking/quickCancel', courierAccount) +
         `&trackingNo=${encodeURIComponent(tn)}`;
       const resp = await this.post<any>(url, {}); // some implementations call POST without body
       const data = resp.data ?? {};
@@ -358,11 +358,11 @@ private readonly metadata = {
   /**
    * Get all locations (terminals) allowed for booking: /api/cargo/getLocations
    */
-  async getLocations(deliveryAccount: any) {
+  async getLocations(courierAccount: any) {
     try {
       const url = this.getUrlWithApiCred(
         'api/cargo/getLocations',
-        deliveryAccount,
+        courierAccount,
       );
       const resp = await this.get<any>(url);
       const data = resp.data ?? {};
@@ -388,11 +388,11 @@ private readonly metadata = {
    * Calculate tariff / service charges: quickCalculateRate
    * Expects payload { destination_terminal_id, qty, weight, ... }
    */
-  async quickCalculateRate(payload: any, deliveryAccount: any) {
+  async quickCalculateRate(payload: any, courierAccount: any) {
     try {
       const url = this.getUrlWithApiCred(
         'api/booking/quickCalculateRate',
-        deliveryAccount,
+        courierAccount,
       );
       const resp = await this.post<any>(url, payload);
       const data = resp.data ?? {};
@@ -417,10 +417,10 @@ private readonly metadata = {
    * Get booking detail (if available in API). The PDF doesn't give a single canonical endpoint name for all details;
    * we'll attempt to call a plausible endpoint path. If your real API has a different route, change accordingly.
    */
-  async getBookingDetail(trackingNumber: string, deliveryAccount: any) {
+  async getBookingDetail(trackingNumber: string, courierAccount: any) {
     try {
       // The doc uses quickTrack for tracking details. We'll reuse quickTrack result as booking detail.
-      return await this.checkParcelStatus(trackingNumber, deliveryAccount);
+      return await this.checkParcelStatus(trackingNumber, courierAccount);
     } catch (err) {
       this.logger.error(
         'getBookingDetail error',
@@ -436,7 +436,7 @@ private readonly metadata = {
    *
    * NOTE: if the API returns binary PDF you may call http.get with responseType 'arraybuffer' and return the buffer.
    */
-  async downloadReceipt(trackingNumber: string[], deliveryAccount: any) {
+  async downloadReceipt(trackingNumber: string[], courierAccount: any) {
     try {
       // There is no explicit PDF endpoint in the v1.3 doc; return a best-effort public URL (adjust if wrong).
       const publicSlipUrl = `${this.baseUrl}Booking/AfterSavePublic/${encodeURIComponent(String(trackingNumber))}`;
@@ -458,7 +458,7 @@ private readonly metadata = {
    */
   async downloadLoadSheet(
     loadSheetId: number,
-    deliveryAccount: any,
+    courierAccount: any,
     responseType: 'JSON' | 'PDF' = 'JSON',
   ) {
     // Not explicitly present in Daewoo doc; return not-implemented or a stub.
