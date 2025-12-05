@@ -22,6 +22,15 @@ export default class DaewooCourier implements ICourierService {
   private readonly logger = new Logger(DaewooCourier.name);
   private readonly baseUrl = 'https://codapi.daewoo.net.pk/';
 
+private readonly metadata = {
+    name: 'DaewooCourier',
+    allowBulkBooking: false
+  }
+
+  get getMetadata(){
+    return this.metadata;
+  }
+
   constructor(private readonly http: HttpService) {}
 
   // ----------------------------- Helpers -----------------------------
@@ -463,21 +472,21 @@ export default class DaewooCourier implements ICourierService {
   /**
    * Return all supported endpoints summary (for debug)
    */
-  getMetadata() {
-    return {
-      baseUrl: this.baseUrl,
-      implemented: [
-        'bookParcel',
-        'bookParcelV3',
-        'checkParcelStatus',
-        'cancelBooking',
-        'getLocations',
-        'quickCalculateRate',
-        'getBookingDetail',
-        'downloadReceipt',
-      ],
-      notes:
-        'This implementation follows the Daewoo API Integration Guide and your production JS adapter.',
-    };
-  }
+  // getMetadata() {
+  //   return {
+  //     baseUrl: this.baseUrl,
+  //     implemented: [
+  //       'bookParcel',
+  //       'bookParcelV3',
+  //       'checkParcelStatus',
+  //       'cancelBooking',
+  //       'getLocations',
+  //       'quickCalculateRate',
+  //       'getBookingDetail',
+  //       'downloadReceipt',
+  //     ],
+  //     notes:
+  //       'This implementation follows the Daewoo API Integration Guide and your production JS adapter.',
+  //   };
+  // }
 }

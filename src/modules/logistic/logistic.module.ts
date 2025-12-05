@@ -15,6 +15,7 @@ import { BookingService } from './services/booking.service';
 import { BullModule } from '@nestjs/bullmq';
 import { CREATE_BOOKING_QUEUE } from './constants';
 import { OrderModule } from '../order/order.module';
+import { CreateBookingQueueConsumer } from './workers/booking.worker';
 
 @Module({
   imports: [
@@ -44,6 +45,7 @@ import { OrderModule } from '../order/order.module';
       provide: AVAILABLE_COURIER_INTEGRATION_LIST.leopard.providerName,
       useClass: TcsCourier,
     },
+    CreateBookingQueueConsumer
   ],
 
   exports: [CourierFactory],

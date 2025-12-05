@@ -24,7 +24,14 @@ type AnyObject = Record<string, any>;
 export class CallCourier implements ICourierService {
   private readonly logger = new Logger(CallCourier.name);
   private readonly baseUrl: string;
+  private readonly metadata = {
+    name: 'DaewooCourier',
+    allowBulkBooking: false
+  }
 
+  get getMetadata(){
+    return this.metadata;
+  }
   constructor(
     private readonly http: HttpService,
     @Inject('CALLCOURIER_BASE_URL') baseUrl?: string,

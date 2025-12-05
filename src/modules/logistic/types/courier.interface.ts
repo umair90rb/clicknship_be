@@ -1,4 +1,10 @@
+interface Metadata {
+  name: string;
+  allowBulkBooking: boolean;
+}
+
 export interface IBaseCourierService {
+  get getMetadata(): Metadata;
   bookParcel(orderDetails: any, deliveryAccount: any): Promise<any>;
   cancelBooking(cn: string, deliveryAccount: any): Promise<any>;
   checkParcelStatus(cn: string, deliveryAccount: any): Promise<any>;
@@ -8,6 +14,10 @@ export interface IBaseCourierService {
 // src/modules/logistics/types/courier.interface.ts
 
 export interface ICourierService extends IBaseCourierService {
+  
+  batchBookParcels?(orders: any[], deliveryAccount: any): Promise<any>;
+
+
   downloadLoadSheet?(
     loadSheetId: number,
     deliveryAccount: any,
@@ -16,11 +26,6 @@ export interface ICourierService extends IBaseCourierService {
 
   /* ------------------- Leopard-Specific Full API Implementation ------------------- */
 
-  batchBookPacket?(payload: {
-    packets: any[];
-    apiKey?: string;
-    apiPassword?: string;
-  }): Promise<any>;
 
   generateLoadSheet?(
     cnNumbers: string[],

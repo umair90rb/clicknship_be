@@ -15,6 +15,14 @@ type LeopardResponse<T = any> = {
 export class LeopardCourier implements ICourierService {
   private readonly logger = new Logger(LeopardCourier.name);
   private readonly baseUrl: string;
+  private readonly metadata = {
+    name: 'LeopardCourier',
+    allowBulkBooking: false
+  }
+
+  get getMetadata(){
+    return this.metadata;
+  }
 
   /**
    * @param http HttpService from @nestjs/axios (injected)
@@ -141,16 +149,12 @@ export class LeopardCourier implements ICourierService {
    * Batch bookPacket
    * Expects an array `packets` in `payload`.
    */
-  async batchBookPacket(payload: {
-    packets: any[];
-    apiKey?: string;
-    apiPassword?: string;
-  }) {
+  async batchBookParcels(orders: any[], deliveryAccount: any) {
     try {
       const body = {
-        api_key: payload.apiKey,
-        api_password: payload.apiPassword,
-        packets: payload.packets,
+        api_key: deliveryAccount.apiKey,
+        api_password: deliveryAccount.apiPassword,
+        packets: orders,
       };
       const response = await this.post<LeopardResponse>(
         'batchBookPacket/format/json',

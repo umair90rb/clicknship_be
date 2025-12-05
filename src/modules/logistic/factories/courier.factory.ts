@@ -34,6 +34,9 @@ export class CourierFactory {
   ) {}
 
   getCourier(name: CourierName): ICourierService {
+    if(process.env.NODE_ENV) {
+      return this.dev
+    }
     const map = {
       tcs: this.tcs,
       leopard: this.leopard,

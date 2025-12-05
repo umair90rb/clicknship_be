@@ -16,6 +16,15 @@ export default class TraxCourier implements ICourierService {
   private readonly logger = new Logger(TraxCourier.name);
   private readonly baseUrl = 'https://sonic.pk/api/';
 
+private readonly metadata = {
+    name: 'TraxCourier',
+    allowBulkBooking: false
+  }
+
+  get getMetadata(){
+    return this.metadata;
+  }
+
   constructor(private readonly http: HttpService) {}
 
   // ---------------- Helpers ----------------
@@ -746,32 +755,32 @@ export default class TraxCourier implements ICourierService {
   /**
    * Metadata about implemented endpoints
    */
-  getMetadata() {
-    return {
-      baseUrl: this.baseUrl,
-      implemented: [
-        'bookParcel',
-        'trackParcel',
-        'checkParcelStatus',
-        'cancelBooking',
-        'downloadReceipt',
-        'getCharges',
-        'getPaymentStatus',
-        'getPayments',
-        'getInvoice',
-        'calculateCharges',
-        'createReceivingSheet',
-        'viewReceivingSheet',
-        'trackByOrderId',
-        'statusByOrderId',
-        'requestRcp',
-        'createCrmRequest',
-        'createClaim',
-        'addPickupAddress',
-        'getPickupAddresses',
-        'getCities',
-      ],
-      doc: 'Sonic API Doc (Version 2.0) used as reference.',
-    };
-  }
+  // getMetadata() {
+  //   return {
+  //     baseUrl: this.baseUrl,
+  //     implemented: [
+  //       'bookParcel',
+  //       'trackParcel',
+  //       'checkParcelStatus',
+  //       'cancelBooking',
+  //       'downloadReceipt',
+  //       'getCharges',
+  //       'getPaymentStatus',
+  //       'getPayments',
+  //       'getInvoice',
+  //       'calculateCharges',
+  //       'createReceivingSheet',
+  //       'viewReceivingSheet',
+  //       'trackByOrderId',
+  //       'statusByOrderId',
+  //       'requestRcp',
+  //       'createCrmRequest',
+  //       'createClaim',
+  //       'addPickupAddress',
+  //       'getPickupAddresses',
+  //       'getCities',
+  //     ],
+  //     doc: 'Sonic API Doc (Version 2.0) used as reference.',
+  //   };
+  // }
 }

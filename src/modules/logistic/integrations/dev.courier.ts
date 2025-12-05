@@ -6,14 +6,51 @@ import { ICourierService } from '../types/courier.interface'; // per your projec
 export default class DevCourier implements ICourierService {
   private readonly logger = new Logger(DevCourier.name);
   private readonly baseUrl = 'localhost';
+  private readonly metadata = {
+    name: 'DevCourier',
+    allowBulkBooking: false
+  }
+
+  get getMetadata(){
+    return this.metadata;
+  }
+
+  private wait(ms = 1000) {
+    return new Promise((resolve) => setTimeout(resolve, ms))
+  }
+
 
   async bookParcel(order: any, deliveryAccount: any) {
     try {
+      await this.wait();
       return {
         success: true,
         cn: Math.random().toString().split('.')[1],
         error: null,
       };
+    } catch (err) {
+      this.logger.error(
+        'bookParcel error',
+        err?.response?.data ?? err?.message ?? err,
+      );
+      return {
+        success: false,
+        cn: null,
+        error: err,
+      };
+    }
+  }
+
+  async batchBookParcels(orders, deliveryAccount) {
+    try {
+      await this.wait(2000);
+      return orders.map(order => ({
+        id: order.id, 
+        order_number: order.order_number,
+        success: true,
+        cn: Math.random().toString().split('.')[1],
+        error: null,
+      }));
     } catch (err) {
       this.logger.error(
         'bookParcel error',

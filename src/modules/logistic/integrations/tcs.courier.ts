@@ -3,6 +3,14 @@ import { ICourierService } from '../types/courier.interface';
 
 @Injectable()
 export class TcsCourier implements ICourierService {
+  private readonly metadata = {
+    name: 'TcsCourier',
+    allowBulkBooking: false
+  }
+
+  get getMetadata(){
+    return this.metadata;
+  }
   async bookParcel(order, account) {
     /* ... */
   }
