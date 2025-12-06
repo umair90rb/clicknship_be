@@ -56,25 +56,44 @@ export class CreateBookingQueueConsumer extends WorkerHost {
     const orders = await this.prismaTenantConnection.order.findMany({
       where: { id: { in: orderIds } },
     });
+    this.logger.log('Orders from db', orders.length);
     if (!orders || !orders.length) {
       return this.logger.warn(
         `No order found for booking, searching for orderIds ${orderIds}`,
       );
     }
-    this.logger.log('Orders from db', orders.length);
+    const bookedOrInBookingQueueOrders = [],
+      notBookedOrders = [];
+    for (const order of orders) {
+      if (
+        order.status === OrderStatus.booked
+      ) {
+        bookedOrInBookingQueueOrders.push(order);
+      } else {
+        notBookedOrders.push(order);
+      }
+    }
+    this.logger.log(
+      'bookedOrInBookingQueueOrders',
+      bookedOrInBookingQueueOrders,
+      'notBookedOrders',
+      notBookedOrders,
+    );
     const createdBookings = [],
       failedBookings = [];
-    if (hasBulkBooking) {
-      const bookingResponse = await courierService.batchBookParcels(
-        orders,
-        courier,
-      );
-      this.logger.log('booking service response', bookingResponse);
-      for (const booking of bookingResponse) {
-        if (booking.success) {
-          createdBookings.push(booking);
-        } else {
-          failedBookings.push(booking);
+    if (notBookedOrders.length) {
+      if (hasBulkBooking) {
+        const bookingResponse = await courierService.batchBookParcels(
+          notBookedOrders,
+          courier,
+        );
+        this.logger.log('booking service response', bookingResponse);
+        for (const booking of bookingResponse) {
+          if (booking.success) {
+            createdBookings.push(booking);
+          } else {
+            failedBookings.push(booking);
+          }
         }
       }
     }
@@ -99,6 +118,14 @@ export class CreateBookingQueueConsumer extends WorkerHost {
       }));
       await this.createOrderLogs(logs);
     }
+    if (bookedOrInBookingQueueOrders.length) {
+      const logs = bookedOrInBookingQueueOrders.map((order) => ({
+        event: `user action of booking order stopped because order is already booked or in booking queue. Tried to book with ${courier?.courier} using account ${courier?.name}`,
+        userId: user?.id,
+        orderId: order?.id,
+      }));
+      await this.createOrderLogs(logs);
+    }
   }
 
   private async createBooking(orderBookings: any[]) {
@@ -110,6 +137,7 @@ export class CreateBookingQueueConsumer extends WorkerHost {
         courierServiceCompany: booking?.courierAccount?.courier,
         status: OrderStatus.booked,
       })),
+      skipDuplicates: true,
     });
   }
 
