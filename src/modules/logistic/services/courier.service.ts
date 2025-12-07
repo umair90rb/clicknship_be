@@ -1,6 +1,6 @@
 import { PrismaClient as PrismaTenantClient } from '@/prisma/tenant/client';
 import { TENANT_CONNECTION_PROVIDER } from '@/src/constants/common';
-import { BadRequestException, Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 import { RequestUser } from '@/src/types/auth';
 import {
   CreateCourierIntegrationDto,

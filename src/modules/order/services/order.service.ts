@@ -39,7 +39,6 @@ export class OrderService {
     items: true,
     address: true,
     payments: true,
-    delivery: true,
     customer: true,
     channel: true,
     comments: {
@@ -60,6 +59,7 @@ export class OrderService {
         user: { select: { name: true, id: true } },
       },
     },
+    delivery: { select: { cn: true, status: true, trackedAt: true, tracking: true } },
   };
 
   async list(body: ListOrdersBodyDto) {
@@ -262,11 +262,6 @@ export class OrderService {
 
   async update(user: RequestUser, orderId: number, updateDto: UpdateOrderDto) {
     const order = await this.isOrderExist(orderId);
-
-    if (!order) {
-      throw new NotFoundException('Order not found');
-    }
-
     // TODO: how to handle this -> add a middleware that add user permisions in request and then pick permission from user obj
     // check if user has permission to "update-confirmed-order" then allow otherwise throw forbidden exception
     if (order.status === OrderStatus.confirmed && user.id !== order.userId) {
@@ -453,8 +448,6 @@ export class OrderService {
 
   async delete(user: RequestUser, orderId: number) {
     const order = await this.isOrderExist(orderId);
-    if (!order) throw new NotFoundException('Order not found');
-
     const deleted = await this.prismaTenant.order.update({
       where: { id: orderId },
       data: { deletedAt: new Date() },
@@ -467,10 +460,24 @@ export class OrderService {
     return deleted;
   }
 
-  isOrderExist(id: number) {
-    return this.prismaTenant.order.findUnique({
+  async getOrderDeliver(orderId: number) {
+    const orderDeliver = await this.prismaTenant.orderDelivery.findFirst({
+      where: { orderId },
+    });
+    if (!orderDeliver) {
+      throw new NotFoundException('Order delivery not found');
+    }
+    return orderDeliver;
+  }
+
+  async isOrderExist(id: number) {
+    const order = await this.prismaTenant.order.findUnique({
       where: { id, deletedAt: null },
       select: { userId: true, status: true },
     });
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+    return order;
   }
 }

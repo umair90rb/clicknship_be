@@ -10,7 +10,8 @@ export enum OrderStatus {
   cancel = 'cancel',
   inBookingQueue = 'in booking queue',
   booked = 'booked',
-  bookingError = 'booking error'
+  bookingError = 'booking error',
+  bookingCanceled = 'booking canceled'
 }
 
 export enum OrderEvents {
@@ -24,4 +25,7 @@ export enum OrderEvents {
   itemUpdated = 'item updated',
   itemDeleted = 'item deleted',
   deleted = 'order deleted',
+  booked = 'order booked with {courier} using account {account}',
+  bookingFailed = 'order booking failed with {courier} using account {account}, error -> {error}',
+  bookingStopped = 'user action of booking order stopped because order is already booked or in booking queue. Tried to book with {courier} using account {account}',
 }

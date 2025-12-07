@@ -10,7 +10,7 @@ import {
 import { RequestWithTenantAndUser } from '@/src/types/auth';
 import { AuthenticationGuard } from '@/src/guards/authentication.guard';
 import { BookingService } from '../services/booking.service';
-import { CreateBookingDto } from '../dtos/booking.dto';
+import { CancelBookingDto, CreateBookingDto } from '../dtos/booking.dto';
 
 @Controller('booking')
 @UseGuards(AuthenticationGuard)
@@ -33,9 +33,9 @@ export class BookingController {
   @Post('cancel')
   async cancel(
     @Req() req: RequestWithTenantAndUser,
-    @Body('cns') cns: string[],
+    @Body() body: CancelBookingDto,
   ) {
-    return this.bookingService.cancel(cns, req);
+    return this.bookingService.cancel(body.orderIds, req);
   }
 
   @Post('download-receipt')

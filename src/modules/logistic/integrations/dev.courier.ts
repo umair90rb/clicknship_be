@@ -76,10 +76,10 @@ export default class DevCourier implements ICourierService {
    */
   async cancelBooking(trackingNumber: string | string[], courierAccount: any) {
     try {
+      await this.wait();
       return {
         success: true,
         message: 'Booking canceled!',
-        error: null,
       };
     } catch (err) {
       this.logger.error(
@@ -88,8 +88,7 @@ export default class DevCourier implements ICourierService {
       );
       return {
         success: false,
-        message: 'Error in booking cancellation!',
-        error: err,
+        message: err,
       };
     }
   }

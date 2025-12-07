@@ -10,3 +10,10 @@ export class CreateBookingDto {
   @IsNotEmpty()
   courierId: number;
 }
+
+export class CancelBookingDto {
+  @IsArray()
+  @IsNumber({}, { each: true })
+  @ArrayMinSize(1)
+  orderIds: number[];
+}
