@@ -10,12 +10,14 @@ import { OrderModule } from './modules/order/order.module';
 import { WebhookModule } from './modules/webhook/webhook.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { LogisticModule } from './modules/logistic/logistic.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     JwtModule.register({}),
     ConfigModule.forRoot(),
     BullModule.forRoot({ connection: { url: process.env.REDIS_URL } }),
+    ScheduleModule.forRoot(),
     AuthModule,
     OnboardModule,
     OrderModule,

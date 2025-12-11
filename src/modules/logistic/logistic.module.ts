@@ -8,14 +8,16 @@ import { CourierService } from './services/courier.service';
 import { PrismaMasterClient } from '@/src/services/master-connection.service';
 import { CourierFactory } from './factories/courier.factory';
 import { AVAILABLE_COURIER_INTEGRATION_LIST } from './constants/available-courier';
-import { TcsCourier } from './integrations/tcs.courier';
-import DevCourier from './integrations/dev.courier';
 import { BookingController } from './controllers/booking.controller';
 import { BookingService } from './services/booking.service';
 import { BullModule } from '@nestjs/bullmq';
 import { CREATE_BOOKING_QUEUE } from './constants';
 import { OrderModule } from '../order/order.module';
-import { CreateBookingQueueConsumer } from './workers/booking.worker';
+import { CreateBookingQueueConsumer } from './processors/booking.processor';
+import DevCourier from './integrations/dev.courier';
+import { OrderTrackingJob } from './jobs/order-tracking.job';
+// import TcsCourier from './integrations/tcs.courier';
+// import LeopardCourier from './integrations/leopard.courier';
 
 @Module({
   imports: [
@@ -37,15 +39,16 @@ import { CreateBookingQueueConsumer } from './workers/booking.worker';
       provide: AVAILABLE_COURIER_INTEGRATION_LIST.dev.providerName,
       useClass: DevCourier,
     },
-    {
-      provide: AVAILABLE_COURIER_INTEGRATION_LIST.tcs.providerName,
-      useClass: TcsCourier,
-    },
-    {
-      provide: AVAILABLE_COURIER_INTEGRATION_LIST.leopard.providerName,
-      useClass: TcsCourier,
-    },
-    CreateBookingQueueConsumer
+    // {
+    //   provide: AVAILABLE_COURIER_INTEGRATION_LIST.tcs.providerName,
+    //   useClass: TcsCourier,
+    // },
+    // {
+    //   provide: AVAILABLE_COURIER_INTEGRATION_LIST.leopard.providerName,
+    //   useClass: LeopardCourier,
+    // },
+    CreateBookingQueueConsumer,
+    OrderTrackingJob
   ],
 
   exports: [CourierFactory],

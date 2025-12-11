@@ -17,6 +17,18 @@ model Tenant {
   @@map("tenants")
 }
 
+model TenantOrderTracking {
+  trackingStartedAt DateTime @default(now()) @map("tracking_started_at")
+  trackingEndedAt DateTime? @map("tracking_ended_at")
+  noOfErrors Int @map("no_of_errors")
+  noOfOrders Int @map("no_of_orders")
+  tenantId    String  @id @unique @map("tenant_id")
+  tenant  Tenant  @relation(fields: [tenantId], references: [tenantId])
+
+  @@map("tenant_order_tracking")
+}
+
+
 model City {
   id                  Int                 @id() @default(autoincrement())
   city                String              @unique()

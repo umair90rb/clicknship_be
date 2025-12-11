@@ -8,17 +8,16 @@ export default class DevCourier implements ICourierService {
   private readonly baseUrl = 'localhost';
   private readonly metadata = {
     name: 'DevCourier',
-    allowBulkBooking: false
-  }
+    allowBulkBooking: false,
+  };
 
-  get getMetadata(){
+  get getMetadata() {
     return this.metadata;
   }
 
   private wait(ms = 1000) {
-    return new Promise((resolve) => setTimeout(resolve, ms))
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
-
 
   async bookParcel(order: any, courierAccount: any) {
     try {
@@ -28,7 +27,7 @@ export default class DevCourier implements ICourierService {
         order,
         success: true,
         cn: Math.random().toString().split('.')[1],
-        error: null,
+        message: null,
       };
     } catch (err) {
       this.logger.error(
@@ -37,8 +36,10 @@ export default class DevCourier implements ICourierService {
       );
       return {
         success: false,
+        message: err,
+        courierAccount,
+        order,
         cn: null,
-        error: err,
       };
     }
   }
@@ -46,22 +47,25 @@ export default class DevCourier implements ICourierService {
   async batchBookParcels(orders, courierAccount) {
     try {
       await this.wait(2000);
-      return orders.map(order => ({
-        courierAccount,
-        order,
+      return {
         success: true,
-        cn: Math.random().toString().split('.')[1],
-        error: null,
-      }));
+        courierAccount,
+        message: 'order batch booking successfully',
+        booking: orders.map((order) => ({
+          order,
+          cn: Math.random().toString().split('.')[1],
+        })),
+      };
     } catch (err) {
       this.logger.error(
         'bookParcel error',
         err?.response?.data ?? err?.message ?? err,
       );
       return {
-        success: false,
-        cn: null,
-        error: err,
+        success: true,
+        courierAccount,
+        message: 'order batch booking successfully',
+        booking: [],
       };
     }
   }
@@ -69,7 +73,38 @@ export default class DevCourier implements ICourierService {
   async checkParcelStatus(
     trackingNumber: string | string[],
     courierAccount?: any,
-  ) {}
+  ) {
+    try {
+      await this.wait(2000);
+      return {
+        success: true,
+        courierAccount,
+        cn: trackingNumber,
+        tracking: [
+          { status: 'Delivered', date: new Date(), reason: 'None', receiver: "string" },
+          { status: 'Out for Delivery', date: new Date(), reason: 'None', receiver: "string" },
+          { status: 'Reached', date: new Date(), reason: 'None', receiver: "string" },
+          { status: 'In Transit', date: new Date(), reason: 'None', receiver: "string" },
+          { status: 'Warehouse', date: new Date(), reason: 'None', receiver: "string" },
+          { status: 'Dispatched', date: new Date(), reason: 'None', receiver: "string" },
+          { status: 'Booked', date: new Date(), reason: 'None', receiver: "string" },
+        ],
+        message: 'Order tracked successfully',
+      };
+    } catch (err) {
+      this.logger.error(
+        'bookParcel error',
+        err?.response?.data ?? err?.message ?? err,
+      );
+      return {
+        success: false,
+        courierAccount,
+        cn: trackingNumber,
+        tracking: [],
+        message: err.message || 'Order tracking failed',
+      };
+    }
+  }
 
   /**
    * Cancel booking - quickCancel
@@ -78,6 +113,8 @@ export default class DevCourier implements ICourierService {
     try {
       await this.wait();
       return {
+        cn: trackingNumber,
+        courierAccount,
         success: true,
         message: 'Booking canceled!',
       };
@@ -87,6 +124,8 @@ export default class DevCourier implements ICourierService {
         err?.response?.data ?? err?.message ?? err,
       );
       return {
+        cn: trackingNumber,
+        courierAccount,
         success: false,
         message: err,
       };

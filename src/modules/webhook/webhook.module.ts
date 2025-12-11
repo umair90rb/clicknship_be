@@ -4,7 +4,7 @@ import { ShopifyService } from './shopify.service';
 import { tenantConnectionProvider } from '@/src/providers/tenant-connection.provider';
 import { BullModule } from '@nestjs/bullmq';
 import { WEBHOOK_ORDER_CREATE_QUEUE } from '@/src/constants/common';
-import { WebhookOrderCreateQueueConsumer } from './order.worker';
+import { WebhookOrderCreateQueueConsumer } from './order.processor';
 
 @Module({
   imports: [

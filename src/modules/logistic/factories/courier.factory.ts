@@ -8,12 +8,12 @@ import { ICourierService } from '../types/courier.interface';
 @Injectable()
 export class CourierFactory {
   constructor(
-    @Inject(AVAILABLE_COURIER_INTEGRATION_LIST.tcs.providerName)
-    private readonly tcs: ICourierService,
-    @Inject(AVAILABLE_COURIER_INTEGRATION_LIST.leopard.providerName)
-    private readonly leopard: ICourierService,
     @Inject(AVAILABLE_COURIER_INTEGRATION_LIST.dev.providerName)
     private readonly dev: ICourierService,
+    // @Inject(AVAILABLE_COURIER_INTEGRATION_LIST.tcs.providerName)
+    // private readonly tcs: ICourierService,
+    // @Inject(AVAILABLE_COURIER_INTEGRATION_LIST.leopard.providerName)
+    // private readonly leopard: ICourierService,
     // @Inject(AVAILABLE_COURIER_INTEGRATION_LIST.postex.providerName)
     // private readonly postex: ICourierService,
     // @Inject(AVAILABLE_COURIER_INTEGRATION_LIST.digi.providerName)
@@ -38,8 +38,8 @@ export class CourierFactory {
       return this.dev
     }
     const map = {
-      tcs: this.tcs,
-      leopard: this.leopard,
+      // tcs: this.tcs,
+      // leopard: this.leopard,
       // postex: this.postex,
       // digi: this.digi,
       // mnp: this.mnp,
