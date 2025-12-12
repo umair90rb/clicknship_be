@@ -11,7 +11,7 @@ export enum OrderStatus {
   inBookingQueue = 'in booking queue',
   booked = 'booked',
   bookingError = 'booking error',
-  bookingCanceled = 'booking canceled'
+  bookingCanceled = 'booking canceled',
 }
 
 export enum OrderEvents {

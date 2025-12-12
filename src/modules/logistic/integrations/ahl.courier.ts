@@ -23,10 +23,10 @@ export default class AHLCourier implements ICourierService {
   private readonly baseUrl = 'https://admin.ahlogistic.pk/api/';
   private readonly metadata = {
     name: 'AHLCourier',
-    allowBulkBooking: false
-  }
+    allowBulkBooking: false,
+  };
 
-  get getMetadata(){
+  get getMetadata() {
     return this.metadata;
   }
 
@@ -34,30 +34,53 @@ export default class AHLCourier implements ICourierService {
 
   // ---------------- Helpers ----------------
 
-  private async post<T = any>(path: string, body: any = {}, token?: string, config: any = {}): Promise<AxiosResponse<T>> {
+  private async post<T = any>(
+    path: string,
+    body: any = {},
+    token?: string,
+    config: any = {},
+  ): Promise<AxiosResponse<T>> {
     const url = `${this.baseUrl}${path}`;
     try {
-      const headers: any = { 'Content-Type': 'application/json', Accept: '*/*' };
+      const headers: any = {
+        'Content-Type': 'application/json',
+        Accept: '*/*',
+      };
       if (token) headers['Authorization'] = `Bearer ${token}`;
       this.logger.debug(`POST ${url} body=${JSON.stringify(body)}`);
-      const resp = await firstValueFrom(this.http.post<T>(url, body, { headers, ...config }));
+      const resp = await firstValueFrom(
+        this.http.post<T>(url, body, { headers, ...config }),
+      );
       return resp;
     } catch (err) {
-      this.logger.error(`POST ${url} failed`, err?.response?.data ?? err?.message ?? err);
+      this.logger.error(
+        `POST ${url} failed`,
+        err?.response?.data ?? err?.message ?? err,
+      );
       throw err;
     }
   }
 
-  private async get<T = any>(path: string, token?: string, params: any = {}, config: any = {}): Promise<AxiosResponse<T>> {
+  private async get<T = any>(
+    path: string,
+    token?: string,
+    params: any = {},
+    config: any = {},
+  ): Promise<AxiosResponse<T>> {
     const url = `${this.baseUrl}${path}`;
     try {
       const headers: any = { Accept: '*/*' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
       this.logger.debug(`GET ${url} params=${JSON.stringify(params)}`);
-      const resp = await firstValueFrom(this.http.get<T>(url, { headers, params, ...config }));
+      const resp = await firstValueFrom(
+        this.http.get<T>(url, { headers, params, ...config }),
+      );
       return resp;
     } catch (err) {
-      this.logger.error(`GET ${url} failed`, err?.response?.data ?? err?.message ?? err);
+      this.logger.error(
+        `GET ${url} failed`,
+        err?.response?.data ?? err?.message ?? err,
+      );
       throw err;
     }
   }
@@ -82,7 +105,10 @@ export default class AHLCourier implements ICourierService {
    */
   async auth(credentials?: { email: string; password: string }) {
     try {
-      const body = credentials ?? { email: 'demi@ahl.com', password: 'ahl@1998' };
+      const body = credentials ?? {
+        email: 'demi@ahl.com',
+        password: 'ahl@1998',
+      };
       const resp = await this.post<any>('shopify-vendor-access-token', body);
       const data = resp.data ?? {};
       const { status, message, access_token } = data;
@@ -95,9 +121,17 @@ export default class AHLCourier implements ICourierService {
         raw: data,
       };
     } catch (err) {
-      this.logger.error('auth error', err?.response?.data ?? err?.message ?? err);
+      this.logger.error(
+        'auth error',
+        err?.response?.data ?? err?.message ?? err,
+      );
       const data = err?.response?.data ?? {};
-      return { isSuccess: false, token: null, error: data?.message ?? err?.message, raw: data };
+      return {
+        isSuccess: false,
+        token: null,
+        error: data?.message ?? err?.message,
+        raw: data,
+      };
     }
   }
 
@@ -119,30 +153,60 @@ export default class AHLCourier implements ICourierService {
     try {
       // get token if not provided in deliveryAccount
       if (!token && deliveryAccount?.email && deliveryAccount?.password) {
-        const auth = await this.auth({ email: deliveryAccount.email, password: deliveryAccount.password });
+        const auth = await this.auth({
+          email: deliveryAccount.email,
+          password: deliveryAccount.password,
+        });
         if (auth.isSuccess && auth.token) token = auth.token;
       }
 
       // Build body according to doc fields (skip DB lookups)
       const body: any = {
-        vendor_id: deliveryAccount?.vendor_id ?? deliveryAccount?.vendorId ?? order.vendor_id ?? 1,
-        consignee_phone: order.customer?.phone ? String(order.customer.phone) : order.consignee_phone ?? '',
-        consignee_first_name: order.customer?.first_name ?? order.consignee_first_name ?? '',
-        consignee_last_name: order.customer?.last_name ?? order.consignee_last_name ?? '',
+        vendor_id:
+          deliveryAccount?.vendor_id ??
+          deliveryAccount?.vendorId ??
+          order.vendor_id ??
+          1,
+        consignee_phone: order.customer?.phone
+          ? String(order.customer.phone)
+          : (order.consignee_phone ?? ''),
+        consignee_first_name:
+          order.customer?.first_name ?? order.consignee_first_name ?? '',
+        consignee_last_name:
+          order.customer?.last_name ?? order.consignee_last_name ?? '',
         consignee_email: order.customer?.email ?? order.consignee_email ?? '',
-        consignee_address: order.address?.address1 ?? order.consignee_address ?? '',
-        consignee_country: order.consignee_country ?? order.address?.country_id ?? 166,
-        consignee_state: order.consignee_state ?? order.address?.state_id ?? 2728,
-        consignee_city: order.consignee_city ?? order.address?.city_id ?? order.address?.city ?? null,
-        consignment_origin_city: order.origin_city ?? deliveryAccount?.origin_city ?? null,
-        consignment_order_id: order.order_number ?? order.consignment_order_id ?? `#AHL${Date.now()}`,
+        consignee_address:
+          order.address?.address1 ?? order.consignee_address ?? '',
+        consignee_country:
+          order.consignee_country ?? order.address?.country_id ?? 166,
+        consignee_state:
+          order.consignee_state ?? order.address?.state_id ?? 2728,
+        consignee_city:
+          order.consignee_city ??
+          order.address?.city_id ??
+          order.address?.city ??
+          null,
+        consignment_origin_city:
+          order.origin_city ?? deliveryAccount?.origin_city ?? null,
+        consignment_order_id:
+          order.order_number ??
+          order.consignment_order_id ??
+          `#AHL${Date.now()}`,
         consignment_order_type: order.order_type ?? 1,
         consignment_cod_price: order.total_price ?? order.cod_amount ?? 0,
-        vendor_weight_id: order.vendor_weight_id ?? deliveryAccount?.vendor_weight_id ?? null, // required per doc
+        vendor_weight_id:
+          order.vendor_weight_id ?? deliveryAccount?.vendor_weight_id ?? null, // required per doc
         consignment_packaging: order.consignment_packaging ?? 1,
         consignment_pieces: order.items?.length ?? 1,
-        consignment_pickup_location: order.consignment_pickup_location ?? deliveryAccount?.pickup_location ?? null,
-        consignment_description: order.consignment_description ?? (Array.isArray(order.items) ? order.items.map(i => `${i.name}/${i.quantity}`).join(' - ') : order.consignment_description ?? ''),
+        consignment_pickup_location:
+          order.consignment_pickup_location ??
+          deliveryAccount?.pickup_location ??
+          null,
+        consignment_description:
+          order.consignment_description ??
+          (Array.isArray(order.items)
+            ? order.items.map((i) => `${i.name}/${i.quantity}`).join(' - ')
+            : (order.consignment_description ?? '')),
       };
 
       const resp = await this.post<any>('shopify-order', body, token);
@@ -158,7 +222,10 @@ export default class AHLCourier implements ICourierService {
         raw: data,
       };
     } catch (err) {
-      this.logger.error('bookParcel error', err?.response?.data ?? err?.message ?? err);
+      this.logger.error(
+        'bookParcel error',
+        err?.response?.data ?? err?.message ?? err,
+      );
       const data = err?.response?.data ?? {};
       return {
         cn: null,
@@ -174,15 +241,25 @@ export default class AHLCourier implements ICourierService {
    * Track order by order reference (shopify-order-track)
    * body: { order_reference_no: "#AHL..." }
    */
-  async checkParcelStatus(trackingNumber: string | string[], deliveryAccount: any) {
+  async checkParcelStatus(
+    trackingNumber: string | string[],
+    deliveryAccount: any,
+  ) {
     let token = deliveryAccount?.token ?? deliveryAccount?.access_token;
     try {
       if (!token && deliveryAccount?.email && deliveryAccount?.password) {
-        const auth = await this.auth({ email: deliveryAccount.email, password: deliveryAccount.password });
+        const auth = await this.auth({
+          email: deliveryAccount.email,
+          password: deliveryAccount.password,
+        });
         if (auth.isSuccess && auth.token) token = auth.token;
       }
 
-      const body = { order_reference_no: Array.isArray(trackingNumber) ? trackingNumber[0] : trackingNumber };
+      const body = {
+        order_reference_no: Array.isArray(trackingNumber)
+          ? trackingNumber[0]
+          : trackingNumber,
+      };
       const resp = await this.post<any>('shopify-order-track', body, token);
       const data = resp.data ?? {};
       const normalized = this.normalizeAhlResponse(data);
@@ -192,7 +269,8 @@ export default class AHLCourier implements ICourierService {
         isSuccess: normalized.isSuccess,
         error: normalized.error,
         history: orderTrack?.history ?? [],
-        status: orderTrack?.order_status ?? orderTrack?.order_status?.name ?? null,
+        status:
+          orderTrack?.order_status ?? orderTrack?.order_status?.name ?? null,
         date: null,
         remarks: null,
         data: orderTrack,
@@ -200,7 +278,10 @@ export default class AHLCourier implements ICourierService {
         raw: data,
       };
     } catch (err) {
-      this.logger.error('checkParcelStatus error', err?.response?.data ?? err?.message ?? err);
+      this.logger.error(
+        'checkParcelStatus error',
+        err?.response?.data ?? err?.message ?? err,
+      );
       const data = err?.response?.data ?? {};
       return {
         isSuccess: false,
@@ -224,11 +305,18 @@ export default class AHLCourier implements ICourierService {
     let token = deliveryAccount?.token ?? deliveryAccount?.access_token;
     try {
       if (!token && deliveryAccount?.email && deliveryAccount?.password) {
-        const auth = await this.auth({ email: deliveryAccount.email, password: deliveryAccount.password });
+        const auth = await this.auth({
+          email: deliveryAccount.email,
+          password: deliveryAccount.password,
+        });
         if (auth.isSuccess && auth.token) token = auth.token;
       }
 
-      const body = { order_reference_no: Array.isArray(trackingNumber) ? trackingNumber[0] : trackingNumber };
+      const body = {
+        order_reference_no: Array.isArray(trackingNumber)
+          ? trackingNumber[0]
+          : trackingNumber,
+      };
       const resp = await this.post<any>('shopify-order-cancel', body, token);
       const data = resp.data ?? {};
       const normalized = this.normalizeAhlResponse(data);
@@ -239,7 +327,10 @@ export default class AHLCourier implements ICourierService {
         raw: data,
       };
     } catch (err) {
-      this.logger.error('cancelBooking error', err?.response?.data ?? err?.message ?? err);
+      this.logger.error(
+        'cancelBooking error',
+        err?.response?.data ?? err?.message ?? err,
+      );
       const data = err?.response?.data ?? {};
       return {
         isSuccess: false,
@@ -257,37 +348,63 @@ export default class AHLCourier implements ICourierService {
     let token = deliveryAccount?.token ?? deliveryAccount?.access_token;
     try {
       if (!token && deliveryAccount?.email && deliveryAccount?.password) {
-        const auth = await this.auth({ email: deliveryAccount.email, password: deliveryAccount.password });
+        const auth = await this.auth({
+          email: deliveryAccount.email,
+          password: deliveryAccount.password,
+        });
         if (auth.isSuccess && auth.token) token = auth.token;
       }
       const resp = await this.get<any>('shopify-order-cities', token);
       const data = resp.data ?? {};
       const normalized = this.normalizeAhlResponse(data);
-      return { isSuccess: normalized.isSuccess, error: normalized.error, data: data?.data ?? data, raw: data };
+      return {
+        isSuccess: normalized.isSuccess,
+        error: normalized.error,
+        data: data?.data ?? data,
+        raw: data,
+      };
     } catch (err) {
-      this.logger.error('getAllCities error', err?.response?.data ?? err?.message ?? err);
+      this.logger.error(
+        'getAllCities error',
+        err?.response?.data ?? err?.message ?? err,
+      );
       const data = err?.response?.data ?? {};
-      return { isSuccess: false, error: data?.message ?? err?.message, raw: data };
+      return {
+        isSuccess: false,
+        error: data?.message ?? err?.message,
+        raw: data,
+      };
     }
   }
 
   /**
    * Get invoice (shopify-order-invoice) - body: { order_reference_no }
    */
-  async downloadReceipt(trackingNumber: string | string[], deliveryAccount: any) {
+  async downloadReceipt(
+    trackingNumber: string | string[],
+    deliveryAccount: any,
+  ) {
     // AHL returns a URL inside data on success (per doc), so we return that URL.
     let token = deliveryAccount?.token ?? deliveryAccount?.access_token;
     try {
       if (!token && deliveryAccount?.email && deliveryAccount?.password) {
-        const auth = await this.auth({ email: deliveryAccount.email, password: deliveryAccount.password });
+        const auth = await this.auth({
+          email: deliveryAccount.email,
+          password: deliveryAccount.password,
+        });
         if (auth.isSuccess && auth.token) token = auth.token;
       }
-      const body = { order_reference_no: Array.isArray(trackingNumber) ? trackingNumber[0] : trackingNumber };
+      const body = {
+        order_reference_no: Array.isArray(trackingNumber)
+          ? trackingNumber[0]
+          : trackingNumber,
+      };
       const resp = await this.post<any>('shopify-order-invoice', body, token);
       const data = resp.data ?? {};
       const normalized = this.normalizeAhlResponse(data);
       // doc shows data contains an URL in data (or "data " key). Try standard keys.
-      const invoiceUrl = data?.data ?? data?.data_url ?? data?.order_invoice ?? null;
+      const invoiceUrl =
+        data?.data ?? data?.data_url ?? data?.order_invoice ?? null;
       return {
         isSuccess: normalized.isSuccess,
         error: normalized.error,
@@ -296,9 +413,17 @@ export default class AHLCourier implements ICourierService {
         raw: data,
       };
     } catch (err) {
-      this.logger.error('downloadReceipt (invoice) error', err?.response?.data ?? err?.message ?? err);
+      this.logger.error(
+        'downloadReceipt (invoice) error',
+        err?.response?.data ?? err?.message ?? err,
+      );
       const data = err?.response?.data ?? {};
-      return { isSuccess: false, error: data?.message ?? err?.message, url: null, raw: data };
+      return {
+        isSuccess: false,
+        error: data?.message ?? err?.message,
+        url: null,
+        raw: data,
+      };
     }
   }
 
@@ -309,19 +434,40 @@ export default class AHLCourier implements ICourierService {
     let token = deliveryAccount?.token ?? deliveryAccount?.access_token;
     try {
       if (!token && deliveryAccount?.email && deliveryAccount?.password) {
-        const auth = await this.auth({ email: deliveryAccount.email, password: deliveryAccount.password });
+        const auth = await this.auth({
+          email: deliveryAccount.email,
+          password: deliveryAccount.password,
+        });
         if (auth.isSuccess && auth.token) token = auth.token;
       }
-      const body = { order_reference_no: Array.isArray(trackingNumber) ? trackingNumber[0] : trackingNumber };
+      const body = {
+        order_reference_no: Array.isArray(trackingNumber)
+          ? trackingNumber[0]
+          : trackingNumber,
+      };
       const resp = await this.post<any>('shopify-order-sms-link', body, token);
       const data = resp.data ?? {};
       const normalized = this.normalizeAhlResponse(data);
       const smsUrl = data?.data ?? null;
-      return { isSuccess: normalized.isSuccess, error: normalized.error, url: smsUrl, response: normalized.message, raw: data };
+      return {
+        isSuccess: normalized.isSuccess,
+        error: normalized.error,
+        url: smsUrl,
+        response: normalized.message,
+        raw: data,
+      };
     } catch (err) {
-      this.logger.error('getSmsLink error', err?.response?.data ?? err?.message ?? err);
+      this.logger.error(
+        'getSmsLink error',
+        err?.response?.data ?? err?.message ?? err,
+      );
       const data = err?.response?.data ?? {};
-      return { isSuccess: false, error: data?.message ?? err?.message, url: null, raw: data };
+      return {
+        isSuccess: false,
+        error: data?.message ?? err?.message,
+        url: null,
+        raw: data,
+      };
     }
   }
 
@@ -332,39 +478,82 @@ export default class AHLCourier implements ICourierService {
     let token = deliveryAccount?.token ?? deliveryAccount?.access_token;
     try {
       if (!token && deliveryAccount?.email && deliveryAccount?.password) {
-        const auth = await this.auth({ email: deliveryAccount.email, password: deliveryAccount.password });
+        const auth = await this.auth({
+          email: deliveryAccount.email,
+          password: deliveryAccount.password,
+        });
         if (auth.isSuccess && auth.token) token = auth.token;
       }
       const resp = await this.get<any>('shopify-status-list', token);
       const data = resp.data ?? {};
       const normalized = this.normalizeAhlResponse(data);
-      return { isSuccess: normalized.isSuccess, error: normalized.error, data: data?.data ?? data, response: normalized.message, raw: data };
+      return {
+        isSuccess: normalized.isSuccess,
+        error: normalized.error,
+        data: data?.data ?? data,
+        response: normalized.message,
+        raw: data,
+      };
     } catch (err) {
-      this.logger.error('getStatusList error', err?.response?.data ?? err?.message ?? err);
+      this.logger.error(
+        'getStatusList error',
+        err?.response?.data ?? err?.message ?? err,
+      );
       const data = err?.response?.data ?? {};
-      return { isSuccess: false, error: data?.message ?? err?.message, raw: data };
+      return {
+        isSuccess: false,
+        error: data?.message ?? err?.message,
+        raw: data,
+      };
     }
   }
 
   /**
    * Order amount details (shopify-order-amount-detail) - body: { order_reference_no }
    */
-  async getOrderAmount(trackingNumber: string | string[], deliveryAccount: any) {
+  async getOrderAmount(
+    trackingNumber: string | string[],
+    deliveryAccount: any,
+  ) {
     let token = deliveryAccount?.token ?? deliveryAccount?.access_token;
     try {
       if (!token && deliveryAccount?.email && deliveryAccount?.password) {
-        const auth = await this.auth({ email: deliveryAccount.email, password: deliveryAccount.password });
+        const auth = await this.auth({
+          email: deliveryAccount.email,
+          password: deliveryAccount.password,
+        });
         if (auth.isSuccess && auth.token) token = auth.token;
       }
-      const body = { order_reference_no: Array.isArray(trackingNumber) ? trackingNumber[0] : trackingNumber };
-      const resp = await this.post<any>('shopify-order-amount-detail', body, token);
+      const body = {
+        order_reference_no: Array.isArray(trackingNumber)
+          ? trackingNumber[0]
+          : trackingNumber,
+      };
+      const resp = await this.post<any>(
+        'shopify-order-amount-detail',
+        body,
+        token,
+      );
       const data = resp.data ?? {};
       const normalized = this.normalizeAhlResponse(data);
-      return { isSuccess: normalized.isSuccess, error: normalized.error, data: data?.data ?? data, response: normalized.message, raw: data };
+      return {
+        isSuccess: normalized.isSuccess,
+        error: normalized.error,
+        data: data?.data ?? data,
+        response: normalized.message,
+        raw: data,
+      };
     } catch (err) {
-      this.logger.error('getOrderAmount error', err?.response?.data ?? err?.message ?? err);
+      this.logger.error(
+        'getOrderAmount error',
+        err?.response?.data ?? err?.message ?? err,
+      );
       const data = err?.response?.data ?? {};
-      return { isSuccess: false, error: data?.message ?? err?.message, raw: data };
+      return {
+        isSuccess: false,
+        error: data?.message ?? err?.message,
+        raw: data,
+      };
     }
   }
 
@@ -372,22 +561,45 @@ export default class AHLCourier implements ICourierService {
    * Detail order tracking (shopify-tracking-api) - body: { order_reference_no }
    * Returns summary of milestones (picked up, dispatched, delivered etc.)
    */
-  async detailTracking(trackingNumber: string | string[], deliveryAccount: any) {
+  async detailTracking(
+    trackingNumber: string | string[],
+    deliveryAccount: any,
+  ) {
     let token = deliveryAccount?.token ?? deliveryAccount?.access_token;
     try {
       if (!token && deliveryAccount?.email && deliveryAccount?.password) {
-        const auth = await this.auth({ email: deliveryAccount.email, password: deliveryAccount.password });
+        const auth = await this.auth({
+          email: deliveryAccount.email,
+          password: deliveryAccount.password,
+        });
         if (auth.isSuccess && auth.token) token = auth.token;
       }
-      const body = { order_reference_no: Array.isArray(trackingNumber) ? trackingNumber[0] : trackingNumber };
+      const body = {
+        order_reference_no: Array.isArray(trackingNumber)
+          ? trackingNumber[0]
+          : trackingNumber,
+      };
       const resp = await this.post<any>('shopify-tracking-api', body, token);
       const data = resp.data ?? {};
       const normalized = this.normalizeAhlResponse(data);
-      return { isSuccess: normalized.isSuccess, error: normalized.error, data: data?.data ?? data, response: normalized.message, raw: data };
+      return {
+        isSuccess: normalized.isSuccess,
+        error: normalized.error,
+        data: data?.data ?? data,
+        response: normalized.message,
+        raw: data,
+      };
     } catch (err) {
-      this.logger.error('detailTracking error', err?.response?.data ?? err?.message ?? err);
+      this.logger.error(
+        'detailTracking error',
+        err?.response?.data ?? err?.message ?? err,
+      );
       const data = err?.response?.data ?? {};
-      return { isSuccess: false, error: data?.message ?? err?.message, raw: data };
+      return {
+        isSuccess: false,
+        error: data?.message ?? err?.message,
+        raw: data,
+      };
     }
   }
 
@@ -395,23 +607,52 @@ export default class AHLCourier implements ICourierService {
    * More detail order tracking (shopify-detail-tracking-api) - body: { order_reference_no }
    * Returns tracking_history array
    */
-  async moreDetailTracking(trackingNumber: string | string[], deliveryAccount: any) {
+  async moreDetailTracking(
+    trackingNumber: string | string[],
+    deliveryAccount: any,
+  ) {
     let token = deliveryAccount?.token ?? deliveryAccount?.access_token;
     try {
       if (!token && deliveryAccount?.email && deliveryAccount?.password) {
-        const auth = await this.auth({ email: deliveryAccount.email, password: deliveryAccount.password });
+        const auth = await this.auth({
+          email: deliveryAccount.email,
+          password: deliveryAccount.password,
+        });
         if (auth.isSuccess && auth.token) token = auth.token;
       }
-      const body = { order_reference_no: Array.isArray(trackingNumber) ? trackingNumber[0] : trackingNumber };
-      const resp = await this.post<any>('shopify-detail-tracking-api', body, token);
+      const body = {
+        order_reference_no: Array.isArray(trackingNumber)
+          ? trackingNumber[0]
+          : trackingNumber,
+      };
+      const resp = await this.post<any>(
+        'shopify-detail-tracking-api',
+        body,
+        token,
+      );
       const data = resp.data ?? {};
       const normalized = this.normalizeAhlResponse(data);
-      const tracking_history = data?.tracking_history ?? data?.data?.tracking_history ?? [];
-      return { isSuccess: normalized.isSuccess, error: normalized.error, tracking_history, response: normalized.message, raw: data };
+      const tracking_history =
+        data?.tracking_history ?? data?.data?.tracking_history ?? [];
+      return {
+        isSuccess: normalized.isSuccess,
+        error: normalized.error,
+        tracking_history,
+        response: normalized.message,
+        raw: data,
+      };
     } catch (err) {
-      this.logger.error('moreDetailTracking error', err?.response?.data ?? err?.message ?? err);
+      this.logger.error(
+        'moreDetailTracking error',
+        err?.response?.data ?? err?.message ?? err,
+      );
       const data = err?.response?.data ?? {};
-      return { isSuccess: false, error: data?.message ?? err?.message, tracking_history: [], raw: data };
+      return {
+        isSuccess: false,
+        error: data?.message ?? err?.message,
+        tracking_history: [],
+        raw: data,
+      };
     }
   }
 
@@ -419,43 +660,65 @@ export default class AHLCourier implements ICourierService {
    * Shipper advise (shopify-shipper-advise)
    * body: { order_reference_no, advise }
    */
-  async shipperAdviceList(payload: { order_reference_no: string; advise?: string }, deliveryAccount: any) {
+  async shipperAdviceList(
+    payload: { order_reference_no: string; advise?: string },
+    deliveryAccount: any,
+  ) {
     let token = deliveryAccount?.token ?? deliveryAccount?.access_token;
     try {
       if (!token && deliveryAccount?.email && deliveryAccount?.password) {
-        const auth = await this.auth({ email: deliveryAccount.email, password: deliveryAccount.password });
+        const auth = await this.auth({
+          email: deliveryAccount.email,
+          password: deliveryAccount.password,
+        });
         if (auth.isSuccess && auth.token) token = auth.token;
       }
-      const resp = await this.post<any>('shopify-shipper-advise', payload, token);
+      const resp = await this.post<any>(
+        'shopify-shipper-advise',
+        payload,
+        token,
+      );
       const data = resp.data ?? {};
       const normalized = this.normalizeAhlResponse(data);
-      return { isSuccess: normalized.isSuccess, error: normalized.error, response: normalized.message, raw: data };
+      return {
+        isSuccess: normalized.isSuccess,
+        error: normalized.error,
+        response: normalized.message,
+        raw: data,
+      };
     } catch (err) {
-      this.logger.error('shipperAdviceList error', err?.response?.data ?? err?.message ?? err);
+      this.logger.error(
+        'shipperAdviceList error',
+        err?.response?.data ?? err?.message ?? err,
+      );
       const data = err?.response?.data ?? {};
-      return { isSuccess: false, error: data?.message ?? err?.message, raw: data };
+      return {
+        isSuccess: false,
+        error: data?.message ?? err?.message,
+        raw: data,
+      };
     }
   }
 
-//   getMetadata() {
-//     return {
-//       baseUrl: this.baseUrl,
-//       implemented: [
-//         'auth',
-//         'bookParcel',
-//         'checkParcelStatus',
-//         'cancelBooking',
-//         'getAllCities',
-//         'downloadReceipt',
-//         'getSmsLink',
-//         'getStatusList',
-//         'getOrderAmount',
-//         'detailTracking',
-//         'moreDetailTracking',
-//         'shipperAdviceList',
-//         'batchBookPacket',
-//       ],
-//       notes: 'Follow AHL API - Updated.pdf for required fields (vendor_weight_id required for booking).',
-//     };
-//   }
+  //   getMetadata() {
+  //     return {
+  //       baseUrl: this.baseUrl,
+  //       implemented: [
+  //         'auth',
+  //         'bookParcel',
+  //         'checkParcelStatus',
+  //         'cancelBooking',
+  //         'getAllCities',
+  //         'downloadReceipt',
+  //         'getSmsLink',
+  //         'getStatusList',
+  //         'getOrderAmount',
+  //         'detailTracking',
+  //         'moreDetailTracking',
+  //         'shipperAdviceList',
+  //         'batchBookPacket',
+  //       ],
+  //       notes: 'Follow AHL API - Updated.pdf for required fields (vendor_weight_id required for booking).',
+  //     };
+  //   }
 }

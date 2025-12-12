@@ -11,7 +11,7 @@ import { AVAILABLE_COURIER_INTEGRATION_LIST } from './constants/available-courie
 import { BookingController } from './controllers/booking.controller';
 import { BookingService } from './services/booking.service';
 import { BullModule } from '@nestjs/bullmq';
-import { CREATE_BOOKING_QUEUE } from './constants';
+import { CREATE_BOOKING_QUEUE, ORDER_TRACKING_QUEUE } from './constants';
 import { OrderModule } from '../order/order.module';
 import { CreateBookingQueueConsumer } from './processors/booking.processor';
 import DevCourier from './integrations/dev.courier';
@@ -23,9 +23,14 @@ import { OrderTrackingJob } from './jobs/order-tracking.job';
   imports: [
     AuthModule,
     OrderModule,
-    BullModule.registerQueue({
-      name: CREATE_BOOKING_QUEUE,
-    }),
+    BullModule.registerQueue(
+      {
+        name: CREATE_BOOKING_QUEUE,
+      },
+      {
+        name: ORDER_TRACKING_QUEUE,
+      },
+    ),
   ],
   controllers: [CityController, CourierController, BookingController],
   providers: [
@@ -48,7 +53,7 @@ import { OrderTrackingJob } from './jobs/order-tracking.job';
     //   useClass: LeopardCourier,
     // },
     CreateBookingQueueConsumer,
-    OrderTrackingJob
+    OrderTrackingJob,
   ],
 
   exports: [CourierFactory],

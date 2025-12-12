@@ -26,10 +26,10 @@ export class CallCourier implements ICourierService {
   private readonly baseUrl: string;
   private readonly metadata = {
     name: 'DaewooCourier',
-    allowBulkBooking: false
-  }
+    allowBulkBooking: false,
+  };
 
-  get getMetadata(){
+  get getMetadata() {
     return this.metadata;
   }
   constructor(
@@ -95,9 +95,7 @@ export class CallCourier implements ICourierService {
     // Build query parameters based on API doc and legacy JS
     try {
       const loginId =
-        courierAccount.key ||
-        courierAccount.loginId ||
-        courierAccount.loginID;
+        courierAccount.key || courierAccount.loginId || courierAccount.loginID;
       const consigneeName =
         `${order.customer?.first_name || ''} ${order.customer?.last_name || ''}`.trim();
       const consigneeRefNo = order.order_number ?? '';
@@ -106,8 +104,7 @@ export class CallCourier implements ICourierService {
         : '';
       const address = order.address?.address1 ?? '';
       // origin and service type should be provided by courierAccount or order
-      const origin =
-        courierAccount.origin || courierAccount.branch || 'Origin';
+      const origin = courierAccount.origin || courierAccount.branch || 'Origin';
       const destCityId =
         order.destination_city ||
         order.address?.city_id ||
@@ -149,9 +146,7 @@ export class CallCourier implements ICourierService {
       const shipperAddress =
         courierAccount.shipper_address || courierAccount.shipperAddress || '';
       const shipperLandLineNo =
-        courierAccount.shipper_landline ||
-        courierAccount.shipperLandLine ||
-        '';
+        courierAccount.shipper_landline || courierAccount.shipperLandLine || '';
       const shipperEmail =
         courierAccount.shipper_email || courierAccount.shipperEmail || '';
 
@@ -452,10 +447,7 @@ export class CallCourier implements ICourierService {
     }
   }
 
-  async getBookingDetail(
-    trackNumber: string | string[],
-    courierAccount?: any,
-  ) {
+  async getBookingDetail(trackNumber: string | string[], courierAccount?: any) {
     try {
       const track_number = Array.isArray(trackNumber)
         ? trackNumber.join(',')

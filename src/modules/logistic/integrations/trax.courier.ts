@@ -16,12 +16,12 @@ export default class TraxCourier implements ICourierService {
   private readonly logger = new Logger(TraxCourier.name);
   private readonly baseUrl = 'https://sonic.pk/api/';
 
-private readonly metadata = {
+  private readonly metadata = {
     name: 'TraxCourier',
-    allowBulkBooking: false
-  }
+    allowBulkBooking: false,
+  };
 
-  get getMetadata(){
+  get getMetadata() {
     return this.metadata;
   }
 
@@ -256,10 +256,7 @@ private readonly metadata = {
    * Cancel booking
    * POST /shipment/cancel { tracking_number }
    */
-  async cancelBooking(
-    trackingNumber: string | string[],
-    courierAccount?: any,
-  ) {
+  async cancelBooking(trackingNumber: string | string[], courierAccount?: any) {
     try {
       const body = {
         tracking_number: Array.isArray(trackingNumber)

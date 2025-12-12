@@ -17,8 +17,8 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "prisma:format": "npx prisma format --schema prisma/master/schema.prisma && npx prisma format --schema prisma/tenant/schema/ ",
-    "migrate:master": "npx prisma migrate dev --schema prisma/master/schema.prisma",
     "generate": "npx prisma generate --schema prisma/master/schema.prisma && npx prisma generate --schema prisma/tenant/schema/ ",
+    "migrate:master": "npx prisma migrate dev --schema prisma/master/schema.prisma",
     "create:migration": "npx prisma migrate dev --create-only --schema prisma/tenant/schema/",
     "migrate:tenants": "./src/scripts/migrate.sh",
     "migrate": "npm run generate && npm run create:migration && npm run migrate:tenants",
@@ -87,8 +87,5 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
-  },
-  "prisma": {
-    "schema": "src/prisma/schema.prisma"
   }
 }

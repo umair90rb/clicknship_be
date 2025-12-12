@@ -12,10 +12,7 @@ interface BookParcelResponse {
 
 export interface IBaseCourierService {
   get getMetadata(): Metadata;
-  bookParcel(
-    orderDetails: any,
-    courierAccount: any,
-  ): Promise<any>;
+  bookParcel(orderDetails: any, courierAccount: any): Promise<any>;
   cancelBooking(cn: string, courierAccount: any): Promise<any>;
   checkParcelStatus(cn: string, courierAccount: any): Promise<any>;
   downloadReceipt(cns: string[], courierAccount: any): Promise<any>;

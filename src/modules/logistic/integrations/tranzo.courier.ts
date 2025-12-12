@@ -34,10 +34,10 @@ export default class TranzoCourier implements ICourierService {
   private readonly baseUrl = 'https://api-integration.tranzo.pk/api/custom/v1';
   private readonly metadata = {
     name: 'TranzoCourier',
-    allowBulkBooking: false
-  }
+    allowBulkBooking: false,
+  };
 
-  get getMetadata(){
+  get getMetadata() {
     return this.metadata;
   }
 
@@ -52,48 +52,88 @@ export default class TranzoCourier implements ICourierService {
     return `${this.baseUrl}/${path}`;
   }
 
-  private async get<T = any>(path: string, params?: any, headers?: any): Promise<AxiosResponse<T>> {
+  private async get<T = any>(
+    path: string,
+    params?: any,
+    headers?: any,
+  ): Promise<AxiosResponse<T>> {
     const url = this.buildUrl(path);
     try {
       this.logger.debug(`GET ${url} params=${JSON.stringify(params)}`);
-      const resp = await firstValueFrom(this.http.get<T>(url, { params, headers }));
+      const resp = await firstValueFrom(
+        this.http.get<T>(url, { params, headers }),
+      );
       return resp;
     } catch (err) {
-      this.logger.error(`GET ${url} failed`, err?.response?.data ?? err?.message ?? err);
+      this.logger.error(
+        `GET ${url} failed`,
+        err?.response?.data ?? err?.message ?? err,
+      );
       throw err;
     }
   }
 
-  private async post<T = any>(path: string, body?: any, headers?: any, config?: any): Promise<AxiosResponse<T>> {
+  private async post<T = any>(
+    path: string,
+    body?: any,
+    headers?: any,
+    config?: any,
+  ): Promise<AxiosResponse<T>> {
     const url = this.buildUrl(path);
     try {
       this.logger.debug(`POST ${url} body=${JSON.stringify(body)}`);
-      const resp = await firstValueFrom(this.http.post<T>(url, body, { headers, ...config }));
+      const resp = await firstValueFrom(
+        this.http.post<T>(url, body, { headers, ...config }),
+      );
       return resp;
     } catch (err) {
-      this.logger.error(`POST ${url} failed`, err?.response?.data ?? err?.message ?? err);
+      this.logger.error(
+        `POST ${url} failed`,
+        err?.response?.data ?? err?.message ?? err,
+      );
       throw err;
     }
   }
 
-  private async put<T = any>(path: string, body?: any, headers?: any, config?: any): Promise<AxiosResponse<T>> {
+  private async put<T = any>(
+    path: string,
+    body?: any,
+    headers?: any,
+    config?: any,
+  ): Promise<AxiosResponse<T>> {
     const url = this.buildUrl(path);
     try {
       this.logger.debug(`PUT ${url} body=${JSON.stringify(body)}`);
-      const resp = await firstValueFrom(this.http.put<T>(url, body, { headers, ...config }));
+      const resp = await firstValueFrom(
+        this.http.put<T>(url, body, { headers, ...config }),
+      );
       return resp;
     } catch (err) {
-      this.logger.error(`PUT ${url} failed`, err?.response?.data ?? err?.message ?? err);
+      this.logger.error(
+        `PUT ${url} failed`,
+        err?.response?.data ?? err?.message ?? err,
+      );
       throw err;
     }
   }
 
-  private normalizeRawSuccessFlag(apiResp: any, successKey = 'status', successWhen = 201): { isSuccess: boolean; raw: any } {
+  private normalizeRawSuccessFlag(
+    apiResp: any,
+    successKey = 'status',
+    successWhen = 201,
+  ): { isSuccess: boolean; raw: any } {
     if (!apiResp) return { isSuccess: false, raw: apiResp };
     // Common Tranzo patterns:
     // - HTTP status 201 for create-order success (we'll sometimes rely on HTTP response.status)
     // - Response may contain `status_code`, `status`, `message`, `detail`, or `tracking_number`
-    return { isSuccess: Boolean(apiResp?.status === successWhen || apiResp?.status_code === successWhen || apiResp?.success === true), raw: apiResp };
+    return {
+      isSuccess: Boolean(
+        apiResp?.status === successWhen ||
+          apiResp?.status_code === successWhen ||
+          apiResp?.success === true,
+      ),
+      raw: apiResp,
+    };
   }
 
   private toError(err: any) {
@@ -115,29 +155,54 @@ export default class TranzoCourier implements ICourierService {
         reference_number: `${order.order_number ?? ''}`,
         order_details: Array.isArray(order.items)
           ? order.items.map((it) => `${it.name}/${it.quantity}`).join('-')
-          : order.order_details ?? order.items?.map((it) => `${it.name}/${it.quantity}`).join('-') ?? '',
-        customer_name: `${order.customer?.first_name ?? ''} ${order.customer?.last_name ?? ''}`.trim(),
-        customer_phone: order.customer?.phone ? `0${String(order.customer.phone).replace(/^0/, '')}` : '',
-        ...(order.customer?.email ? { customer_email: order.customer.email } : {}),
-        delivery_address: `${order.address?.address1 ?? ''} ${order.address?.city ?? ''}`.trim(),
-        special_instructions: order.special_instructions ?? order.address2 ?? 'rush delivery',
-        destination_city: order.destination_city ?? order.destination_city_code ?? null, // you will map this
-        pickup_address_code: deliveryAccount?.dispatch_address ?? deliveryAccount?.pickup_address,
+          : (order.order_details ??
+            order.items?.map((it) => `${it.name}/${it.quantity}`).join('-') ??
+            ''),
+        customer_name:
+          `${order.customer?.first_name ?? ''} ${order.customer?.last_name ?? ''}`.trim(),
+        customer_phone: order.customer?.phone
+          ? `0${String(order.customer.phone).replace(/^0/, '')}`
+          : '',
+        ...(order.customer?.email
+          ? { customer_email: order.customer.email }
+          : {}),
+        delivery_address:
+          `${order.address?.address1 ?? ''} ${order.address?.city ?? ''}`.trim(),
+        special_instructions:
+          order.special_instructions ?? order.address2 ?? 'rush delivery',
+        destination_city:
+          order.destination_city ?? order.destination_city_code ?? null, // you will map this
+        pickup_address_code:
+          deliveryAccount?.dispatch_address ?? deliveryAccount?.pickup_address,
         return_address_code: deliveryAccount?.return_address,
-        ds_shipment_type: deliveryAccount?.client_id ? parseInt(String(deliveryAccount.client_id)) : undefined,
-        store_id: deliveryAccount?.cost_center ? parseInt(String(deliveryAccount.cost_center)) : undefined,
+        ds_shipment_type: deliveryAccount?.client_id
+          ? parseInt(String(deliveryAccount.client_id))
+          : undefined,
+        store_id: deliveryAccount?.cost_center
+          ? parseInt(String(deliveryAccount.cost_center))
+          : undefined,
         cod_amount: order.total_price ?? 0,
         total_items: order.items?.length ?? 1,
         booking_weight: order.weightKg ?? order.weight ?? 0.25,
       };
 
-      const headers = deliveryAccount?.key ? { 'api-token': deliveryAccount.key } : {};
+      const headers = deliveryAccount?.key
+        ? { 'api-token': deliveryAccount.key }
+        : {};
       response = await this.post('/create-order/', body, { ...headers });
       const data = response.data ?? {};
 
       // legacy JS treated HTTP status 201 as success (response.status === 201)
-      const isSuccess = response.status === 201 || data?.status === 201 || data?.status_code === 201 || data?.success === true;
-      const tracking_number = data?.tracking_number ?? data?.tracking_no ?? data?.data?.tracking_number ?? null;
+      const isSuccess =
+        response.status === 201 ||
+        data?.status === 201 ||
+        data?.status_code === 201 ||
+        data?.success === true;
+      const tracking_number =
+        data?.tracking_number ??
+        data?.tracking_no ??
+        data?.data?.tracking_number ??
+        null;
       const detail = data?.detail ?? data?.errors ?? null;
 
       return {
@@ -145,7 +210,9 @@ export default class TranzoCourier implements ICourierService {
         slip: JSON.stringify(data),
         isSuccess: Boolean(isSuccess),
         error: isSuccess ? null : (detail ?? data?.message ?? null),
-        response: isSuccess ? 'Package booked' : data?.message ?? 'Error: Something goes wrong!',
+        response: isSuccess
+          ? 'Package booked'
+          : (data?.message ?? 'Error: Something goes wrong!'),
         raw: data,
       };
     } catch (err) {
@@ -167,13 +234,24 @@ export default class TranzoCourier implements ICourierService {
    * Track order(s) - GET /shopify-detail-tracking-api?tracking_numbers=...
    * Per your request: support multiple tracking numbers and return mapping.
    */
-  async checkParcelStatus(trackingNumber: string | string[] , deliveryAccount?: any): Promise<any> {
+  async checkParcelStatus(
+    trackingNumber: string | string[],
+    deliveryAccount?: any,
+  ): Promise<any> {
     let response: AxiosResponse | undefined;
     try {
-      const tns = Array.isArray(trackingNumber) ? trackingNumber.join(',') : String(trackingNumber);
-      const headers = deliveryAccount?.key ? { 'api-token': deliveryAccount.key } : {};
+      const tns = Array.isArray(trackingNumber)
+        ? trackingNumber.join(',')
+        : String(trackingNumber);
+      const headers = deliveryAccount?.key
+        ? { 'api-token': deliveryAccount.key }
+        : {};
       // endpoint used in legacy JS: /shopify-detail-tracking-api?tracking_numbers=...
-      response = await this.get(`/shopify-detail-tracking-api`, { tracking_numbers: tns }, headers);
+      response = await this.get(
+        `/shopify-detail-tracking-api`,
+        { tracking_numbers: tns },
+        headers,
+      );
       const data = response.data ?? {};
 
       // The API returns an object where keys are tracking_numbers with arrays as values.
@@ -227,7 +305,10 @@ export default class TranzoCourier implements ICourierService {
         raw: data,
       };
     } catch (err) {
-      this.logger.error('checkParcelStatus error', { err: this.toError(err), trackingNumber });
+      this.logger.error('checkParcelStatus error', {
+        err: this.toError(err),
+        trackingNumber,
+      });
       const data = (err as any)?.response?.data ?? null;
       // Try to surface error per-tracking-number if available
       if (data && typeof data === 'object') {
@@ -260,29 +341,44 @@ export default class TranzoCourier implements ICourierService {
   /**
    * Cancel booking - PUT /cancel-order/
    */
-  async cancelBooking(trackingNumber: string | string[], deliveryAccount: any): Promise<any> {
+  async cancelBooking(
+    trackingNumber: string | string[],
+    deliveryAccount: any,
+  ): Promise<any> {
     let response: AxiosResponse | undefined;
     let body: any;
     try {
       body = {
-        tracking_numbers: Array.isArray(trackingNumber) ? trackingNumber : [trackingNumber],
+        tracking_numbers: Array.isArray(trackingNumber)
+          ? trackingNumber
+          : [trackingNumber],
       };
-      const headers = deliveryAccount?.key ? { 'api-token': deliveryAccount.key } : {};
+      const headers = deliveryAccount?.key
+        ? { 'api-token': deliveryAccount.key }
+        : {};
       response = await this.put(`/cancel-order/`, body, { ...headers });
       const data = response.data ?? {};
       // response.data often an array per legacy JS: response.data?.[0] ...
       const first = Array.isArray(data) ? data[0] : data;
-      const status_code = first?.status_code ?? first?.status ?? response.status;
+      const status_code =
+        first?.status_code ?? first?.status ?? response.status;
       const non_field_errors = first?.non_field_errors ?? first?.detail ?? null;
       const message = first?.message ?? first?.detail ?? data?.message ?? null;
       return {
         isSuccess: status_code === 200 || status_code === '200',
-        error: status_code === 200 ? null : non_field_errors ?? message ?? null,
-        response: status_code === 200 ? message ?? 'Canceled' : message ?? 'Error something goes wrong',
+        error:
+          status_code === 200 ? null : (non_field_errors ?? message ?? null),
+        response:
+          status_code === 200
+            ? (message ?? 'Canceled')
+            : (message ?? 'Error something goes wrong'),
         raw: data,
       };
     } catch (err) {
-      this.logger.error('cancelBooking error', { body, err: this.toError(err) });
+      this.logger.error('cancelBooking error', {
+        body,
+        err: this.toError(err),
+      });
       const data = (err as any)?.response?.data ?? null;
       return {
         isSuccess: false,
@@ -297,15 +393,30 @@ export default class TranzoCourier implements ICourierService {
    * Download receipt / invoice (Tranzo may provide public slip endpoints)
    * Attempt to return URL or binary depending on API. Here return URL pattern + raw when unknown.
    */
-  async downloadReceipt(trackingNumber: string | string[], deliveryAccount?: any): Promise<any> {
+  async downloadReceipt(
+    trackingNumber: string | string[],
+    deliveryAccount?: any,
+  ): Promise<any> {
     try {
       // Tranzo JS didn't implement a specific receipt download; we return a best-effort URL pattern.
-      const tn = Array.isArray(trackingNumber) ? trackingNumber[0] : trackingNumber;
+      const tn = Array.isArray(trackingNumber)
+        ? trackingNumber[0]
+        : trackingNumber;
       const publicUrl = `${this.baseUrl}/order/${encodeURIComponent(String(tn))}/print`; // adjust if doc has a specific route
-      return { isSuccess: true, url: publicUrl as any, response: 'Public slip url (verify)', raw: { url: publicUrl } };
+      return {
+        isSuccess: true,
+        url: publicUrl as any,
+        response: 'Public slip url (verify)',
+        raw: { url: publicUrl },
+      };
     } catch (err) {
       this.logger.error('downloadReceipt error', this.toError(err));
-      return { isSuccess: false, error: this.toError(err), response: 'Error fetching receipt', raw: err };
+      return {
+        isSuccess: false,
+        error: this.toError(err),
+        response: 'Error fetching receipt',
+        raw: err,
+      };
     }
   }
 
@@ -316,7 +427,9 @@ export default class TranzoCourier implements ICourierService {
    */
   async getOperationalCities(deliveryAccount?: any): Promise<any> {
     try {
-      const headers = deliveryAccount?.key ? { 'api-token': deliveryAccount.key } : {};
+      const headers = deliveryAccount?.key
+        ? { 'api-token': deliveryAccount.key }
+        : {};
       const resp = await this.get('/get-operational-cities/', {}, headers);
       const data = resp.data ?? {};
       return { isSuccess: true, data: data?.cities ?? data, raw: data };
@@ -332,7 +445,9 @@ export default class TranzoCourier implements ICourierService {
    */
   async getLocations(deliveryAccount?: any): Promise<any> {
     try {
-      const headers = deliveryAccount?.key ? { 'api-token': deliveryAccount.key } : {};
+      const headers = deliveryAccount?.key
+        ? { 'api-token': deliveryAccount.key }
+        : {};
       const resp = await this.get('/get-locations/', {}, headers);
       const data = resp.data ?? {};
       return { isSuccess: true, data: data?.locations ?? data, raw: data };
@@ -348,7 +463,9 @@ export default class TranzoCourier implements ICourierService {
    */
   async getStores(deliveryAccount?: any): Promise<any> {
     try {
-      const headers = deliveryAccount?.key ? { 'api-token': deliveryAccount.key } : {};
+      const headers = deliveryAccount?.key
+        ? { 'api-token': deliveryAccount.key }
+        : {};
       const resp = await this.get('/get-stores/', {}, headers);
       const data = resp.data ?? {};
       return { isSuccess: true, data: data?.stores ?? data, raw: data };
@@ -364,7 +481,9 @@ export default class TranzoCourier implements ICourierService {
    */
   async getShipmentTypes(deliveryAccount?: any): Promise<any> {
     try {
-      const headers = deliveryAccount?.key ? { 'api-token': deliveryAccount.key } : {};
+      const headers = deliveryAccount?.key
+        ? { 'api-token': deliveryAccount.key }
+        : {};
       const resp = await this.get('/get-shipment-types/', {}, headers);
       const data = resp.data ?? {};
       return { isSuccess: true, data: data?.shipment_types ?? data, raw: data };
@@ -380,9 +499,13 @@ export default class TranzoCourier implements ICourierService {
    */
   async getOrderLogs(query: any, deliveryAccount?: any): Promise<any> {
     try {
-      const headers = deliveryAccount?.key ? { 'api-token': deliveryAccount.key } : {};
+      const headers = deliveryAccount?.key
+        ? { 'api-token': deliveryAccount.key }
+        : {};
       // legacy doc may expect PUT with filters in body
-      const resp = await this.put('/get-order-logs/', query || {}, { ...headers });
+      const resp = await this.put('/get-order-logs/', query || {}, {
+        ...headers,
+      });
       const data = resp.data ?? {};
       return { isSuccess: true, data: data?.logs ?? data, raw: data };
     } catch (err) {
@@ -396,13 +519,25 @@ export default class TranzoCourier implements ICourierService {
    * Create merchant advice - PUT /create-merchant-advice/ (or POST depending on doc)
    * body example: { order_reference_no: '...', advise: '...' }
    */
-  async createMerchantAdvice(payload: any, deliveryAccount?: any): Promise<any> {
+  async createMerchantAdvice(
+    payload: any,
+    deliveryAccount?: any,
+  ): Promise<any> {
     try {
-      const headers = deliveryAccount?.key ? { 'api-token': deliveryAccount.key } : {};
+      const headers = deliveryAccount?.key
+        ? { 'api-token': deliveryAccount.key }
+        : {};
       // doc might use POST or PUT - use POST if not sure
-      const resp = await this.post('/create-merchant-advice/', payload, { ...headers });
+      const resp = await this.post('/create-merchant-advice/', payload, {
+        ...headers,
+      });
       const data = resp.data ?? {};
-      return { isSuccess: true, response: data?.message ?? data, data, raw: data };
+      return {
+        isSuccess: true,
+        response: data?.message ?? data,
+        data,
+        raw: data,
+      };
     } catch (err) {
       this.logger.error('createMerchantAdvice error', this.toError(err));
       const data = (err as any)?.response?.data ?? null;
@@ -413,11 +548,22 @@ export default class TranzoCourier implements ICourierService {
   /**
    * Get order status - GET /get-order-status/?tracking_number=...
    */
-  async getOrderStatus(trackingNumber: string | string[], deliveryAccount?: any): Promise<any> {
+  async getOrderStatus(
+    trackingNumber: string | string[],
+    deliveryAccount?: any,
+  ): Promise<any> {
     try {
-      const tn = Array.isArray(trackingNumber) ? trackingNumber.join(',') : String(trackingNumber);
-      const headers = deliveryAccount?.key ? { 'api-token': deliveryAccount.key } : {};
-      const resp = await this.get('/get-order-status/', { tracking_number: tn }, { ...headers });
+      const tn = Array.isArray(trackingNumber)
+        ? trackingNumber.join(',')
+        : String(trackingNumber);
+      const headers = deliveryAccount?.key
+        ? { 'api-token': deliveryAccount.key }
+        : {};
+      const resp = await this.get(
+        '/get-order-status/',
+        { tracking_number: tn },
+        { ...headers },
+      );
       const data = resp.data ?? {};
       return { isSuccess: true, data: data?.status ?? data, raw: data };
     } catch (err) {
@@ -432,7 +578,10 @@ export default class TranzoCourier implements ICourierService {
   /**
    * Batch book - fallback loop (Tranzo has create-order single endpoint)
    */
-  async batchBookPacket(payload: { bookings: any[] }, deliveryAccount: any): Promise<any> {
+  async batchBookPacket(
+    payload: { bookings: any[] },
+    deliveryAccount: any,
+  ): Promise<any> {
     try {
       const results: any[] = [];
       for (const b of payload.bookings) {
@@ -453,23 +602,23 @@ export default class TranzoCourier implements ICourierService {
     return this.getOperationalCities(deliveryAccount);
   }
 
-//   async getMetadata() {
-//     return {
-//       baseUrl: this.baseUrl,
-//       implemented: [
-//         'bookParcel',
-//         'checkParcelStatus',
-//         'cancelBooking',
-//         'downloadReceipt',
-//         'getOperationalCities',
-//         'getLocations',
-//         'getStores',
-//         'getShipmentTypes',
-//         'getOrderLogs',
-//         'createMerchantAdvice',
-//         'getOrderStatus',
-//         'batchBookPacket',
-//       ],
-//     };
-//   }
+  //   async getMetadata() {
+  //     return {
+  //       baseUrl: this.baseUrl,
+  //       implemented: [
+  //         'bookParcel',
+  //         'checkParcelStatus',
+  //         'cancelBooking',
+  //         'downloadReceipt',
+  //         'getOperationalCities',
+  //         'getLocations',
+  //         'getStores',
+  //         'getShipmentTypes',
+  //         'getOrderLogs',
+  //         'createMerchantAdvice',
+  //         'getOrderStatus',
+  //         'batchBookPacket',
+  //       ],
+  //     };
+  //   }
 }

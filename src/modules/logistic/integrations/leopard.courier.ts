@@ -17,10 +17,10 @@ export class LeopardCourier implements ICourierService {
   private readonly baseUrl: string;
   private readonly metadata = {
     name: 'LeopardCourier',
-    allowBulkBooking: false
-  }
+    allowBulkBooking: false,
+  };
 
-  get getMetadata(){
+  get getMetadata() {
     return this.metadata;
   }
 

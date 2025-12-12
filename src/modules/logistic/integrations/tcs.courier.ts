@@ -271,7 +271,6 @@ export default class TCSCourier implements ICourierService {
   }
 
   /* ------------------------ ICourierService Implementation ------------------------ */
-  
 
   /**
    * bookParcel - creates booking

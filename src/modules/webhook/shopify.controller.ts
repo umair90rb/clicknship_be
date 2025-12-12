@@ -9,7 +9,7 @@ import { ApiTags } from '@nestjs/swagger';
 @ApiTags('Webhook')
 @Controller('shopify')
 export class ShopifyController {
-  constructor(private readonly shopifyService: ShopifyService) { }
+  constructor(private readonly shopifyService: ShopifyService) {}
 
   // @ApiBody({ schema: OrderData })
   @Post('order/create')

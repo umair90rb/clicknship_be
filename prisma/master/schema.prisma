@@ -10,24 +10,27 @@ datasource db {
 }
 
 model Tenant {
-  tenantId    String  @id @unique @map("tenant_id")
-  dbName      String? @unique @map("db_name")
-  companyName String? @map("company_name")
+  tenantId     String                  @id @unique @map("tenant_id")
+  dbName       String?                 @unique @map("db_name")
+  companyName  String?                 @map("company_name")
+  trackingLogs OrderTrackingMetadata[]
 
   @@map("tenants")
 }
 
-model TenantOrderTracking {
-  trackingStartedAt DateTime @default(now()) @map("tracking_started_at")
-  trackingEndedAt DateTime? @map("tracking_ended_at")
-  noOfErrors Int @map("no_of_errors")
-  noOfOrders Int @map("no_of_orders")
-  tenantId    String  @id @unique @map("tenant_id")
-  tenant  Tenant  @relation(fields: [tenantId], references: [tenantId])
+model OrderTrackingMetadata {
+  id         String    @id @default(uuid())
+  tenantId   String    @map("tenant_id")
+  startedAt  DateTime  @default(now()) @map("tracking_started_at")
+  endedAt    DateTime? @map("tracking_ended_at")
+  noOfJobs   Int       @map("no_of_jobs")
+  noOfOrders Int       @map("no_of_orders")
 
-  @@map("tenant_order_tracking")
+  tenant Tenant @relation(fields: [tenantId], references: [tenantId])
+
+  @@index([tenantId, startedAt])
+  @@map("order_tracking_metadata")
 }
-
 
 model City {
   id                  Int                 @id() @default(autoincrement())

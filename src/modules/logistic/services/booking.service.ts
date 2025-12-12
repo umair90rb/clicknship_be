@@ -1,4 +1,8 @@
-import { Inject, Injectable, UnprocessableEntityException } from '@nestjs/common';
+import {
+  Inject,
+  Injectable,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { CourierFactory } from '../factories/courier.factory';
 import { RequestWithTenantAndUser } from '@/src/types/auth';
 import { CreateBookingDto } from '../dtos/booking.dto';
@@ -20,7 +24,7 @@ export class BookingService {
     @InjectQueue(CREATE_BOOKING_QUEUE) private bookingQueue: Queue,
     private readonly courierFactory: CourierFactory,
     private readonly orderService: OrderService,
-    private readonly courierService: CourierService
+    private readonly courierService: CourierService,
   ) {}
 
   async status(cn: string, req: RequestWithTenantAndUser) {
@@ -54,11 +58,18 @@ export class BookingService {
   async cancel(orderIds: number[], req: RequestWithTenantAndUser) {
     const orderId = orderIds[0];
     const orderBooking = await this.orderService.getOrderDeliver(orderId);
-    const courier = await this.courierService.get(orderBooking.courierServiceId);
+    const courier = await this.courierService.get(
+      orderBooking.courierServiceId,
+    );
     const courierService = this.courierFactory.getCourier(courier.courier);
-    const bookingCancelResponse = await courierService.cancelBooking(orderBooking.cn, courierService);
-    if(!bookingCancelResponse.success) {
-      throw new UnprocessableEntityException(bookingCancelResponse.message || "Order(s) booking cancelation failed")
+    const bookingCancelResponse = await courierService.cancelBooking(
+      orderBooking.cn,
+      courierService,
+    );
+    if (!bookingCancelResponse.success) {
+      throw new UnprocessableEntityException(
+        bookingCancelResponse.message || 'Order(s) booking cancelation failed',
+      );
     }
     await this.orderService.updateStatus(
       req.user,
@@ -66,7 +77,6 @@ export class BookingService {
       OrderStatus.bookingCanceled,
     );
     return { message: 'Order(s) booking canceled', success: true };
-
   }
 
   async downloadReceipt(cns, deliveryAccount) {

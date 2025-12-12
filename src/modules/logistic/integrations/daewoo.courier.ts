@@ -22,12 +22,12 @@ export default class DaewooCourier implements ICourierService {
   private readonly logger = new Logger(DaewooCourier.name);
   private readonly baseUrl = 'https://codapi.daewoo.net.pk/';
 
-private readonly metadata = {
+  private readonly metadata = {
     name: 'DaewooCourier',
-    allowBulkBooking: false
-  }
+    allowBulkBooking: false,
+  };
 
-  get getMetadata(){
+  get getMetadata() {
     return this.metadata;
   }
 

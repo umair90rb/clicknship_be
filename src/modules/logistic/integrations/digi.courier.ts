@@ -32,14 +32,16 @@ type Normalized = {
 export default class DigiCourier implements ICourierService {
   private readonly logger = new Logger(DigiCourier.name);
   private readonly baseURL = 'https://digidokaan.pk/api/v1/digidokaan';
-  private readonly httpBasePath = this.baseURL.endsWith('/') ? this.baseURL : `${this.baseURL}/`;
+  private readonly httpBasePath = this.baseURL.endsWith('/')
+    ? this.baseURL
+    : `${this.baseURL}/`;
   private readonly metadata = {
     name: 'AHLCourier',
-    allowBulkBooking: false
-  }
+    allowBulkBooking: false,
+  };
 
   get getMetadata() {
-    return this.metadata
+    return this.metadata;
   }
 
   constructor(private readonly http: HttpService) {}
@@ -53,26 +55,45 @@ export default class DigiCourier implements ICourierService {
     return `${this.httpBasePath}${path}`;
   }
 
-  private async doGet<T = any>(path: string, params?: any, headers?: any): Promise<AxiosResponse<T>> {
+  private async doGet<T = any>(
+    path: string,
+    params?: any,
+    headers?: any,
+  ): Promise<AxiosResponse<T>> {
     const url = this.buildUrl(path);
     try {
       this.logger.debug(`Digi GET ${url} params=${JSON.stringify(params)}`);
-      const resp = await firstValueFrom(this.http.get<T>(url, { params, headers }));
+      const resp = await firstValueFrom(
+        this.http.get<T>(url, { params, headers }),
+      );
       return resp;
     } catch (err) {
-      this.logger.error(`Digi GET ${url} failed`, err?.response?.data ?? err?.message ?? err);
+      this.logger.error(
+        `Digi GET ${url} failed`,
+        err?.response?.data ?? err?.message ?? err,
+      );
       throw err;
     }
   }
 
-  private async doPost<T = any>(path: string, body?: any, headers?: any, config?: any): Promise<AxiosResponse<T>> {
+  private async doPost<T = any>(
+    path: string,
+    body?: any,
+    headers?: any,
+    config?: any,
+  ): Promise<AxiosResponse<T>> {
     const url = this.buildUrl(path);
     try {
       this.logger.debug(`Digi POST ${url} body=${JSON.stringify(body)}`);
-      const resp = await firstValueFrom(this.http.post<T>(url, body, { headers, ...config }));
+      const resp = await firstValueFrom(
+        this.http.post<T>(url, body, { headers, ...config }),
+      );
       return resp;
     } catch (err) {
-      this.logger.error(`Digi POST ${url} failed`, err?.response?.data ?? err?.message ?? err);
+      this.logger.error(
+        `Digi POST ${url} failed`,
+        err?.response?.data ?? err?.message ?? err,
+      );
       throw err;
     }
   }
@@ -87,8 +108,11 @@ export default class DigiCourier implements ICourierService {
   // otherwise it will call `login` using deliveryAccount.username/password and return token to caller.
   // You can later replace getToken/saveToken with DB logic.
 
-  private async loginUsingAccount(deliveryAccount: any): Promise<{ token: string; expiry: string } | null> {
-    if (!deliveryAccount) throw new Error('No deliveryAccount provided for login');
+  private async loginUsingAccount(
+    deliveryAccount: any,
+  ): Promise<{ token: string; expiry: string } | null> {
+    if (!deliveryAccount)
+      throw new Error('No deliveryAccount provided for login');
     const phone = deliveryAccount.username;
     const password = deliveryAccount.password;
     if (!phone || !password) return null;
@@ -111,7 +135,9 @@ export default class DigiCourier implements ICourierService {
     }
   }
 
-  private async refreshTokenUsingToken(token: string): Promise<{ token: string; expiry: string } | null> {
+  private async refreshTokenUsingToken(
+    token: string,
+  ): Promise<{ token: string; expiry: string } | null> {
     try {
       const headers = { Authorization: `Bearer ${token}`, Accept: '*/*' };
       const resp = await this.doPost('auth/refresh_token', null, headers);
@@ -123,7 +149,10 @@ export default class DigiCourier implements ICourierService {
       }
       throw new Error(data?.message ?? 'Token refresh failed');
     } catch (err) {
-      this.logger.error('Digi refreshTokenUsingToken failed', this.toError(err));
+      this.logger.error(
+        'Digi refreshTokenUsingToken failed',
+        this.toError(err),
+      );
       throw err;
     }
   }
@@ -136,10 +165,15 @@ export default class DigiCourier implements ICourierService {
    */
   private async getToken(deliveryAccount: any): Promise<string> {
     try {
-      if (!deliveryAccount) throw new Error('deliveryAccount required for token');
+      if (!deliveryAccount)
+        throw new Error('deliveryAccount required for token');
 
       // If tokens array present and first token exists, assume valid (your JS used expiry check helpers).
-      if (deliveryAccount.tokens && Array.isArray(deliveryAccount.tokens) && deliveryAccount.tokens.length > 0) {
+      if (
+        deliveryAccount.tokens &&
+        Array.isArray(deliveryAccount.tokens) &&
+        deliveryAccount.tokens.length > 0
+      ) {
         const tokenRecord = deliveryAccount.tokens[0];
         // the JS code used isExpired(token.expiry) - we omit expiry check here because user will add DB logic later.
         if (tokenRecord && tokenRecord.token) return tokenRecord.token;
@@ -158,48 +192,87 @@ export default class DigiCourier implements ICourierService {
     }
   }
 
-
   /**
    * bookParcel - wrapper for "order-book" endpoint used in JS adapter
    */
-  async bookParcel(orderDetails: any, courierAccount: any): Promise<Normalized> {
+  async bookParcel(
+    orderDetails: any,
+    courierAccount: any,
+  ): Promise<Normalized> {
     let resp: AxiosResponse | undefined;
     try {
       const token = await this.getToken(courierAccount);
       const headers = { Accept: '*/*', Authorization: `Bearer ${token}` };
 
       // NOTE: we are skipping DB city lookup - expect orderDetails to already have destination city id when required
-      const buyerNumber = orderDetails.customer?.phone ? `+92${String(orderDetails.customer.phone).replace(/^0/, '')}` : undefined;
-      const buyerName = `${orderDetails.customer?.first_name ?? ''} ${orderDetails.customer?.last_name ?? ''}`.trim();
+      const buyerNumber = orderDetails.customer?.phone
+        ? `+92${String(orderDetails.customer.phone).replace(/^0/, '')}`
+        : undefined;
+      const buyerName =
+        `${orderDetails.customer?.first_name ?? ''} ${orderDetails.customer?.last_name ?? ''}`.trim();
       const productName = Array.isArray(orderDetails.items)
         ? orderDetails.items.map((it) => `${it.name}/${it.quantity}`).join('-')
-        : orderDetails.product_name ?? '';
+        : (orderDetails.product_name ?? '');
 
       // The JS adapter builds a long query string; we'll call the POST endpoint 'order-book' with querystring as in JS
       // For simplicity we use POST to the query path (JS used POST requestOptions.url)
       // Build URL path exactly like JS -> order-book?param1=...&param2=...
       const qsParts: string[] = [];
-      qsParts.push(`seller_number=${encodeURIComponent(courierAccount.username ?? '')}`);
+      qsParts.push(
+        `seller_number=${encodeURIComponent(courierAccount.username ?? '')}`,
+      );
       qsParts.push(`buyer_number=${encodeURIComponent(buyerNumber ?? '')}`);
       qsParts.push(`buyer_name=${encodeURIComponent(buyerName)}`);
-      qsParts.push(`buyer_address=${encodeURIComponent(orderDetails.address?.address1 ?? '')}`);
-      qsParts.push(`buyer_city=${encodeURIComponent(orderDetails.destination_city ?? '')}`); // expects assigned_id
-      qsParts.push(`piece=${encodeURIComponent(String(orderDetails.items?.length ?? 1))}`);
-      qsParts.push(`amount=${encodeURIComponent(String(orderDetails.total_price ?? 0))}`);
-      qsParts.push(`external_reference_no=${encodeURIComponent(orderDetails.order_number ?? '')}`);
-      qsParts.push(`weight=${encodeURIComponent(courierAccount.key == '17' ? '0.5' : '0.25')}`); // copied from JS
+      qsParts.push(
+        `buyer_address=${encodeURIComponent(orderDetails.address?.address1 ?? '')}`,
+      );
+      qsParts.push(
+        `buyer_city=${encodeURIComponent(orderDetails.destination_city ?? '')}`,
+      ); // expects assigned_id
+      qsParts.push(
+        `piece=${encodeURIComponent(String(orderDetails.items?.length ?? 1))}`,
+      );
+      qsParts.push(
+        `amount=${encodeURIComponent(String(orderDetails.total_price ?? 0))}`,
+      );
+      qsParts.push(
+        `external_reference_no=${encodeURIComponent(orderDetails.order_number ?? '')}`,
+      );
+      qsParts.push(
+        `weight=${encodeURIComponent(courierAccount.key == '17' ? '0.5' : '0.25')}`,
+      ); // copied from JS
       qsParts.push(`product_name=${encodeURIComponent(productName)}`);
       qsParts.push(`shipment_type=1`);
-      qsParts.push(`special_instruction=${encodeURIComponent(orderDetails.special_instructions ?? 'rush delivery')}`);
-      qsParts.push(`store_url=${encodeURIComponent(orderDetails.store_url ?? 'sukooon.com')}`);
-      qsParts.push(`business_name=${encodeURIComponent(orderDetails.business_name ?? 'Sukooon')}`);
-      qsParts.push(`origin=${encodeURIComponent(orderDetails.origin ?? 'Faisalabad')}`);
-      qsParts.push(`gateway_id=${encodeURIComponent(courierAccount.key ?? '')}`);
-      qsParts.push(`shipper_address=${encodeURIComponent(courierAccount.shipper_address ?? '')}`);
-      qsParts.push(`shipper_name=${encodeURIComponent(courierAccount.shipper_name ?? courierAccount.username ?? '')}`);
-      qsParts.push(`shipper_phone=${encodeURIComponent(courierAccount.username ?? '')}`);
-      qsParts.push(`pickup_id=${encodeURIComponent(courierAccount.cost_center ?? '')}`);
-      qsParts.push(`source=${encodeURIComponent(orderDetails.source ?? 'sukooon')}`);
+      qsParts.push(
+        `special_instruction=${encodeURIComponent(orderDetails.special_instructions ?? 'rush delivery')}`,
+      );
+      qsParts.push(
+        `store_url=${encodeURIComponent(orderDetails.store_url ?? 'sukooon.com')}`,
+      );
+      qsParts.push(
+        `business_name=${encodeURIComponent(orderDetails.business_name ?? 'Sukooon')}`,
+      );
+      qsParts.push(
+        `origin=${encodeURIComponent(orderDetails.origin ?? 'Faisalabad')}`,
+      );
+      qsParts.push(
+        `gateway_id=${encodeURIComponent(courierAccount.key ?? '')}`,
+      );
+      qsParts.push(
+        `shipper_address=${encodeURIComponent(courierAccount.shipper_address ?? '')}`,
+      );
+      qsParts.push(
+        `shipper_name=${encodeURIComponent(courierAccount.shipper_name ?? courierAccount.username ?? '')}`,
+      );
+      qsParts.push(
+        `shipper_phone=${encodeURIComponent(courierAccount.username ?? '')}`,
+      );
+      qsParts.push(
+        `pickup_id=${encodeURIComponent(courierAccount.cost_center ?? '')}`,
+      );
+      qsParts.push(
+        `source=${encodeURIComponent(orderDetails.source ?? 'sukooon')}`,
+      );
       qsParts.push(`new_destination_city_check=1`);
 
       const path = `order-book?${qsParts.join('&')}`;
@@ -220,7 +293,14 @@ export default class DigiCourier implements ICourierService {
         } = data ?? {};
         return {
           cn: tracking_no ?? null,
-          slip: slip_link ?? JSON.stringify({ order_no, load_sheet_id, pdf_link, delivery_charges }),
+          slip:
+            slip_link ??
+            JSON.stringify({
+              order_no,
+              load_sheet_id,
+              pdf_link,
+              delivery_charges,
+            }),
           isSuccess: true,
           error: null,
           response: msg ?? message ?? 'Booked',
@@ -254,7 +334,10 @@ export default class DigiCourier implements ICourierService {
   /**
    * checkParcelStatus - uses endpoint 'get-order-tracking' (JS used POST)
    */
-  async checkParcelStatus(cn: string | string[], courierAccount: any): Promise<Normalized> {
+  async checkParcelStatus(
+    cn: string | string[],
+    courierAccount: any,
+  ): Promise<Normalized> {
     let resp: AxiosResponse | undefined;
     try {
       const token = await this.getToken(courierAccount);
@@ -267,7 +350,9 @@ export default class DigiCourier implements ICourierService {
       // In JS they called request with method POST but url containing query string; we do the same pattern (POST to that path, no body)
       resp = await this.doPost(path, null, headers);
       const resData = resp.data ?? {};
-      this.logger.log('info', 'Digi checkParcelStatus response', { res: resData });
+      this.logger.log('info', 'Digi checkParcelStatus response', {
+        res: resData,
+      });
 
       const { code, msg, tracking_number, data, error } = resData;
       if (code === 200) {
@@ -328,7 +413,10 @@ export default class DigiCourier implements ICourierService {
   /**
    * downloadReceipt - A best-effort: return slip link if available by hitting invoice/pdf endpoint (JS returned pdf_link in booking)
    */
-  async downloadReceipt(cns: string[], courierAccount: any): Promise<Normalized> {
+  async downloadReceipt(
+    cns: string[],
+    courierAccount: any,
+  ): Promise<Normalized> {
     try {
       // If booking returned pdf_link in earlier bookParcel, you should use that.
       // We'll try to build a path that might return invoice/pdf; if not available, consumer must use slip from booking response.
@@ -343,13 +431,22 @@ export default class DigiCourier implements ICourierService {
       // maybe returns URL or binary; if returns URL, return it; if PDF, consumer can use response.data binary (not implemented here)
       const invoiceUrl = data?.data ?? data?.pdf_link ?? data?.url ?? null;
       if (invoiceUrl) {
-        return { isSuccess: true, url: invoiceUrl as any, response: 'Invoice URL', raw: data };
+        return {
+          isSuccess: true,
+          url: invoiceUrl as any,
+          response: 'Invoice URL',
+          raw: data,
+        };
       }
       return { isSuccess: false, error: 'Invoice not found', raw: data };
     } catch (err) {
       this.logger.error('Digi downloadReceipt error', this.toError(err));
       const data = (err as any)?.response?.data ?? null;
-      return { isSuccess: false, error: data ?? this.toError(err), raw: data ?? err };
+      return {
+        isSuccess: false,
+        error: data ?? this.toError(err),
+        raw: data ?? err,
+      };
     }
   }
 
@@ -370,8 +467,16 @@ export default class DigiCourier implements ICourierService {
   /**
    * downloadLoadSheet - not explicitly in Digi doc; provide stub
    */
-  async downloadLoadSheet(loadSheetId: number, courierAccount: any, responseType: 'PDF' | 'JSON' = 'JSON'): Promise<any> {
-    return { isSuccess: false, error: 'downloadLoadSheet not implemented for Digi', raw: null };
+  async downloadLoadSheet(
+    loadSheetId: number,
+    courierAccount: any,
+    responseType: 'PDF' | 'JSON' = 'JSON',
+  ): Promise<any> {
+    return {
+      isSuccess: false,
+      error: 'downloadLoadSheet not implemented for Digi',
+      raw: null,
+    };
   }
 
   /**
@@ -384,7 +489,11 @@ export default class DigiCourier implements ICourierService {
       const resp = await this.doGet('get-cities', null, headers);
       const data = resp.data ?? {};
       // expected response likely contains list in data or cities
-      return { isSuccess: true, data: data?.data ?? data?.cities ?? data, raw: data };
+      return {
+        isSuccess: true,
+        data: data?.data ?? data?.cities ?? data,
+        raw: data,
+      };
     } catch (err) {
       this.logger.error('Digi getAllCities error', this.toError(err));
       const data = (err as any)?.response?.data ?? null;
