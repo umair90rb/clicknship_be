@@ -70,16 +70,17 @@ export default class DevCourier implements ICourierService {
     }
   }
 
-  async checkParcelStatus(
-    trackingNumber: string | string[],
+  async parcelStatus(
+    shipment: any,
     courierAccount?: any,
   ) {
     try {
-      await this.wait(2000);
+      await this.wait(1000);
       return {
         success: true,
         courierAccount,
-        cn: trackingNumber,
+        shipment,
+        cn: shipment?.cn,
         tracking: [
           {
             status: 'Delivered',
@@ -134,10 +135,84 @@ export default class DevCourier implements ICourierService {
       return {
         success: false,
         courierAccount,
-        cn: trackingNumber,
+        shipment,
+        cn: shipment?.cn,
         tracking: [],
         message: err.message || 'Order tracking failed',
       };
+    }
+  }
+
+  async batchParcelStatus(
+    shipments: any[],
+    courierAccount?: any,
+  ) {
+    try {
+      await this.wait(shipments.length * 1000);
+      return shipments.map(shipment => ({
+        success: true,
+        courierAccount,
+        shipment,
+        cn: shipment?.cn,
+        tracking: [
+          {
+            status: 'Delivered',
+            date: new Date(),
+            reason: 'None',
+            receiver: 'string',
+          },
+          {
+            status: 'Out for Delivery',
+            date: new Date(),
+            reason: 'None',
+            receiver: 'string',
+          },
+          {
+            status: 'Reached',
+            date: new Date(),
+            reason: 'None',
+            receiver: 'string',
+          },
+          {
+            status: 'In Transit',
+            date: new Date(),
+            reason: 'None',
+            receiver: 'string',
+          },
+          {
+            status: 'Warehouse',
+            date: new Date(),
+            reason: 'None',
+            receiver: 'string',
+          },
+          {
+            status: 'Dispatched',
+            date: new Date(),
+            reason: 'None',
+            receiver: 'string',
+          },
+          {
+            status: 'Booked',
+            date: new Date(),
+            reason: 'None',
+            receiver: 'string',
+          },
+        ],
+        message: 'Order tracked successfully',
+      }));
+    } catch (err) {
+      this.logger.error(
+        'bookParcel error',
+        err?.response?.data ?? err?.message ?? err,
+      );
+      return shipments.map(shipment => ({
+        success: false,
+        courierAccount,
+        shipment,
+        cn: shipment?.cn,
+        tracking: [],
+        message: err.message || 'Order tracking failed',
+      }));
     }
   }
 

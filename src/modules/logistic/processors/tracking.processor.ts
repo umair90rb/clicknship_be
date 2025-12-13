@@ -53,7 +53,30 @@ export class TrackBookingQueueConsumer extends WorkerHost {
       courierService.getMetadata,
     );
 
-    // booking started
+    // tracking started
+    let trackingResponse = [];
+    if (hasBulkTracking) {
+        trackingResponse = await courierService.batchParcelStatus(
+          shipments,
+          courier,
+        );
+      } else {
+        trackingResponse = await Promise.all(
+          shipments.map((shipment) =>
+            courierService.parcelStatus(shipment, courier),
+          ),
+        );
+      }
+      
+      let failedTracking = [], successTracking = [];
+      for (const tracking of trackingResponse) {
+        if (tracking.success) {
+          successTracking.push(tracking);
+        } else {
+          failedTracking.push(tracking);
+        }
+      }
+    
   }
 
   private async getCourier(courierId: number) {
