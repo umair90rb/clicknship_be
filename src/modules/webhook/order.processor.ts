@@ -14,7 +14,7 @@ import {
 } from './order-data-keys';
 
 import { CreateOrderJobData } from './order.types';
-import { tenantWithPrefix } from '@/src/utils/tenant';
+import { getTenantDbName } from '@/src/utils/tenant';
 import { OrderEvents, OrderStatus } from '@/src/types/order';
 import { getDbUrl } from '../onboard/utils';
 import { normalizeCustomerName } from '@/src/utils/order';
@@ -30,7 +30,7 @@ export class WebhookOrderCreateQueueConsumer extends WorkerHost {
 
   async openTenantDbConnection(tenantId: string) {
     this.prismaTenantConnection = new PrismaClient({
-      datasourceUrl: getDbUrl(tenantWithPrefix(tenantId)),
+      datasourceUrl: getDbUrl(getTenantDbName(tenantId)),
     });
 
     await this.prismaTenantConnection.$connect();

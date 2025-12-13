@@ -31,7 +31,11 @@ for DB_NAME in $DB_LIST; do
   
   export DATABASE_URL=$DB
   echo "Running migration..."
-  npx prisma migrate $MIGRATE_TYPE --schema $SCHEMA_PATH --skip-generate
+  # npx prisma migrate $MIGRATE_TYPE --schema $SCHEMA_PATH --skip-generate
+  if ! npx prisma migrate $MIGRATE_TYPE --schema $SCHEMA_PATH --skip-generate; then
+    echo "Migration failed"
+    exit 1
+  fi
   
   echo "Migrated $DB_NAME ✅"
 done

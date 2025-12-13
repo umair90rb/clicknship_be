@@ -13,12 +13,12 @@ model Tenant {
   tenantId     String                  @id @unique @map("tenant_id")
   dbName       String?                 @unique @map("db_name")
   companyName  String?                 @map("company_name")
-  trackingLogs OrderTrackingMetadata[]
+  trackingLogs ShipmentTrackingMetadata[]
 
   @@map("tenants")
 }
 
-model OrderTrackingMetadata {
+model ShipmentTrackingMetadata {
   id         String    @id @default(uuid())
   tenantId   String    @map("tenant_id")
   startedAt  DateTime  @default(now()) @map("tracking_started_at")

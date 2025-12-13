@@ -1,7 +1,9 @@
+import { OrderShipment } from '@/prisma/tenant/client';
 import { Tenant } from '@/src/types/tenant';
 
 export enum BOOKING_ACTIONS {
   create = 'booking/create',
+  track = 'booking/track',
 }
 
 export interface CreateBookingJobData {
@@ -9,4 +11,13 @@ export interface CreateBookingJobData {
   tenant: Tenant;
   courierId: number;
   orderIds: number[];
+}
+
+export interface TrackBookingJobData {
+  courierServiceId: number;
+  shipments: Omit<
+    OrderShipment,
+    'tracking' | 'trackingAt' | 'trackingStatus' | 'status'
+  >[];
+  tenant: Tenant;
 }

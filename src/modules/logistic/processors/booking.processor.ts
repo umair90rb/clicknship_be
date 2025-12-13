@@ -2,7 +2,6 @@ import { PrismaClient } from '@/prisma/tenant/client';
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
-import { tenantWithPrefix } from '@/src/utils/tenant';
 import { CreateBookingJobData } from '../types';
 import { getDbUrl } from '../../onboard/utils';
 import { CREATE_BOOKING_QUEUE } from '../constants';
@@ -43,7 +42,7 @@ export class CreateBookingQueueConsumer extends WorkerHost {
   async process(job: Job, token?: string): Promise<any> {
     const { user, tenant, orderIds, courierId }: CreateBookingJobData =
       job.data;
-    await this.openTenantDbConnection(tenant.tenantId);
+    await this.openTenantDbConnection(tenant.dbName);
     this.logger.log(job.data);
     const courier = await this.getCourier(courierId);
     if (!courier) {
@@ -138,9 +137,9 @@ export class CreateBookingQueueConsumer extends WorkerHost {
     }
   }
 
-  async openTenantDbConnection(tenantId: string) {
+  private async openTenantDbConnection(dbName: string) {
     this.prismaTenantConnection = new PrismaClient({
-      datasourceUrl: getDbUrl(tenantWithPrefix(tenantId)),
+      datasourceUrl: getDbUrl(dbName),
     });
 
     await this.prismaTenantConnection.$connect();
@@ -163,7 +162,7 @@ export class CreateBookingQueueConsumer extends WorkerHost {
   }
 
   private async createBooking(orderBookings: any[]) {
-    return this.prismaTenantConnection.orderDelivery.createMany({
+    return this.prismaTenantConnection.orderShipment.createMany({
       data: orderBookings.map((booking) => ({
         cn: booking?.cn,
         orderId: booking?.order?.id,

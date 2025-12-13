@@ -2,17 +2,16 @@ import { PrismaClient } from '@/prisma/tenant/client';
 import { OnWorkerEvent, Processor, WorkerHost } from '@nestjs/bullmq';
 import { Logger } from '@nestjs/common';
 import { Job } from 'bullmq';
-import { tenantWithPrefix } from '@/src/utils/tenant';
-import { CreateBookingJobData } from '../types';
+import { TrackBookingJobData } from '../types';
 import { getDbUrl } from '../../onboard/utils';
-import { CREATE_BOOKING_QUEUE, ORDER_TRACKING_QUEUE } from '../constants';
+import { ORDER_TRACKING_QUEUE } from '../constants';
 import { CourierFactory } from '../factories/courier.factory';
 import { OrderEvents, OrderStatus } from '@/src/types/order';
 
 @Processor(ORDER_TRACKING_QUEUE, {})
-export class CreateBookingQueueConsumer extends WorkerHost {
+export class TrackBookingQueueConsumer extends WorkerHost {
   private prismaTenantConnection: PrismaClient = null;
-  private readonly logger = new Logger(CreateBookingQueueConsumer.name);
+  private readonly logger = new Logger(TrackBookingQueueConsumer.name);
 
   constructor(private readonly courierFactory: CourierFactory) {
     super();
@@ -21,7 +20,7 @@ export class CreateBookingQueueConsumer extends WorkerHost {
 
   async openTenantDbConnection(tenantId: string) {
     this.prismaTenantConnection = new PrismaClient({
-      datasourceUrl: getDbUrl(tenantWithPrefix(tenantId)),
+      datasourceUrl: getDbUrl(tenantId),
     });
 
     await this.prismaTenantConnection.$connect();
@@ -29,101 +28,32 @@ export class CreateBookingQueueConsumer extends WorkerHost {
   }
 
   async process(job: Job, token?: string): Promise<any> {
-    const { user, tenant, orderIds, courierId }: CreateBookingJobData =
-      job.data;
-    await this.openTenantDbConnection(tenant.tenantId);
-    this.logger.log(job.data);
-    const courier = await this.getCourier(courierId);
-    if (!courier) {
-      return this.logger.error(`Courier service with ${courierId} not found!`);
+    const {
+      tenant,
+      shipments,
+      courierServiceId,
+    }: TrackBookingJobData = job.data;
+    if (!shipments.length) {
+      this.logger.log(`No booking to track for job: ${job.id}`);
+      return;
     }
-    this.logger.log(courier);
+    await this.openTenantDbConnection(tenant.dbName);
+    this.logger.log(job.data);
+    const courier = await this.getCourier(courierServiceId);
+    if (!courier) {
+      return this.logger.error(
+        `Courier service with ${courierServiceId} not found!`,
+      );
+    }
     const courierService = this.courierFactory.getCourier(courier.name);
     // const hasBulkBooking = courierService.getFeatures.allowBulkBooking;
-    const hasBulkBooking = courier.courier === 'leopard'; // for dev
-    this.logger.log(`Courier bulk booking feature`, courierService.getMetadata);
-    const orders = await this.prismaTenantConnection.order.findMany({
-      where: { id: { in: orderIds } },
-    });
-    this.logger.log('Orders from db', orders.length);
-    if (!orders || !orders.length) {
-      return this.logger.warn(
-        `No order found for booking, searching for orderIds ${orderIds}`,
-      );
-    }
-    const alreadyBookedOrders = [],
-      notBookedOrders = [];
-    for (const order of orders) {
-      if (order.status === OrderStatus.booked) {
-        alreadyBookedOrders.push(order);
-      } else {
-        notBookedOrders.push(order);
-      }
-    }
+    const hasBulkTracking = courier.courier === 'leopard'; // for dev
+    this.logger.log(
+      `Courier bulk tracking feature`,
+      courierService.getMetadata,
+    );
+
     // booking started
-    const createdBookings = [],
-      failedBookings = [];
-    if (notBookedOrders.length) {
-      let bookingResponses = null;
-      if (hasBulkBooking) {
-        bookingResponses = await courierService.batchBookParcels(
-          notBookedOrders,
-          courier,
-        );
-      } else {
-        bookingResponses = await Promise.all(
-          notBookedOrders.map((order) =>
-            courierService.bookParcel(order, courier),
-          ),
-        );
-      }
-      this.logger.log('booking service response', bookingResponses);
-      for (const booking of bookingResponses) {
-        if (booking.success) {
-          createdBookings.push(booking);
-        } else {
-          failedBookings.push(booking);
-        }
-      }
-    }
-
-    if (createdBookings.length) {
-      const orderIds = createdBookings.map((booking) => booking.order.id);
-      await this.createBooking(createdBookings);
-      await this.updateOrderStatus(orderIds, OrderStatus.booked);
-      await this.generateAndCreateOrderLogs(
-        orderIds,
-        user.id,
-        OrderEvents.booked
-          .replace('{courier}', courier.courier)
-          .replace('{account}', courier.name),
-      );
-    }
-
-    if (failedBookings.length) {
-      const orderIds = failedBookings.map((booking) => booking?.order?.id);
-      await this.updateOrderStatus(orderIds, OrderStatus.bookingError);
-      const logs = failedBookings.map((failedBooking) => ({
-        event: OrderEvents.bookingFailed
-          .replace('{courier}', courier.courier)
-          .replace('{account}', courier.name)
-          .replace('{error}', failedBooking?.message),
-        userId: user?.id,
-        orderId: failedBooking?.order?.id,
-      }));
-      await this.createOrderLogs(logs);
-    }
-
-    if (alreadyBookedOrders.length) {
-      const orderIds = alreadyBookedOrders.map((order) => order.id);
-      await this.generateAndCreateOrderLogs(
-        orderIds,
-        user.id,
-        OrderEvents.bookingStopped
-          .replace('{courier}', courier.courier)
-          .replace('{account}', courier.name),
-      );
-    }
   }
 
   private async getCourier(courierId: number) {
@@ -142,7 +72,7 @@ export class CreateBookingQueueConsumer extends WorkerHost {
   }
 
   private async createBooking(orderBookings: any[]) {
-    return this.prismaTenantConnection.orderDelivery.createMany({
+    return this.prismaTenantConnection.orderShipment.createMany({
       data: orderBookings.map((booking) => ({
         cn: booking?.cn,
         orderId: booking?.order?.id,
@@ -184,13 +114,13 @@ export class CreateBookingQueueConsumer extends WorkerHost {
 
   @OnWorkerEvent('active')
   onActive(job: Job) {
-    Logger.log(`Job with id ${job.id} from ${CREATE_BOOKING_QUEUE} is started`);
+    Logger.log(`Job with id ${job.id} from ${ORDER_TRACKING_QUEUE} is started`);
   }
 
   @OnWorkerEvent('completed')
   async onCompleted(job: Job) {
     Logger.log(
-      `Job with id ${job.id} from ${CREATE_BOOKING_QUEUE} is completed`,
+      `Job with id ${job.id} from ${ORDER_TRACKING_QUEUE} is completed`,
     );
     await this.prismaTenantConnection.$disconnect();
   }
@@ -199,8 +129,7 @@ export class CreateBookingQueueConsumer extends WorkerHost {
   async onFailed(job: Job) {
     await this.prismaTenantConnection.$disconnect();
     Logger.log(
-      `Job with id ${job.id} from ${CREATE_BOOKING_QUEUE} is failed due to ${job.failedReason}`,
+      `Job with id ${job.id} from ${ORDER_TRACKING_QUEUE} is failed due to ${job.failedReason}`,
     );
   }
-
 }

@@ -12,6 +12,11 @@ export enum OrderStatus {
   booked = 'booked',
   bookingError = 'booking error',
   bookingCanceled = 'booking canceled',
+  dispatched = 'dispatched',
+  inTransit = 'in transit',
+  delivered = 'delivered',
+  inReturnProcess = 'in return process',
+  returned = 'returned',
 }
 
 export enum OrderEvents {

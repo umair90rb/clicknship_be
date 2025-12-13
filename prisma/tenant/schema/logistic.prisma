@@ -22,3 +22,21 @@ model CourierServiceField {
 
   @@map("courier_service_fields")
 }
+
+model OrderShipment {
+  id     Int     @id @default(autoincrement())
+  cn     String?
+  status String?
+
+  lastTrackedAt DateTime? @map("last_tracked_at")
+  trackingJson  Json?   @map("tracking_json")
+
+  orderId Int   @unique() @map("order_id")
+  order   Order @relation(fields: [orderId], references: [id])
+
+  courierServiceId Int @map("courier_service_id")
+
+  @@index([cn])
+  @@index([orderId])
+  @@map("order_shipments")
+}

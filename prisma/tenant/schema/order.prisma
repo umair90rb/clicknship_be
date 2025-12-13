@@ -29,7 +29,7 @@ model Order {
   userId     Int?      @map("user_id")
   assignedAt DateTime? @map("assigned_at")
 
-  delivery OrderDelivery?
+  delivery OrderShipment?
   items    OrderItem[]
   logs     OrderLog[]
   comments OrderComment[]
@@ -103,24 +103,6 @@ model OrderPayment {
   @@map("order_payments")
 }
 
-model OrderDelivery {
-  id             Int       @id @default(autoincrement())
-  cn             String?
-  status         String?
-  trackingStatus String?   @map("tracking_status")
-  trackedAt      DateTime? @map("tracked_at")
-  tracking       String?
-
-  orderId Int   @unique() @map("order_id")
-  order   Order @relation(fields: [orderId], references: [id])
-
-  courierServiceId      Int     @map("courier_service_id")
-  courierServiceCompany String? @map("courier_service_company")
-
-  @@index([cn])
-  @@index([orderId])
-  @@map("order_deliveries")
-}
 
 model OrderLog {
   id        Int      @id @default(autoincrement())

@@ -463,7 +463,7 @@ export class OrderService {
   }
 
   async getOrderDeliver(orderId: number) {
-    const orderDeliver = await this.prismaTenant.orderDelivery.findFirst({
+    const orderDeliver = await this.prismaTenant.orderShipment.findFirst({
       where: { orderId },
     });
     if (!orderDeliver) {

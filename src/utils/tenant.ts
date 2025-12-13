@@ -1,3 +1,3 @@
-export function tenantWithPrefix(tenant: string) {
-  return `tenant_${tenant}`;
+export function getTenantDbName(tenant: string) {
+  return `tenant_${tenant.replace(/-/g, '_')}`;
 }
