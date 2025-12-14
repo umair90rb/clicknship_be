@@ -6,25 +6,22 @@ import { TrackBookingJobData } from '../types';
 import { getDbUrl } from '../../onboard/utils';
 import { ORDER_TRACKING_QUEUE } from '../constants';
 import { CourierFactory } from '../factories/courier.factory';
-import { OrderEvents, OrderStatus } from '@/src/types/order';
+// import { OrderEvents, OrderStatus } from '@/src/types/order';
+import { ParcelStatusResponse } from '../types/courier.interface';
+import { PrismaMasterClient } from '@/src/services/master-connection.service';
+import { getTenantDbName } from '@/src/utils/tenant';
 
 @Processor(ORDER_TRACKING_QUEUE, {})
-export class TrackBookingQueueConsumer extends WorkerHost {
+export class TrackShipmentQueueConsumer extends WorkerHost {
   private prismaTenantConnection: PrismaClient = null;
-  private readonly logger = new Logger(TrackBookingQueueConsumer.name);
+  private readonly logger = new Logger(TrackShipmentQueueConsumer.name);
 
-  constructor(private readonly courierFactory: CourierFactory) {
+  constructor(
+    private readonly courierFactory: CourierFactory,
+    private readonly prismaMaster: PrismaMasterClient,
+  ) {
     super();
     this.prismaTenantConnection = null;
-  }
-
-  async openTenantDbConnection(tenantId: string) {
-    this.prismaTenantConnection = new PrismaClient({
-      datasourceUrl: getDbUrl(tenantId),
-    });
-
-    await this.prismaTenantConnection.$connect();
-    return this.prismaTenantConnection;
   }
 
   async process(job: Job, token?: string): Promise<any> {
@@ -32,14 +29,15 @@ export class TrackBookingQueueConsumer extends WorkerHost {
       tenant,
       shipments,
       courierServiceId,
+      shipmentTrackingMetadataId,
     }: TrackBookingJobData = job.data;
     if (!shipments.length) {
       this.logger.log(`No booking to track for job: ${job.id}`);
       return;
     }
-    await this.openTenantDbConnection(tenant.dbName);
+    await this.openTenantDbConnection(tenant.tenantId);
     this.logger.log(job.data);
-    const courier = await this.getCourier(courierServiceId);
+    const courier = await this.getCourier(parseInt(courierServiceId));
     if (!courier) {
       return this.logger.error(
         `Courier service with ${courierServiceId} not found!`,
@@ -54,29 +52,38 @@ export class TrackBookingQueueConsumer extends WorkerHost {
     );
 
     // tracking started
-    let trackingResponse = [];
+    let trackingResponse: ParcelStatusResponse[] = [];
     if (hasBulkTracking) {
-        trackingResponse = await courierService.batchParcelStatus(
-          shipments,
-          courier,
-        );
-      } else {
-        trackingResponse = await Promise.all(
-          shipments.map((shipment) =>
-            courierService.parcelStatus(shipment, courier),
-          ),
-        );
+      trackingResponse = await courierService.batchParcelStatus(
+        shipments,
+        courier,
+      );
+    } else {
+      trackingResponse = await Promise.all(
+        shipments.map((shipment) =>
+          courierService.parcelStatus(shipment, courier),
+        ),
+      );
+    }
+
+    for (const trackingDetail of trackingResponse) {
+      const { success, cn, courierAccount, message, shipment, tracking } =
+        trackingDetail;
+      if (success) {
+        await this.updateShipment(shipment.id, {
+          lastTrackedAt: new Date(),
+          trackingJson: tracking,
+          status: tracking[0].status,
+        });
       }
-      
-      let failedTracking = [], successTracking = [];
-      for (const tracking of trackingResponse) {
-        if (tracking.success) {
-          successTracking.push(tracking);
-        } else {
-          failedTracking.push(tracking);
-        }
-      }
-    
+    }
+
+    await this.prismaMaster.shipmentTrackingMetadata.update({
+      where: { id: shipmentTrackingMetadataId },
+      data: {
+        endedAt: new Date(),
+      },
+    });
   }
 
   private async getCourier(courierId: number) {
@@ -94,45 +101,41 @@ export class TrackBookingQueueConsumer extends WorkerHost {
     });
   }
 
-  private async createBooking(orderBookings: any[]) {
-    return this.prismaTenantConnection.orderShipment.createMany({
-      data: orderBookings.map((booking) => ({
-        cn: booking?.cn,
-        orderId: booking?.order?.id,
-        courierServiceId: booking?.courierAccount?.id,
-        courierServiceCompany: booking?.courierAccount?.courier,
-        status: OrderStatus.booked,
-      })),
-      skipDuplicates: true,
+  private async updateShipment(id: number, data: any) {
+    return this.prismaTenantConnection.orderShipment.update({
+      where: { id },
+      data,
     });
   }
 
-  private async updateOrderStatus(orderIds: any[], status: OrderStatus) {
-    return this.prismaTenantConnection.order.updateMany({
-      data: {
-        status,
-      },
-      where: { id: { in: orderIds } },
+  // private async updateOrderStatus(orderIds: any[], status: OrderStatus) {
+  //   return this.prismaTenantConnection.order.updateMany({
+  //     data: {
+  //       status,
+  //     },
+  //     where: { id: { in: orderIds } },
+  //   });
+  // }
+
+  // private async createOrderLogs(logs: any[]) {
+  //   return this.prismaTenantConnection.orderLog.createMany({
+  //     data: logs,
+  //   });
+  // }
+
+  async openTenantDbConnection(tenantId: string) {
+    this.prismaTenantConnection = new PrismaClient({
+      datasourceUrl: getDbUrl(getTenantDbName(tenantId)),
     });
+
+    await this.prismaTenantConnection.$connect();
+    return this.prismaTenantConnection;
   }
 
-  private async generateAndCreateOrderLogs(
-    orderIds: any[],
-    userId: number,
-    event: string,
-  ) {
-    const logs = orderIds.map((orderId) => ({
-      orderId,
-      event,
-      userId,
-    }));
-    await this.createOrderLogs(logs);
-  }
-
-  private async createOrderLogs(logs: any[]) {
-    return this.prismaTenantConnection.orderLog.createMany({
-      data: logs,
-    });
+  async closeTenantDbConnection() {
+    if (this.prismaTenantConnection) {
+      await this.prismaTenantConnection.$disconnect();
+    }
   }
 
   @OnWorkerEvent('active')
@@ -145,14 +148,14 @@ export class TrackBookingQueueConsumer extends WorkerHost {
     Logger.log(
       `Job with id ${job.id} from ${ORDER_TRACKING_QUEUE} is completed`,
     );
-    await this.prismaTenantConnection.$disconnect();
+    await this.closeTenantDbConnection();
   }
 
   @OnWorkerEvent('failed')
-  async onFailed(job: Job) {
-    await this.prismaTenantConnection.$disconnect();
+  async onFailed(job: Job, error: Error) {
     Logger.log(
-      `Job with id ${job.id} from ${ORDER_TRACKING_QUEUE} is failed due to ${job.failedReason}`,
+      `Job with id ${job.id} from ${ORDER_TRACKING_QUEUE} is failed due to ${job.failedReason}, ${error.stack}`,
     );
+    await this.closeTenantDbConnection();
   }
 }

@@ -7,6 +7,10 @@ import { getDbUrl } from '../../onboard/utils';
 import { CREATE_BOOKING_QUEUE } from '../constants';
 import { CourierFactory } from '../factories/courier.factory';
 import { OrderEvents, OrderStatus } from '@/src/types/order';
+import {
+  BatchBookParcelResponse,
+  BookParcelResponse,
+} from '../types/courier.interface';
 
 @Processor(CREATE_BOOKING_QUEUE, {})
 export class CreateBookingQueueConsumer extends WorkerHost {
@@ -32,10 +36,10 @@ export class CreateBookingQueueConsumer extends WorkerHost {
   }
 
   @OnWorkerEvent('failed')
-  async onFailed(job: Job) {
+  async onFailed(job: Job, error: Error) {
     await this.prismaTenantConnection.$disconnect();
     Logger.log(
-      `Job with id ${job.id} from ${CREATE_BOOKING_QUEUE} is failed due to ${job.failedReason}`,
+      `Job with id ${job.id} from ${CREATE_BOOKING_QUEUE} is failed due to ${job.failedReason}, ${error.stack}`,
     );
   }
 
@@ -75,27 +79,34 @@ export class CreateBookingQueueConsumer extends WorkerHost {
     const createdBookings = [],
       failedBookings = [];
     if (notBookedOrders.length) {
-      let bookingResponses = null;
       if (hasBulkBooking) {
-        bookingResponses = await courierService.batchBookParcels(
-          notBookedOrders,
-          courier,
-        );
+        const batchBookingResponse: BatchBookParcelResponse =
+          await courierService.batchBookParcels(notBookedOrders, courier);
+        if (batchBookingResponse.success) {
+          batchBookingResponse.bookings.map((booking) =>
+            createdBookings.push({
+              cn: booking.cn,
+              order: booking.order,
+              courierServiceId: batchBookingResponse?.courierAccount?.id,
+              status: OrderStatus.booked,
+            }),
+          );
+        }
       } else {
-        bookingResponses = await Promise.all(
+        const bookingResponses: BookParcelResponse[] = await Promise.all(
           notBookedOrders.map((order) =>
             courierService.bookParcel(order, courier),
           ),
         );
-      }
-      this.logger.log('booking service response', bookingResponses);
-      for (const booking of bookingResponses) {
-        if (booking.success) {
-          createdBookings.push(booking);
-        } else {
-          failedBookings.push(booking);
+        for (const booking of bookingResponses) {
+          if (booking.success) {
+            createdBookings.push(booking);
+          } else {
+            failedBookings.push(booking);
+          }
         }
       }
+      
     }
 
     if (createdBookings.length) {
@@ -167,7 +178,6 @@ export class CreateBookingQueueConsumer extends WorkerHost {
         cn: booking?.cn,
         orderId: booking?.order?.id,
         courierServiceId: booking?.courierAccount?.id,
-        courierServiceCompany: booking?.courierAccount?.courier,
         status: OrderStatus.booked,
       })),
       skipDuplicates: true,

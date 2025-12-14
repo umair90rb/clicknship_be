@@ -13,7 +13,7 @@ model Tenant {
   tenantId     String                  @id @unique @map("tenant_id")
   dbName       String?                 @unique @map("db_name")
   companyName  String?                 @map("company_name")
-  trackingLogs ShipmentTrackingMetadata[]
+  shipmentTrackingMetadata ShipmentTrackingMetadata[]
 
   @@map("tenants")
 }

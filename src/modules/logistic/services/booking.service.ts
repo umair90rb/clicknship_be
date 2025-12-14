@@ -30,7 +30,7 @@ export class BookingService {
   async status(cn: string, req: RequestWithTenantAndUser) {
     const deliveryAccount = { service: 'abc' }; //get delivery account
     const courier = this.courierFactory.getCourier(deliveryAccount.service);
-    return courier.checkParcelStatus(cn, deliveryAccount);
+    return courier.parcelStatus(cn, deliveryAccount);
   }
 
   async create(

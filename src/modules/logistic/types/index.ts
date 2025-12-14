@@ -14,7 +14,8 @@ export interface CreateBookingJobData {
 }
 
 export interface TrackBookingJobData {
-  courierServiceId: number;
+  shipmentTrackingMetadataId: string;
+  courierServiceId: string;
   shipments: Omit<
     OrderShipment,
     'tracking' | 'trackingAt' | 'trackingStatus' | 'status'

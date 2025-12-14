@@ -59,8 +59,8 @@ export class OrderService {
         user: { select: { name: true, id: true } },
       },
     },
-    delivery: {
-      select: { cn: true, status: true, trackedAt: true, tracking: true },
+    shipment: {
+      select: { cn: true, status: true, lastTrackedAt: true, trackingJson: true },
     },
   };
 

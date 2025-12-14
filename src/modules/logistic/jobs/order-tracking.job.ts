@@ -38,12 +38,9 @@ export class OrderTrackingJob {
     // 1) Find tenants that DO NOT have a record today
     const tenant = await this.prismaMasterService.tenant.findFirst({
       where: {
-        trackingLogs: {
+        shipmentTrackingMetadata: {
           none: {
-            startedAt: {
-              gte: start,
-              lte: end,
-            },
+            startedAt: { lte: end, gte: start },
           },
         },
       },
@@ -72,30 +69,31 @@ export class OrderTrackingJob {
         orderId: true,
         id: true,
       },
-      where: {
-        OR: [
-          {
-            lastTrackedAt: { lte: start },
-          },
-          { lastTrackedAt: null },
-        ],
-        status: {
-          notIn: [
-            OrderStatus.delivered,
-            OrderStatus.returned,
-            OrderStatus.inReturnProcess,
-          ],
-        },
-      },
+      //commented for dev testing
+      // where: {
+      //   OR: [
+      //     {
+      //       lastTrackedAt: { lte: start },
+      //     },
+      //     { lastTrackedAt: null },
+      //   ],
+      //   status: {
+      //     notIn: [
+      //       OrderStatus.delivered,
+      //       OrderStatus.returned,
+      //       OrderStatus.inReturnProcess,
+      //     ],
+      //   },
+      // },
     });
 
     if (!shipments.length) {
-      this.logger.log(`No shipment found for tracking for tenant ${tenantId}`, );
+      this.logger.log(`No shipment found for tracking for tenant ${tenantId}`);
       await this.addShipmentTrackingMetadata({
         noOfJobs: 0,
         noOfOrders: shipments.length,
         startedAt: new Date(),
-        endedAt: new Date,
+        endedAt: new Date(),
         tenantId: tenantId,
       });
       return;
@@ -112,26 +110,27 @@ export class OrderTrackingJob {
     }
     // put them into queue
     const courierServiceIdsArr = Object.keys(groupedByCourierServiceId);
+    const shipmentTrackingMetadata = await this.addShipmentTrackingMetadata({
+      noOfJobs: courierServiceIdsArr.length,
+      noOfOrders: shipments.length,
+      startedAt: new Date(),
+      tenantId: tenantId,
+      endedAt: undefined,
+    });
     await this.trackingQueue.addBulk(
       courierServiceIdsArr.map((key) => ({
         name: BOOKING_ACTIONS.track,
         data: {
           courierServiceId: key,
-          bookings: groupedByCourierServiceId[key],
+          shipments: groupedByCourierServiceId[key],
           tenant,
+          shipmentTrackingMetadataId: shipmentTrackingMetadata.id
         },
         opts: {
           jobId: `${BOOKING_ACTIONS.track}/${tenantId}/${key}/${Date.now()}`,
         },
       })),
     );
-    await this.addShipmentTrackingMetadata({
-      noOfJobs: courierServiceIdsArr.length,
-      noOfOrders: shipments.length,
-      startedAt: new Date(),
-      tenantId: tenantId,
-      endedAt: undefined
-    });
 
     this.logger.log(
       `${courierServiceIdsArr.length} tracking jobs added for tenant: ${tenantId}, closing db connection...`,
@@ -140,8 +139,11 @@ export class OrderTrackingJob {
     this.logger.log('db connection closed.');
   }
 
-  private async addShipmentTrackingMetadata(data: Omit<ShipmentTrackingMetadata, 'id'>) {
+  private async addShipmentTrackingMetadata(
+    data: Omit<ShipmentTrackingMetadata, 'id'>,
+  ) {
     return this.prismaMasterService.shipmentTrackingMetadata.create({
+      select: {id: true},
       data,
     });
   }

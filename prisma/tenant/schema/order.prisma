@@ -29,7 +29,7 @@ model Order {
   userId     Int?      @map("user_id")
   assignedAt DateTime? @map("assigned_at")
 
-  delivery OrderShipment?
+  shipment OrderShipment?
   items    OrderItem[]
   logs     OrderLog[]
   comments OrderComment[]

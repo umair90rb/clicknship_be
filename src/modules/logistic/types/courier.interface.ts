@@ -1,36 +1,86 @@
-interface Metadata {
+export interface Metadata {
   name: string;
   allowBulkBooking: boolean;
+  allowBulkTracking: boolean;
 }
 
-interface BookParcelResponse {
+export interface BookParcelResponse {
   cn: string;
+  courierAccount: any;
   success: boolean;
   message: string;
   order: any;
+  data: any;
+}
+interface BatchBookingData {
+    cn: string;
+    order: any;
+  }
+export interface BatchBookParcelResponse {
+  success: boolean;
+  courierAccount: any;
+  message: string;
+  bookings: BatchBookingData[];
+}
+
+export interface CancelParcelResponse {
+  cn: string;
+  courierAccount: any;
+  success: boolean;
+  message: string;
+  data: any;
+}
+
+export interface TrackingEvent {
+  status: string;
+  date: Date;
+  reason: string;
+  receiver: string;
+}
+
+export interface ParcelStatusResponse {
+  courierAccount: any;
+  shipment: any;
+  tracking: TrackingEvent[];
+  cn: string;
+  success: boolean;
+  message: string;
 }
 
 export interface IBaseCourierService {
   get getMetadata(): Metadata;
-  bookParcel(orderDetails: any, courierAccount: any): Promise<any>;
-  cancelBooking(cn: string, courierAccount: any): Promise<any>;
-  parcelStatus(shipment: any, courierAccount: any): Promise<any>;
-  batchParcelStatus(shipments: any[], courierAccount: any): Promise<any>;
-  downloadReceipt(cns: string[], courierAccount: any): Promise<any>;
+  bookParcel(
+    orderDetails: any,
+    courierAccount: any,
+  ): Promise<BookParcelResponse>;
+  cancelBooking(
+    shipment: string,
+    courierAccount: any,
+  ): Promise<CancelParcelResponse>;
+  parcelStatus(
+    shipment: any,
+    courierAccount: any,
+  ): Promise<ParcelStatusResponse>;
+  batchParcelStatus?(
+    shipments: any[],
+    courierAccount: any,
+  ): Promise<ParcelStatusResponse[]>;
+  batchBookParcels?(
+    orders: any[],
+    courierAccount: any,
+  ): Promise<BatchBookParcelResponse>;
 }
 
 // src/modules/logistics/types/courier.interface.ts
 
 export interface ICourierService extends IBaseCourierService {
-  batchBookParcels?(orders: any[], courierAccount: any): Promise<any>;
+  downloadReceipt(cns: string[], courierAccount: any): Promise<any>;
 
   downloadLoadSheet?(
     loadSheetId: number,
     courierAccount: any,
     responseType?: 'PDF' | 'JSON',
   ): Promise<any>;
-
-  /* ------------------- Leopard-Specific Full API Implementation ------------------- */
 
   generateLoadSheet?(
     cnNumbers: string[],

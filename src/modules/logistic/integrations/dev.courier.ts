@@ -1,6 +1,6 @@
 // src/modules/logistics/integrations/Daewoo/index.ts
 import { Injectable, Logger } from '@nestjs/common';
-import { ICourierService } from '../types/courier.interface'; // per your project layout
+import { BatchBookParcelResponse, BookParcelResponse, ICourierService, ParcelStatusResponse } from '../types/courier.interface'; // per your project layout
 
 @Injectable()
 export default class DevCourier implements ICourierService {
@@ -9,6 +9,7 @@ export default class DevCourier implements ICourierService {
   private readonly metadata = {
     name: 'DevCourier',
     allowBulkBooking: false,
+    allowBulkTracking: true,
   };
 
   get getMetadata() {
@@ -19,7 +20,7 @@ export default class DevCourier implements ICourierService {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  async bookParcel(order: any, courierAccount: any) {
+  async bookParcel(order: any, courierAccount: any): Promise<BookParcelResponse> {
     try {
       await this.wait();
       return {
@@ -28,6 +29,7 @@ export default class DevCourier implements ICourierService {
         success: true,
         cn: Math.random().toString().split('.')[1],
         message: null,
+        data: {}
       };
     } catch (err) {
       this.logger.error(
@@ -40,44 +42,43 @@ export default class DevCourier implements ICourierService {
         courierAccount,
         order,
         cn: null,
+        data: {}
       };
     }
   }
 
-  async batchBookParcels(orders, courierAccount) {
+  async batchBookParcels(orders: any[], courierAccount: any): Promise<BatchBookParcelResponse> {
     try {
-      await this.wait(2000);
+      await this.wait(orders.length);
       return {
-        success: true,
-        courierAccount,
-        message: 'order batch booking successfully',
-        booking: orders.map((order) => ({
-          order,
-          cn: Math.random().toString().split('.')[1],
-        })),
-      };
+            success: true,
+            courierAccount,
+            message: 'order batch booking successfully',
+            bookings: orders.map((order) => ({
+              order,
+              cn: Math.random().toString().split('.')[1],
+            }))
+        }
     } catch (err) {
       this.logger.error(
         'bookParcel error',
         err?.response?.data ?? err?.message ?? err,
       );
       return {
-        success: true,
+        success: false,
         courierAccount,
         message: 'order batch booking successfully',
-        booking: [],
+        bookings: [],
       };
     }
   }
 
-  async parcelStatus(
-    shipment: any,
-    courierAccount?: any,
-  ) {
+  async parcelStatus(shipment: any, courierAccount?: any): Promise<ParcelStatusResponse> {
     try {
       await this.wait(1000);
       return {
         success: true,
+        message: 'Order tracked successfully',
         courierAccount,
         shipment,
         cn: shipment?.cn,
@@ -125,7 +126,6 @@ export default class DevCourier implements ICourierService {
             receiver: 'string',
           },
         ],
-        message: 'Order tracked successfully',
       };
     } catch (err) {
       this.logger.error(
@@ -143,13 +143,10 @@ export default class DevCourier implements ICourierService {
     }
   }
 
-  async batchParcelStatus(
-    shipments: any[],
-    courierAccount?: any,
-  ) {
+  async batchParcelStatus(shipments: any[], courierAccount?: any): Promise<any> {
     try {
       await this.wait(shipments.length * 1000);
-      return shipments.map(shipment => ({
+      return shipments.map((shipment) => ({
         success: true,
         courierAccount,
         shipment,
@@ -205,7 +202,7 @@ export default class DevCourier implements ICourierService {
         'bookParcel error',
         err?.response?.data ?? err?.message ?? err,
       );
-      return shipments.map(shipment => ({
+      return shipments.map((shipment) => ({
         success: false,
         courierAccount,
         shipment,
@@ -219,7 +216,7 @@ export default class DevCourier implements ICourierService {
   /**
    * Cancel booking - quickCancel
    */
-  async cancelBooking(trackingNumber: string | string[], courierAccount: any) {
+  async cancelBooking(trackingNumber: string, courierAccount: any) {
     try {
       await this.wait();
       return {
@@ -227,6 +224,7 @@ export default class DevCourier implements ICourierService {
         courierAccount,
         success: true,
         message: 'Booking canceled!',
+        data: {}
       };
     } catch (err) {
       this.logger.error(
@@ -238,6 +236,7 @@ export default class DevCourier implements ICourierService {
         courierAccount,
         success: false,
         message: err,
+        data: {}
       };
     }
   }
@@ -260,7 +259,7 @@ export default class DevCourier implements ICourierService {
   async getBookingDetail(trackingNumber: string, courierAccount: any) {
     try {
       // The doc uses quickTrack for tracking details. We'll reuse quickTrack result as booking detail.
-      return await this.checkParcelStatus(trackingNumber, courierAccount);
+      return await this.parcelStatus(trackingNumber, courierAccount);
     } catch (err) {
       this.logger.error(
         'getBookingDetail error',

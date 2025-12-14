@@ -16,6 +16,7 @@ import { OrderModule } from '../order/order.module';
 import { CreateBookingQueueConsumer } from './processors/booking.processor';
 import DevCourier from './integrations/dev.courier';
 import { OrderTrackingJob } from './jobs/order-tracking.job';
+import { TrackShipmentQueueConsumer } from './processors/tracking.processor';
 // import TcsCourier from './integrations/tcs.courier';
 // import LeopardCourier from './integrations/leopard.courier';
 
@@ -54,6 +55,7 @@ import { OrderTrackingJob } from './jobs/order-tracking.job';
     // },
     CreateBookingQueueConsumer,
     OrderTrackingJob,
+    TrackShipmentQueueConsumer
   ],
 
   exports: [CourierFactory],
