@@ -10,6 +10,7 @@ import { OrderModule } from './modules/order/order.module';
 import { WebhookModule } from './modules/webhook/webhook.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { LogisticModule } from './modules/logistic/logistic.module';
+import { InventoryModule } from './modules/inventory/inventory.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -24,6 +25,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     WebhookModule,
     SettingsModule,
     LogisticModule,
+    InventoryModule,
   ],
   controllers: [AppController],
   providers: [],

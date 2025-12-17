@@ -1,0 +1,259 @@
+// Accounting Module Schema
+
+model Account {
+  id              Int     @id @default(autoincrement())
+  code            String  @unique
+  name            String
+  type            String // ASSET, LIABILITY, EQUITY, REVENUE, EXPENSE
+  subType         String? @map("sub_type") // CASH, BANK, ACCOUNTS_RECEIVABLE, INVENTORY, ACCOUNTS_PAYABLE, SALES, COGS, etc.
+  description     String?
+  isSystemAccount Boolean @default(false) @map("is_system_account")
+  active          Boolean @default(true)
+
+  parentId Int?      @map("parent_id")
+  parent   Account?  @relation("AccountHierarchy", fields: [parentId], references: [id])
+  children Account[] @relation("AccountHierarchy")
+
+  journalEntryLines JournalEntryLine[]
+  billItems         BillItem[]
+  taxRates          TaxRate[]
+
+  @@index([type])
+  @@index([code])
+  @@map("accounts")
+}
+
+model FiscalPeriod {
+  id        Int       @id @default(autoincrement())
+  name      String
+  startDate DateTime  @map("start_date")
+  endDate   DateTime  @map("end_date")
+  status    String    @default("OPEN") // OPEN, CLOSED
+  closedAt  DateTime? @map("closed_at")
+
+  journalEntries JournalEntry[]
+
+  @@index([startDate, endDate])
+  @@map("fiscal_periods")
+}
+
+model JournalEntry {
+  id            Int       @id @default(autoincrement())
+  entryNumber   String    @unique @map("entry_number")
+  date          DateTime
+  description   String?
+  referenceType String?   @map("reference_type") // ORDER, PAYMENT, REFUND, PURCHASE, ADJUSTMENT, COD_REMITTANCE
+  referenceId   Int?      @map("reference_id")
+  status        String    @default("DRAFT") // DRAFT, POSTED, REVERSED
+  createdAt     DateTime  @default(now()) @map("created_at")
+  postedAt      DateTime? @map("posted_at")
+
+  fiscalPeriodId Int?          @map("fiscal_period_id")
+  fiscalPeriod   FiscalPeriod? @relation(fields: [fiscalPeriodId], references: [id])
+
+  reversedEntryId Int?           @map("reversed_entry_id")
+  reversedEntry   JournalEntry?  @relation("ReversalEntry", fields: [reversedEntryId], references: [id])
+  reversals       JournalEntry[] @relation("ReversalEntry")
+
+  userId Int?  @map("user_id")
+  user   User? @relation(fields: [userId], references: [id])
+
+  lines JournalEntryLine[]
+
+  @@index([date])
+  @@index([referenceType, referenceId])
+  @@index([status])
+  @@map("journal_entries")
+}
+
+model JournalEntryLine {
+  id     Int     @id @default(autoincrement())
+  debit  Float   @default(0)
+  credit Float   @default(0)
+  memo   String?
+
+  journalEntryId Int          @map("journal_entry_id")
+  journalEntry   JournalEntry @relation(fields: [journalEntryId], references: [id], onDelete: Cascade)
+
+  accountId Int     @map("account_id")
+  account   Account @relation(fields: [accountId], references: [id])
+
+  @@map("journal_entry_lines")
+}
+
+model Invoice {
+  id            Int       @id @default(autoincrement())
+  invoiceNumber String    @unique @map("invoice_number")
+  issueDate     DateTime  @map("issue_date")
+  dueDate       DateTime? @map("due_date")
+  subtotal      Float     @default(0)
+  taxAmount     Float     @default(0) @map("tax_amount")
+  totalAmount   Float     @default(0) @map("total_amount")
+  paidAmount    Float     @default(0) @map("paid_amount")
+  status        String    @default("DRAFT") // DRAFT, SENT, PARTIAL, PAID, OVERDUE, CANCELLED
+  notes         String?
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  customerId Int?      @map("customer_id")
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  orderId Int?   @map("order_id")
+  order   Order? @relation(fields: [orderId], references: [id])
+
+  items    InvoiceItem[]
+  payments PaymentRecord[]
+
+  @@index([status])
+  @@index([issueDate])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          Int    @id @default(autoincrement())
+  description String
+  quantity    Float  @default(1)
+  unitPrice   Float  @map("unit_price")
+  taxRate     Float  @default(0) @map("tax_rate")
+  taxAmount   Float  @default(0) @map("tax_amount")
+  lineTotal   Float  @map("line_total")
+
+  invoiceId Int     @map("invoice_id")
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  productId Int?     @map("product_id")
+  product   Product? @relation(fields: [productId], references: [id])
+
+  @@map("invoice_items")
+}
+
+model Bill {
+  id          Int       @id @default(autoincrement())
+  billNumber  String    @unique @map("bill_number")
+  issueDate   DateTime  @map("issue_date")
+  dueDate     DateTime? @map("due_date")
+  subtotal    Float     @default(0)
+  taxAmount   Float     @default(0) @map("tax_amount")
+  totalAmount Float     @default(0) @map("total_amount")
+  paidAmount  Float     @default(0) @map("paid_amount")
+  status      String    @default("DRAFT") // DRAFT, PENDING, PARTIAL, PAID, OVERDUE
+  notes       String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  supplierId Int?      @map("supplier_id")
+  supplier   Supplier? @relation(fields: [supplierId], references: [id])
+
+  purchaseOrderId Int?           @map("purchase_order_id")
+  purchaseOrder   PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
+
+  items    BillItem[]
+  payments PaymentRecord[]
+
+  @@index([status])
+  @@index([issueDate])
+  @@map("bills")
+}
+
+model BillItem {
+  id          Int    @id @default(autoincrement())
+  description String
+  quantity    Float  @default(1)
+  unitPrice   Float  @map("unit_price")
+  lineTotal   Float  @map("line_total")
+
+  billId Int  @map("bill_id")
+  bill   Bill @relation(fields: [billId], references: [id], onDelete: Cascade)
+
+  accountId Int?     @map("account_id")
+  account   Account? @relation(fields: [accountId], references: [id])
+
+  @@map("bill_items")
+}
+
+model PaymentRecord {
+  id             Int      @id @default(autoincrement())
+  paymentNumber  String   @unique @map("payment_number")
+  type           String // RECEIPT, DISBURSEMENT, REFUND, COD_REMITTANCE
+  method         String // CASH, BANK_TRANSFER, COD, CARD, WALLET, CHEQUE
+  amount         Float
+  date           DateTime
+  bankAccount    String?  @map("bank_account")
+  transactionRef String?  @map("transaction_ref")
+  notes          String?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  invoiceId Int?     @map("invoice_id")
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id])
+
+  billId Int?  @map("bill_id")
+  bill   Bill? @relation(fields: [billId], references: [id])
+
+  orderId Int?   @map("order_id")
+  order   Order? @relation(fields: [orderId], references: [id])
+
+  codRemittanceId Int?           @map("cod_remittance_id")
+  codRemittance   CodRemittance? @relation(fields: [codRemittanceId], references: [id])
+
+  userId Int?  @map("user_id")
+  user   User? @relation(fields: [userId], references: [id])
+
+  @@index([type])
+  @@index([date])
+  @@map("payment_records")
+}
+
+model CodRemittance {
+  id               Int       @id @default(autoincrement())
+  remittanceNumber String    @unique @map("remittance_number")
+  statementDate    DateTime  @map("statement_date")
+  totalOrders      Int       @map("total_orders")
+  grossAmount      Float     @map("gross_amount")
+  courierCharges   Float     @map("courier_charges")
+  netAmount        Float     @map("net_amount")
+  status           String    @default("PENDING") // PENDING, RECEIVED, RECONCILED, DISPUTED
+  receivedDate     DateTime? @map("received_date")
+  bankReference    String?   @map("bank_reference")
+  notes            String?
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  courierServiceId Int            @map("courier_service_id")
+  courierService   CourierService @relation(fields: [courierServiceId], references: [id])
+
+  userId Int?  @map("user_id")
+  user   User? @relation(fields: [userId], references: [id])
+
+  items    CodRemittanceItem[]
+  payments PaymentRecord[]
+
+  @@index([status])
+  @@index([statementDate])
+  @@map("cod_remittances")
+}
+
+model CodRemittanceItem {
+  id            Int    @id @default(autoincrement())
+  cn            String // Consignment number
+  amount        Float
+  courierCharge Float  @map("courier_charge")
+
+  codRemittanceId Int           @map("cod_remittance_id")
+  codRemittance   CodRemittance @relation(fields: [codRemittanceId], references: [id], onDelete: Cascade)
+
+  orderId Int   @map("order_id")
+  order   Order @relation(fields: [orderId], references: [id])
+
+  @@map("cod_remittance_items")
+}
+
+model TaxRate {
+  id     Int     @id @default(autoincrement())
+  name   String
+  rate   Float // Percentage (e.g., 17 for 17%)
+  active Boolean @default(true)
+
+  accountId Int?     @map("account_id")
+  account   Account? @relation(fields: [accountId], references: [id])
+
+  @@map("tax_rates")
+}

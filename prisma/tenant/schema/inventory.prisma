@@ -1,0 +1,158 @@
+// Inventory Module Schema
+
+model InventoryLocation {
+  id        Int     @id @default(autoincrement())
+  name      String
+  address   String?
+  isDefault Boolean @default(false) @map("is_default")
+  active    Boolean @default(true)
+
+  inventoryItems     InventoryItem[]
+  purchaseOrderItems PurchaseOrderItem[]
+  transfersFrom      StockTransfer[]     @relation("TransferFrom")
+  transfersTo        StockTransfer[]     @relation("TransferTo")
+
+  @@map("inventory_locations")
+}
+
+model InventoryItem {
+  id               Int    @id @default(autoincrement())
+  quantity         Int    @default(0)
+  reservedQuantity Int    @default(0) @map("reserved_quantity")
+  reorderPoint     Int?   @map("reorder_point")
+  reorderQuantity  Int?   @map("reorder_quantity")
+  costPrice        Float? @map("cost_price")
+
+  productId Int     @map("product_id")
+  product   Product @relation(fields: [productId], references: [id])
+
+  locationId Int?               @map("location_id")
+  location   InventoryLocation? @relation(fields: [locationId], references: [id])
+
+  movements InventoryMovement[]
+
+  updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
+
+  @@unique([productId, locationId])
+  @@index([productId])
+  @@map("inventory_items")
+}
+
+model InventoryMovement {
+  id               Int      @id @default(autoincrement())
+  type             String // SALE, RETURN, ADJUSTMENT, PURCHASE, TRANSFER_IN, TRANSFER_OUT, RESERVATION, RESERVATION_RELEASE, DAMAGED, EXPIRED
+  quantity         Int // positive or negative
+  previousQuantity Int      @map("previous_quantity")
+  newQuantity      Int      @map("new_quantity")
+  reason           String?
+  referenceType    String?  @map("reference_type") // ORDER, PURCHASE_ORDER, TRANSFER, MANUAL
+  referenceId      Int?     @map("reference_id")
+  costAtTime       Float?   @map("cost_at_time")
+  createdAt        DateTime @default(now()) @map("created_at")
+
+  inventoryItemId Int           @map("inventory_item_id")
+  inventoryItem   InventoryItem @relation(fields: [inventoryItemId], references: [id])
+
+  userId Int?  @map("user_id")
+  user   User? @relation(fields: [userId], references: [id])
+
+  @@index([inventoryItemId])
+  @@index([referenceType, referenceId])
+  @@index([createdAt])
+  @@map("inventory_movements")
+}
+
+model Supplier {
+  id          Int     @id @default(autoincrement())
+  name        String
+  contactName String? @map("contact_name")
+  email       String?
+  phone       String?
+  address     String?
+  active      Boolean @default(true)
+
+  purchaseOrders PurchaseOrder[]
+  bills          Bill[]
+
+  @@map("suppliers")
+}
+
+model PurchaseOrder {
+  id           Int       @id @default(autoincrement())
+  poNumber     String    @unique @map("po_number")
+  status       String    @default("DRAFT") // DRAFT, ORDERED, PARTIAL, RECEIVED, CANCELLED
+  orderDate    DateTime? @map("order_date")
+  expectedDate DateTime? @map("expected_date")
+  receivedDate DateTime? @map("received_date")
+  totalAmount  Float?    @default(0) @map("total_amount")
+  notes        String?
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  supplierId Int?      @map("supplier_id")
+  supplier   Supplier? @relation(fields: [supplierId], references: [id])
+
+  userId Int?  @map("user_id")
+  user   User? @relation(fields: [userId], references: [id])
+
+  items PurchaseOrderItem[]
+  bills Bill[]
+
+  @@index([status])
+  @@index([poNumber])
+  @@map("purchase_orders")
+}
+
+model PurchaseOrderItem {
+  id               Int   @id @default(autoincrement())
+  orderedQuantity  Int   @map("ordered_quantity")
+  receivedQuantity Int   @default(0) @map("received_quantity")
+  unitCost         Float @map("unit_cost")
+
+  purchaseOrderId Int           @map("purchase_order_id")
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+
+  productId Int     @map("product_id")
+  product   Product @relation(fields: [productId], references: [id])
+
+  locationId Int?               @map("location_id")
+  location   InventoryLocation? @relation(fields: [locationId], references: [id])
+
+  @@map("purchase_order_items")
+}
+
+model StockTransfer {
+  id             Int       @id @default(autoincrement())
+  transferNumber String    @unique @map("transfer_number")
+  status         String    @default("PENDING") // PENDING, IN_TRANSIT, COMPLETED, CANCELLED
+  notes          String?
+  initiatedAt    DateTime  @default(now()) @map("initiated_at")
+  completedAt    DateTime? @map("completed_at")
+
+  fromLocationId Int               @map("from_location_id")
+  fromLocation   InventoryLocation @relation("TransferFrom", fields: [fromLocationId], references: [id])
+
+  toLocationId Int               @map("to_location_id")
+  toLocation   InventoryLocation @relation("TransferTo", fields: [toLocationId], references: [id])
+
+  userId Int?  @map("user_id")
+  user   User? @relation(fields: [userId], references: [id])
+
+  items StockTransferItem[]
+
+  @@index([status])
+  @@map("stock_transfers")
+}
+
+model StockTransferItem {
+  id       Int @id @default(autoincrement())
+  quantity Int
+
+  stockTransferId Int           @map("stock_transfer_id")
+  stockTransfer   StockTransfer @relation(fields: [stockTransferId], references: [id], onDelete: Cascade)
+
+  productId Int     @map("product_id")
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@map("stock_transfer_items")
+}

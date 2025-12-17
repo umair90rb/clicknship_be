@@ -8,6 +8,7 @@ model CourierService {
 
   orders               Order[]
   courierServiceFields CourierServiceField[]
+  codRemittances       CodRemittance[]
 
   @@map("courier_services")
 }
@@ -29,7 +30,7 @@ model OrderShipment {
   status String?
 
   lastTrackedAt DateTime? @map("last_tracked_at")
-  trackingJson  Json?   @map("tracking_json")
+  trackingJson  Json?     @map("tracking_json")
 
   orderId Int   @unique() @map("order_id")
   order   Order @relation(fields: [orderId], references: [id])

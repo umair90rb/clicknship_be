@@ -23,6 +23,16 @@ model User {
   comments     OrderComment[]
   refreshToken RefreshToken?
 
+  // Inventory relations
+  inventoryMovements InventoryMovement[]
+  purchaseOrders     PurchaseOrder[]
+  stockTransfers     StockTransfer[]
+
+  // Accounting relations
+  journalEntries JournalEntry[]
+  paymentRecords PaymentRecord[]
+  codRemittances CodRemittance[]
+
   @@map("users")
 }
 
