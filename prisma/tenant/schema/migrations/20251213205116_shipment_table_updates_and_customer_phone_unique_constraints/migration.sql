@@ -34,7 +34,7 @@ CREATE INDEX "order_shipments_cn_idx" ON "public"."order_shipments"("cn");
 CREATE INDEX "order_shipments_order_id_idx" ON "public"."order_shipments"("order_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "customers_phone_key" ON "public"."customers"("phone") WHERE phone IS NOT NULL;
+CREATE UNIQUE INDEX "customers_phone_key" ON "public"."customers"("phone");
 
 -- AddForeignKey
 ALTER TABLE "public"."order_shipments" ADD CONSTRAINT "order_shipments_order_id_fkey" FOREIGN KEY ("order_id") REFERENCES "public"."orders"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

@@ -11,6 +11,8 @@ import { WebhookModule } from './modules/webhook/webhook.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { LogisticModule } from './modules/logistic/logistic.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
+import { AccountingModule } from './modules/accounting/accounting.module';
+import { ReportingModule } from './modules/reporting/reporting.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -26,6 +28,8 @@ import { ScheduleModule } from '@nestjs/schedule';
     SettingsModule,
     LogisticModule,
     InventoryModule,
+    AccountingModule,
+    ReportingModule,
   ],
   controllers: [AppController],
   providers: [],

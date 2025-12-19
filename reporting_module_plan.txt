@@ -1,0 +1,204 @@
+Here is Claude's plan:                                                                                        
+╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌╌
+ Reporting Module Implementation Plan                                                                          
+                                                                                                               
+ Overview                                                                                                      
+                                                                                                               
+ Create a comprehensive reporting module for e-commerce operations covering orders, inventory, and accounting  
+ reports with common filters.                                                                                  
+                                                                                                               
+ Order Statuses Reference                                                                                      
+                                                                                                               
+ // From src/types/order.ts                                                                                    
+ draft, received, processed, confirmed, fake order, duplicate,                                                 
+ payment pending, no pick, cancel, in booking queue, booked,                                                   
+ booking error, booking canceled, dispatched, in transit,                                                      
+ delivered, in return process, returned                                                                        
+                                                                                                               
+ Key Insight: Orders with userId set are considered "assigned" to that user/agent.                             
+                                                                                                               
+ ---                                                                                                           
+ Module Structure                                                                                              
+                                                                                                               
+ src/modules/reporting/                                                                                        
+ ├── reporting.module.ts                                                                                       
+ ├── controllers/                                                                                              
+ │   ├── order-reports.controller.ts                                                                           
+ │   ├── inventory-reports.controller.ts                                                                       
+ │   └── accounting-reports.controller.ts                                                                      
+ ├── services/                                                                                                 
+ │   ├── order-reports.service.ts                                                                              
+ │   ├── inventory-reports.service.ts                                                                          
+ │   └── accounting-reports.service.ts                                                                         
+ ├── dto/                                                                                                      
+ │   ├── base-filter.dto.ts                                                                                    
+ │   ├── order-report-filters.dto.ts                                                                           
+ │   ├── inventory-report-filters.dto.ts                                                                       
+ │   └── accounting-report-filters.dto.ts                                                                      
+ └── types/                                                                                                    
+     └── report.types.ts                                                                                       
+                                                                                                               
+ ---                                                                                                           
+ Common Filters (All Reports)                                                                                  
+                                                                                                               
+ | Filter           | Type                         | Description                               |               
+ |------------------|------------------------------|-------------------------------------------|               
+ | brandId          | number                       | Filter by brand                           |               
+ | channelId        | number                       | Filter by sales channel                   |               
+ | dateRange        | {start: string, end: string} | Date range with time support on createdAt |               
+ | city             | string                       | Filter by order address city              |               
+ | courierServiceId | number                       | Filter by courier service                 |               
+ | status           | string[]                     | Filter by order statuses (order reports)  |               
+                                                                                                               
+ ---                                                                                                           
+ Reports to Implement                                                                                          
+                                                                                                               
+ Order Reports (11 total) - POST /api/v1/reports/orders/...                                                    
+                                                                                                               
+ | #   | Endpoint                  | Description                                                               
+               | Key Aggregation                   |                                                           
+ |-----|---------------------------|-------------------------------------------------------------------------- 
+ --------------|-----------------------------------|                                                           
+ | 1   | /agent-order              | Per user: name, total orders,                                             
+ confirmed/assigned/no_pick/payment_pending/cancel counts | groupBy userId + status           |                
+ | 2   | /product-unit             | Per product: name, total units, confirmed/no_pick/cancel units            
+               | findMany + aggregate by sku       |                                                           
+ | 3   | /booking-unit             | Per product: confirmed/booked/booking_error units, delivered per courier  
+               | Raw SQL (pivot)                   |                                                           
+ | 4   | /foc-unit                 | Per product (unitPrice=0): total FOC units, delivered per courier         
+               | filter unitPrice=0                |                                                           
+ | 5   | /agent-channel            | Per channel+user: orders, COD amount, product counts                      
+               | groupBy channelId + userId        |                                                           
+ | 6   | /channel-order            | Per channel: order/product counts by status                               
+               | groupBy channelId + status        |                                                           
+ | 7   | /user-incentive           | Per user+product: confirmed/delivered counts, incentive calculation       
+               | Join with products.incentive      |                                                           
+ | 8   | /courier-delivery         | Per courier: booked/delivered/in_transit/returned/error/canceled counts   
+               | groupBy courierServiceId + status |                                                           
+ | 9   | /courier-dispatch         | Per courier: total booked orders count                                    
+               | groupBy courierServiceId          |                                                           
+ | 10  | /channel-order-generation | Per Shopify domain: orders count, total units from webhook logs           
+               | groupBy domain                    |                                                           
+ | 11  | /booked-product-value     | Per product in booked orders: name, unit_price, count, total_value        
+               | findMany + aggregate              |                                                           
+                                                                                                               
+ Inventory Reports (6 total) - POST /api/v1/reports/inventory/...                                              
+                                                                                                               
+ | #   | Endpoint        | Description                                             |                           
+ |-----|-----------------|---------------------------------------------------------|                           
+ | 1   | /stock          | Current stock levels by location/product with valuation |                           
+ | 2   | /stock-damaged  | Damaged stock movements (type=DAMAGED)                  |                           
+ | 3   | /stock-expired  | Expired stock movements (type=EXPIRED)                  |                           
+ | 4   | /stock-movement | All stock movements with filters by type                |                           
+ | 5   | /low-stock      | Products below reorder point                            |                           
+ | 6   | /purchase-order | Purchase order status and amounts                       |                           
+                                                                                                               
+ Accounting Reports (5 total) - POST /api/v1/reports/accounting/...                                            
+                                                                                                               
+ | #   | Endpoint        | Description                              |                                          
+ |-----|-----------------|------------------------------------------|                                          
+ | 1   | /revenue        | Sales revenue by period (day/week/month) |                                          
+ | 2   | /invoice-aging  | Accounts receivable aging buckets        |                                          
+ | 3   | /cod-remittance | COD collections by courier service       |                                          
+ | 4   | /payment        | Payment transactions list                |                                          
+ | 5   | /profit-summary | Revenue vs costs summary                 |                                          
+                                                                                                               
+ ---                                                                                                           
+ Implementation Details                                                                                        
+                                                                                                               
+ 1. Base Filter DTO (dto/base-filter.dto.ts)                                                                   
+                                                                                                               
+ class DateRangeDto { start?: string; end?: string; }                                                          
+ class BaseReportFilterDto {                                                                                   
+   brandId?: number;                                                                                           
+   channelId?: number;                                                                                         
+   dateRange?: DateRangeDto;                                                                                   
+   city?: string;                                                                                              
+   courierServiceId?: number;                                                                                  
+   status?: string[];  // Order statuses filter                                                                
+ }                                                                                                             
+                                                                                                               
+ 2. Service Pattern                                                                                            
+                                                                                                               
+ - Inject TENANT_CONNECTION_PROVIDER for PrismaTenantClient                                                    
+ - Build where clause from filters using helper function                                                       
+ - Use Prisma groupBy for simple aggregations                                                                  
+ - Use raw SQL ($queryRaw) for complex pivots (booking-unit, revenue)                                          
+ - Return { data, meta: { total, filters, generatedAt } } structure                                            
+                                                                                                               
+ 3. Key Report Logic                                                                                           
+                                                                                                               
+ Agent Order Report (assigned = has userId):                                                                   
+ // Count orders grouped by userId and status                                                                  
+ // "assigned" count = total orders for that user (userId is set)                                              
+ // Then map statuses to: confirmed, no_pick, payment_pending, cancel, delivered                               
+                                                                                                               
+ Booking Unit Report (complex - use raw SQL):                                                                  
+ // Pivot delivered units by courier service name                                                              
+ // Group by product, then sub-group delivered counts by courier                                               
+                                                                                                               
+ User Incentive Report:                                                                                        
+ // Join order_items with products table to get incentive field                                                
+ // Sum incentive * quantity for confirmed/delivered orders per user                                           
+                                                                                                               
+ ---                                                                                                           
+ Files to Create                                                                                               
+                                                                                                               
+ 1. src/modules/reporting/reporting.module.ts                                                                  
+ 2. src/modules/reporting/dto/base-filter.dto.ts                                                               
+ 3. src/modules/reporting/dto/order-report-filters.dto.ts                                                      
+ 4. src/modules/reporting/dto/inventory-report-filters.dto.ts                                                  
+ 5. src/modules/reporting/dto/accounting-report-filters.dto.ts                                                 
+ 6. src/modules/reporting/types/report.types.ts                                                                
+ 7. src/modules/reporting/services/order-reports.service.ts                                                    
+ 8. src/modules/reporting/services/inventory-reports.service.ts                                                
+ 9. src/modules/reporting/services/accounting-reports.service.ts                                               
+ 10. src/modules/reporting/controllers/order-reports.controller.ts                                             
+ 11. src/modules/reporting/controllers/inventory-reports.controller.ts                                         
+ 12. src/modules/reporting/controllers/accounting-reports.controller.ts                                        
+                                                                                                               
+ Files to Modify                                                                                               
+                                                                                                               
+ 1. src/app.module.ts - Add ReportingModule to imports                                                         
+                                                                                                               
+ ---                                                                                                           
+ Implementation Sequence                                                                                       
+                                                                                                               
+ 1. Phase 1: Core Setup                                                                                        
+   - Create module structure and base DTOs                                                                     
+   - Create types file with response interfaces                                                                
+   - Register module in app.module.ts                                                                          
+ 2. Phase 2: Order Reports (11 reports)                                                                        
+   - Implement OrderReportsService with all 11 reports                                                         
+   - Implement OrderReportsController                                                                          
+ 3. Phase 3: Inventory Reports (6 reports)                                                                     
+   - Implement InventoryReportsService                                                                         
+   - Implement InventoryReportsController                                                                      
+ 4. Phase 4: Accounting Reports (5 reports)                                                                    
+   - Implement AccountingReportsService                                                                        
+   - Implement AccountingReportsController                                                                     
+                                                                                                               
+ ---                                                                                                           
+ Critical Reference Files                                                                                      
+                                                                                                               
+ - src/modules/order/services/order.service.ts - Filter building pattern                                       
+ - src/modules/order/dto/order.dto.ts - DTO structure pattern                                                  
+ - src/types/order.ts - OrderStatus enum                                                                       
+ - src/dtos/pagination.dto.ts - Pagination DTO                                                                 
+ - src/constants/common.ts - TENANT_CONNECTION_PROVIDER                                                        
+ - prisma/tenant/schema/order.prisma - Order schema                                                            
+ - prisma/tenant/schema/inventory.prisma - Inventory schema                                                    
+ - prisma/tenant/schema/accounting.prisma - Accounting schema   
+
+
+
+   Todos                                                                                                        
+  ☒ Create module structure and base DTOs                                                                      
+  ☒ Create types file with response interfaces                                                                 
+  ☒ Implement Order Reports Service (11 reports)                                                               
+  ☒ Implement Order Reports Controller                                                                         
+  ☒ Implement Inventory Reports Service (6 reports)                                                            
+  ☒ Implement Inventory Reports Controller                                                                     
+  ☐ Implement Accounting Reports Service (5 reports)                                                           
+  ☐ Implement Accounting Reports Controller                                                                    
+  ☐ Register module in app.module.ts    

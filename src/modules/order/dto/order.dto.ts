@@ -178,9 +178,9 @@ export class CreateCustomerDto {
   @IsString()
   name?: string;
 
-  @IsOptional()
+  @IsNotEmpty()
   @IsString()
-  phone?: string;
+  phone: string;
 
   @IsOptional()
   @IsString()

@@ -214,8 +214,8 @@ export class OrderService {
       totalDiscount,
       totalTax,
     } = createDto || {};
-    const { id: existingCustomerId, ...customerData } = customer || {};
-    const { id: existingAddressId, ...addressData } = address || {};
+    const { id: existingCustomerId, ...customerData } = customer;
+    const { id: existingAddressId, ...addressData } = address;
     let upsertCustomer = await this.prismaTenant.customer.findFirst({
       where: {
         OR: [{ id: existingCustomerId || 0 }, { phone: customer.phone }],
