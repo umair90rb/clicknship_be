@@ -15,12 +15,15 @@ import {
 @Controller('reports/accounting')
 @UseGuards(AuthenticationGuard)
 export class AccountingReportsController {
-  constructor(private readonly accountingReportsService: AccountingReportsService) {}
+  constructor(
+    private readonly accountingReportsService: AccountingReportsService,
+  ) {}
 
   @Post('revenue')
   @ApiOperation({
     summary: 'Revenue Report',
-    description: 'Sales revenue by period (day/week/month/quarter/year) with breakdown',
+    description:
+      'Sales revenue by period (day/week/month/quarter/year) with breakdown',
   })
   async getRevenueReport(@Body() filters: RevenueReportFilterDto) {
     return this.accountingReportsService.getRevenueReport(filters);
@@ -49,7 +52,8 @@ export class AccountingReportsController {
   @Post('payment')
   @ApiOperation({
     summary: 'Payment Report',
-    description: 'Payment transactions list with type, method, and linked documents',
+    description:
+      'Payment transactions list with type, method, and linked documents',
   })
   async getPaymentReport(@Body() filters: PaymentReportFilterDto) {
     return this.accountingReportsService.getPaymentReport(filters);
@@ -58,7 +62,8 @@ export class AccountingReportsController {
   @Post('profit-summary')
   @ApiOperation({
     summary: 'Profit Summary Report',
-    description: 'Revenue vs costs summary with gross profit, COGS, and profit margins',
+    description:
+      'Revenue vs costs summary with gross profit, COGS, and profit margins',
   })
   async getProfitSummaryReport(@Body() filters: ProfitSummaryFilterDto) {
     return this.accountingReportsService.getProfitSummaryReport(filters);

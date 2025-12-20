@@ -1,6 +1,11 @@
 // src/modules/logistics/integrations/Daewoo/index.ts
 import { Injectable, Logger } from '@nestjs/common';
-import { BatchBookParcelResponse, BookParcelResponse, ICourierService, ParcelStatusResponse } from '../types/courier.interface'; // per your project layout
+import {
+  BatchBookParcelResponse,
+  BookParcelResponse,
+  ICourierService,
+  ParcelStatusResponse,
+} from '../types/courier.interface'; // per your project layout
 
 @Injectable()
 export default class DevCourier implements ICourierService {
@@ -20,7 +25,10 @@ export default class DevCourier implements ICourierService {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  async bookParcel(order: any, courierAccount: any): Promise<BookParcelResponse> {
+  async bookParcel(
+    order: any,
+    courierAccount: any,
+  ): Promise<BookParcelResponse> {
     try {
       await this.wait();
       return {
@@ -29,7 +37,7 @@ export default class DevCourier implements ICourierService {
         success: true,
         cn: Math.random().toString().split('.')[1],
         message: null,
-        data: {}
+        data: {},
       };
     } catch (err) {
       this.logger.error(
@@ -42,23 +50,26 @@ export default class DevCourier implements ICourierService {
         courierAccount,
         order,
         cn: null,
-        data: {}
+        data: {},
       };
     }
   }
 
-  async batchBookParcels(orders: any[], courierAccount: any): Promise<BatchBookParcelResponse> {
+  async batchBookParcels(
+    orders: any[],
+    courierAccount: any,
+  ): Promise<BatchBookParcelResponse> {
     try {
       await this.wait(orders.length);
       return {
-            success: true,
-            courierAccount,
-            message: 'order batch booking successfully',
-            bookings: orders.map((order) => ({
-              order,
-              cn: Math.random().toString().split('.')[1],
-            }))
-        }
+        success: true,
+        courierAccount,
+        message: 'order batch booking successfully',
+        bookings: orders.map((order) => ({
+          order,
+          cn: Math.random().toString().split('.')[1],
+        })),
+      };
     } catch (err) {
       this.logger.error(
         'bookParcel error',
@@ -73,7 +84,10 @@ export default class DevCourier implements ICourierService {
     }
   }
 
-  async parcelStatus(shipment: any, courierAccount?: any): Promise<ParcelStatusResponse> {
+  async parcelStatus(
+    shipment: any,
+    courierAccount?: any,
+  ): Promise<ParcelStatusResponse> {
     try {
       await this.wait(1000);
       return {
@@ -143,7 +157,10 @@ export default class DevCourier implements ICourierService {
     }
   }
 
-  async batchParcelStatus(shipments: any[], courierAccount?: any): Promise<any> {
+  async batchParcelStatus(
+    shipments: any[],
+    courierAccount?: any,
+  ): Promise<any> {
     try {
       await this.wait(shipments.length * 1000);
       return shipments.map((shipment) => ({
@@ -224,7 +241,7 @@ export default class DevCourier implements ICourierService {
         courierAccount,
         success: true,
         message: 'Booking canceled!',
-        data: {}
+        data: {},
       };
     } catch (err) {
       this.logger.error(
@@ -236,7 +253,7 @@ export default class DevCourier implements ICourierService {
         courierAccount,
         success: false,
         message: err,
-        data: {}
+        data: {},
       };
     }
   }

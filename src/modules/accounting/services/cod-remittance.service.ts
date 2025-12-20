@@ -212,8 +212,10 @@ export class CodRemittanceService {
     }
 
     // Cannot delete if already received (accounting entry has been created)
-    if (remittance.status === CodRemittanceStatus.RECEIVED ||
-        remittance.status === CodRemittanceStatus.RECONCILED) {
+    if (
+      remittance.status === CodRemittanceStatus.RECEIVED ||
+      remittance.status === CodRemittanceStatus.RECONCILED
+    ) {
       throw new BadRequestException(
         'Cannot delete remittance that has been received or reconciled',
       );

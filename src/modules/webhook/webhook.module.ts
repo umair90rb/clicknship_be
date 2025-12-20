@@ -5,9 +5,11 @@ import { tenantConnectionProvider } from '@/src/providers/tenant-connection.prov
 import { BullModule } from '@nestjs/bullmq';
 import { WEBHOOK_ORDER_CREATE_QUEUE } from '@/src/constants/common';
 import { WebhookOrderCreateQueueConsumer } from './order.processor';
+import { BillingModule } from '../billing/billing.module';
 
 @Module({
   imports: [
+    BillingModule,
     BullModule.registerQueue({
       name: WEBHOOK_ORDER_CREATE_QUEUE,
       defaultJobOptions: {

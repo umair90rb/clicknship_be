@@ -24,7 +24,9 @@ export class InventoryReportsService {
     private prismaTenant: PrismaTenantClient,
   ) {}
 
-  private buildInventoryItemWhereClause(filters: InventoryReportFilterDto): any {
+  private buildInventoryItemWhereClause(
+    filters: InventoryReportFilterDto,
+  ): any {
     const where: any = {};
 
     if (filters.locationId) where.locationId = filters.locationId;
@@ -98,12 +100,18 @@ export class InventoryReportsService {
 
     if (filters.dateRange?.start || filters.dateRange?.end) {
       where.createdAt = {};
-      if (filters.dateRange.start) where.createdAt.gte = new Date(filters.dateRange.start);
-      if (filters.dateRange.end) where.createdAt.lte = new Date(filters.dateRange.end);
+      if (filters.dateRange.start)
+        where.createdAt.gte = new Date(filters.dateRange.start);
+      if (filters.dateRange.end)
+        where.createdAt.lte = new Date(filters.dateRange.end);
     }
-    if (filters.locationId) where.inventoryItem = { locationId: filters.locationId };
+    if (filters.locationId)
+      where.inventoryItem = { locationId: filters.locationId };
     if (filters.productId) {
-      where.inventoryItem = { ...where.inventoryItem, productId: filters.productId };
+      where.inventoryItem = {
+        ...where.inventoryItem,
+        productId: filters.productId,
+      };
     }
     if (filters.userId) where.userId = filters.userId;
 
@@ -178,12 +186,18 @@ export class InventoryReportsService {
 
     if (filters.dateRange?.start || filters.dateRange?.end) {
       where.createdAt = {};
-      if (filters.dateRange.start) where.createdAt.gte = new Date(filters.dateRange.start);
-      if (filters.dateRange.end) where.createdAt.lte = new Date(filters.dateRange.end);
+      if (filters.dateRange.start)
+        where.createdAt.gte = new Date(filters.dateRange.start);
+      if (filters.dateRange.end)
+        where.createdAt.lte = new Date(filters.dateRange.end);
     }
-    if (filters.locationId) where.inventoryItem = { locationId: filters.locationId };
+    if (filters.locationId)
+      where.inventoryItem = { locationId: filters.locationId };
     if (filters.productId) {
-      where.inventoryItem = { ...where.inventoryItem, productId: filters.productId };
+      where.inventoryItem = {
+        ...where.inventoryItem,
+        productId: filters.productId,
+      };
     }
     if (filters.userId) where.userId = filters.userId;
 
@@ -255,16 +269,23 @@ export class InventoryReportsService {
   ): Promise<ReportResponse<StockMovementReportRow>> {
     const where: any = {};
 
-    if (filters.movementTypes?.length) where.type = { in: filters.movementTypes };
+    if (filters.movementTypes?.length)
+      where.type = { in: filters.movementTypes };
     if (filters.userId) where.userId = filters.userId;
     if (filters.dateRange?.start || filters.dateRange?.end) {
       where.createdAt = {};
-      if (filters.dateRange.start) where.createdAt.gte = new Date(filters.dateRange.start);
-      if (filters.dateRange.end) where.createdAt.lte = new Date(filters.dateRange.end);
+      if (filters.dateRange.start)
+        where.createdAt.gte = new Date(filters.dateRange.start);
+      if (filters.dateRange.end)
+        where.createdAt.lte = new Date(filters.dateRange.end);
     }
-    if (filters.locationId) where.inventoryItem = { locationId: filters.locationId };
+    if (filters.locationId)
+      where.inventoryItem = { locationId: filters.locationId };
     if (filters.productId) {
-      where.inventoryItem = { ...where.inventoryItem, productId: filters.productId };
+      where.inventoryItem = {
+        ...where.inventoryItem,
+        productId: filters.productId,
+      };
     }
     if (filters.sku) {
       where.inventoryItem = {
@@ -358,7 +379,8 @@ export class InventoryReportsService {
     const lowStock = items
       .filter((item) => {
         const available = item.quantity - item.reservedQuantity;
-        const isLow = item.reorderPoint !== null && available <= item.reorderPoint;
+        const isLow =
+          item.reorderPoint !== null && available <= item.reorderPoint;
         const includeZero = filters.includeZeroStock || item.quantity > 0;
         return isLow && includeZero;
       })
@@ -396,8 +418,10 @@ export class InventoryReportsService {
     if (filters.supplierId) where.supplierId = filters.supplierId;
     if (filters.dateRange?.start || filters.dateRange?.end) {
       where.createdAt = {};
-      if (filters.dateRange.start) where.createdAt.gte = new Date(filters.dateRange.start);
-      if (filters.dateRange.end) where.createdAt.lte = new Date(filters.dateRange.end);
+      if (filters.dateRange.start)
+        where.createdAt.gte = new Date(filters.dateRange.start);
+      if (filters.dateRange.end)
+        where.createdAt.lte = new Date(filters.dateRange.end);
     }
 
     const pos = await this.prismaTenant.purchaseOrder.findMany({
@@ -427,8 +451,9 @@ export class InventoryReportsService {
       receivedDate: po.receivedDate?.toISOString() || null,
       totalAmount: po.totalAmount || 0,
       itemCount: po.items.length,
-      receivedItemCount: po.items.filter((i) => i.receivedQuantity >= i.orderedQuantity)
-        .length,
+      receivedItemCount: po.items.filter(
+        (i) => i.receivedQuantity >= i.orderedQuantity,
+      ).length,
     }));
 
     return {

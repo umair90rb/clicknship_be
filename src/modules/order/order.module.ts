@@ -11,9 +11,10 @@ import { CustomerService } from '@/src/modules/order/services/customer.service';
 import { CustomerController } from '@/src/modules/order/controllers/customer.controller';
 import { ProductService } from '@/src/modules/order/services/product.service';
 import { ProductController } from '@/src/modules/order/controllers/product.controller';
+import { BillingModule } from '@/src/modules/billing/billing.module';
 
 @Module({
-  imports: [AuthModule],
+  imports: [AuthModule, BillingModule],
   controllers: [OrderController, CustomerController, ProductController],
   providers: [
     OrderService,

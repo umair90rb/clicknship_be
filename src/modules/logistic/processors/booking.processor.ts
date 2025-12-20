@@ -106,7 +106,6 @@ export class CreateBookingQueueConsumer extends WorkerHost {
           }
         }
       }
-      
     }
 
     if (createdBookings.length) {

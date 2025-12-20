@@ -238,7 +238,9 @@ export class InvoiceService {
     }
 
     if (invoice.status !== InvoiceStatus.DRAFT) {
-      throw new BadRequestException('Only draft invoices can be marked as sent');
+      throw new BadRequestException(
+        'Only draft invoices can be marked as sent',
+      );
     }
 
     return this.prismaTenant.invoice.update({

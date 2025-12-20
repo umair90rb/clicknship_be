@@ -13,9 +13,9 @@ export interface BookParcelResponse {
   data: any;
 }
 interface BatchBookingData {
-    cn: string;
-    order: any;
-  }
+  cn: string;
+  order: any;
+}
 export interface BatchBookParcelResponse {
   success: boolean;
   courierAccount: any;

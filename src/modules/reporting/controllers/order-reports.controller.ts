@@ -32,7 +32,8 @@ export class OrderReportsController {
   @Post('product-unit')
   @ApiOperation({
     summary: 'Product Unit Report',
-    description: 'Per product: name, total units, confirmed/no_pick/cancel units by order status',
+    description:
+      'Per product: name, total units, confirmed/no_pick/cancel units by order status',
   })
   async getProductUnitReport(@Body() filters: ProductReportFilterDto) {
     return this.orderReportsService.getProductUnitReport(filters);
@@ -51,7 +52,8 @@ export class OrderReportsController {
   @Post('foc-unit')
   @ApiOperation({
     summary: 'FOC Unit Report',
-    description: 'Per product with unitPrice=0: total FOC units, delivered per courier',
+    description:
+      'Per product with unitPrice=0: total FOC units, delivered per courier',
   })
   async getFocUnitReport(@Body() filters: FocReportFilterDto) {
     return this.orderReportsService.getFocUnitReport(filters);
@@ -108,18 +110,24 @@ export class OrderReportsController {
   @Post('channel-order-generation')
   @ApiOperation({
     summary: 'Channel Order Generation Report',
-    description: 'Per Shopify domain: orders count, total units from webhook logs',
+    description:
+      'Per Shopify domain: orders count, total units from webhook logs',
   })
-  async getChannelOrderGenerationReport(@Body() filters: WebhookReportFilterDto) {
+  async getChannelOrderGenerationReport(
+    @Body() filters: WebhookReportFilterDto,
+  ) {
     return this.orderReportsService.getChannelOrderGenerationReport(filters);
   }
 
   @Post('booked-product-value')
   @ApiOperation({
     summary: 'Booked Product Value Report',
-    description: 'Per product in booked orders: name, unit_price, quantity, total_value',
+    description:
+      'Per product in booked orders: name, unit_price, quantity, total_value',
   })
-  async getBookedProductValueReport(@Body() filters: BookedProductValueFilterDto) {
+  async getBookedProductValueReport(
+    @Body() filters: BookedProductValueFilterDto,
+  ) {
     return this.orderReportsService.getBookedProductValueReport(filters);
   }
 }

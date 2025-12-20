@@ -18,8 +18,8 @@ export function extractKeysFromObj(
 }
 
 export function formatPhoneNumber(phoneNumber: string): string {
-  let phone = `${String(phoneNumber).replace(/\s/g, '')}`;
-  let number = phone.match(/(3[0-9]*)/g);
+  const phone = `${String(phoneNumber).replace(/\s/g, '')}`;
+  const number = phone.match(/(3[0-9]*)/g);
   return Array.isArray(number) && number[0].length >= 10
     ? number[0]
     : phoneNumber;

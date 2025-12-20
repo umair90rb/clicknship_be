@@ -37,14 +37,22 @@ export interface BookingUnitReportRow {
   confirmedUnits: number;
   bookedUnits: number;
   bookingErrorUnits: number;
-  deliveredByCourier: { courierServiceName: string; courierName: string; units: number }[];
+  deliveredByCourier: {
+    courierServiceName: string;
+    courierName: string;
+    units: number;
+  }[];
 }
 
 export interface FocUnitReportRow {
   productName: string;
   sku: string;
   totalFocUnits: number;
-  deliveredByCourier: { courierServiceName: string; courierName: string; units: number }[];
+  deliveredByCourier: {
+    courierServiceName: string;
+    courierName: string;
+    units: number;
+  }[];
 }
 
 export interface AgentChannelReportRow {

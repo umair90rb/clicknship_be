@@ -55,7 +55,7 @@ import { TrackShipmentQueueConsumer } from './processors/tracking.processor';
     // },
     CreateBookingQueueConsumer,
     OrderTrackingJob,
-    TrackShipmentQueueConsumer
+    TrackShipmentQueueConsumer,
   ],
 
   exports: [CourierFactory],

@@ -302,7 +302,9 @@ export class AutoEntryService {
       DEFAULT_ACCOUNT_CODES.SALES_RETURNS,
     );
     const creditAccount = await this.accountService.getByCode(
-      isPaid ? DEFAULT_ACCOUNT_CODES.CASH : DEFAULT_ACCOUNT_CODES.ACCOUNTS_RECEIVABLE,
+      isPaid
+        ? DEFAULT_ACCOUNT_CODES.CASH
+        : DEFAULT_ACCOUNT_CODES.ACCOUNTS_RECEIVABLE,
     );
 
     if (!salesReturnsAccount || !creditAccount) {

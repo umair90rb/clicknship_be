@@ -14,6 +14,7 @@ import { PrismaClient as PrismaTenantClient } from '@/prisma/tenant/client';
 import { OrderEvents, OrderStatus } from '@/src/types/order';
 import { RequestUser } from '@/src/types/auth';
 import { OrderLoggingService } from '@/src/modules/order/services/logging.service';
+import { CreditService } from '@/src/modules/billing/services/credit.service';
 
 @Injectable()
 export class OrderService {
@@ -21,6 +22,7 @@ export class OrderService {
     @Inject(TENANT_CONNECTION_PROVIDER)
     private prismaTenant: PrismaTenantClient,
     private orderLoggingService: OrderLoggingService,
+    private creditService: CreditService,
   ) {}
 
   private select = {
@@ -60,7 +62,12 @@ export class OrderService {
       },
     },
     shipment: {
-      select: { cn: true, status: true, lastTrackedAt: true, trackingJson: true },
+      select: {
+        cn: true,
+        status: true,
+        lastTrackedAt: true,
+        trackingJson: true,
+      },
     },
   };
 
@@ -198,7 +205,7 @@ export class OrderService {
     return { data: order };
   }
 
-  async create(user: RequestUser, createDto: CreateOrderDto) {
+  async create(user: RequestUser, tenantId: string, createDto: CreateOrderDto) {
     const {
       items,
       address,
@@ -259,6 +266,15 @@ export class OrderService {
       [order.id],
       OrderEvents.created,
     );
+
+    // Deduct 1 credit for the order
+    await this.creditService.deductCredit(
+      tenantId,
+      1, // 1 credit per order
+      order.id.toString(),
+      'order',
+    );
+
     return order;
   }
 

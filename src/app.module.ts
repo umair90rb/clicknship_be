@@ -13,6 +13,8 @@ import { LogisticModule } from './modules/logistic/logistic.module';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { AccountingModule } from './modules/accounting/accounting.module';
 import { ReportingModule } from './modules/reporting/reporting.module';
+import { SupportModule } from './modules/support/support.module';
+import { BillingModule } from './modules/billing/billing.module';
 import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
@@ -30,12 +32,17 @@ import { ScheduleModule } from '@nestjs/schedule';
     InventoryModule,
     AccountingModule,
     ReportingModule,
+    SupportModule,
+    BillingModule,
   ],
   controllers: [AppController],
   providers: [],
 })
 export class AppModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(TenantMiddleware).exclude('onboard').forRoutes('*');
+    consumer
+      .apply(TenantMiddleware)
+      .exclude('onboard', 'billing/webhook/(.*)', 'billing/callback/(.*)')
+      .forRoutes('*');
   }
 }

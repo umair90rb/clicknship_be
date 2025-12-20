@@ -13,7 +13,11 @@ import {
 import { ApiTags } from '@nestjs/swagger';
 import { AuthenticationGuard } from '@/src/guards/authentication.guard';
 import { BillService } from '../services/bill.service';
-import { CreateBillDto, UpdateBillDto, BillQueryDto } from '../dtos/accounting.dto';
+import {
+  CreateBillDto,
+  UpdateBillDto,
+  BillQueryDto,
+} from '../dtos/accounting.dto';
 
 @ApiTags('Accounting - Bills')
 @Controller('accounting/bill')

@@ -181,7 +181,9 @@ export class AccountService {
     }
 
     if (account._count.children > 0) {
-      throw new BadRequestException('Cannot delete account with child accounts');
+      throw new BadRequestException(
+        'Cannot delete account with child accounts',
+      );
     }
 
     return this.prismaTenant.account.delete({ where: { id } });

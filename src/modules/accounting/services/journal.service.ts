@@ -118,7 +118,10 @@ export class JournalService {
     return entry;
   }
 
-  async getByReference(referenceType: JournalReferenceType, referenceId: number) {
+  async getByReference(
+    referenceType: JournalReferenceType,
+    referenceId: number,
+  ) {
     return this.prismaTenant.journalEntry.findMany({
       where: { referenceType, referenceId },
       select: this.select,
@@ -219,9 +222,7 @@ export class JournalService {
     }
 
     if (entry.fiscalPeriod?.status === 'CLOSED') {
-      throw new BadRequestException(
-        'Cannot post to a closed fiscal period',
-      );
+      throw new BadRequestException('Cannot post to a closed fiscal period');
     }
 
     return this.prismaTenant.journalEntry.update({
@@ -301,11 +302,7 @@ export class JournalService {
     return this.prismaTenant.journalEntry.delete({ where: { id } });
   }
 
-  async getAccountLedger(
-    accountId: number,
-    fromDate?: Date,
-    toDate?: Date,
-  ) {
+  async getAccountLedger(accountId: number, fromDate?: Date, toDate?: Date) {
     const where: any = {
       accountId,
       journalEntry: {
@@ -414,7 +411,10 @@ export class JournalService {
       .sort((a, b) => a.account.code.localeCompare(b.account.code));
 
     const totalDebit = trialBalance.reduce((sum, item) => sum + item.debit, 0);
-    const totalCredit = trialBalance.reduce((sum, item) => sum + item.credit, 0);
+    const totalCredit = trialBalance.reduce(
+      (sum, item) => sum + item.credit,
+      0,
+    );
 
     return {
       accounts: trialBalance,

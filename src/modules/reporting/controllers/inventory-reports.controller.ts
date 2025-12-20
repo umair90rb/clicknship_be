@@ -14,7 +14,9 @@ import {
 @Controller('reports/inventory')
 @UseGuards(AuthenticationGuard)
 export class InventoryReportsController {
-  constructor(private readonly inventoryReportsService: InventoryReportsService) {}
+  constructor(
+    private readonly inventoryReportsService: InventoryReportsService,
+  ) {}
 
   @Post('stock')
   @ApiOperation({
@@ -29,7 +31,8 @@ export class InventoryReportsController {
   @Post('stock-damaged')
   @ApiOperation({
     summary: 'Stock Damaged Report',
-    description: 'Damaged stock movements aggregated by product/location with movement details',
+    description:
+      'Damaged stock movements aggregated by product/location with movement details',
   })
   async getStockDamagedReport(@Body() filters: StockMovementReportFilterDto) {
     return this.inventoryReportsService.getStockDamagedReport(filters);
@@ -38,7 +41,8 @@ export class InventoryReportsController {
   @Post('stock-expired')
   @ApiOperation({
     summary: 'Stock Expired Report',
-    description: 'Expired stock movements aggregated by product/location with movement details',
+    description:
+      'Expired stock movements aggregated by product/location with movement details',
   })
   async getStockExpiredReport(@Body() filters: StockMovementReportFilterDto) {
     return this.inventoryReportsService.getStockExpiredReport(filters);
@@ -66,7 +70,8 @@ export class InventoryReportsController {
   @Post('purchase-order')
   @ApiOperation({
     summary: 'Purchase Order Report',
-    description: 'Purchase orders with status, supplier, amounts, and item counts',
+    description:
+      'Purchase orders with status, supplier, amounts, and item counts',
   })
   async getPurchaseOrderReport(@Body() filters: PurchaseOrderReportFilterDto) {
     return this.inventoryReportsService.getPurchaseOrderReport(filters);

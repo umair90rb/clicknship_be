@@ -124,7 +124,7 @@ export class OrderTrackingJob {
           courierServiceId: key,
           shipments: groupedByCourierServiceId[key],
           tenant,
-          shipmentTrackingMetadataId: shipmentTrackingMetadata.id
+          shipmentTrackingMetadataId: shipmentTrackingMetadata.id,
         },
         opts: {
           jobId: `${BOOKING_ACTIONS.track}/${tenantId}/${key}/${Date.now()}`,
@@ -143,7 +143,7 @@ export class OrderTrackingJob {
     data: Omit<ShipmentTrackingMetadata, 'id'>,
   ) {
     return this.prismaMasterService.shipmentTrackingMetadata.create({
-      select: {id: true},
+      select: { id: true },
       data,
     });
   }

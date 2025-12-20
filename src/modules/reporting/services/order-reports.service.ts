@@ -39,7 +39,8 @@ export class OrderReportsService {
 
     if (filters.brandId) where.brandId = filters.brandId;
     if (filters.channelId) where.channelId = filters.channelId;
-    if (filters.courierServiceId) where.courierServiceId = filters.courierServiceId;
+    if (filters.courierServiceId)
+      where.courierServiceId = filters.courierServiceId;
     if (filters.city) {
       where.address = { city: { contains: filters.city, mode: 'insensitive' } };
     }
@@ -48,8 +49,10 @@ export class OrderReportsService {
     }
     if (filters.dateRange?.start || filters.dateRange?.end) {
       where.createdAt = {};
-      if (filters.dateRange.start) where.createdAt.gte = new Date(filters.dateRange.start);
-      if (filters.dateRange.end) where.createdAt.lte = new Date(filters.dateRange.end);
+      if (filters.dateRange.start)
+        where.createdAt.gte = new Date(filters.dateRange.start);
+      if (filters.dateRange.end)
+        where.createdAt.lte = new Date(filters.dateRange.end);
     }
 
     return where;
@@ -68,7 +71,9 @@ export class OrderReportsService {
       _count: { id: true },
     });
 
-    const userIds = [...new Set(grouped.map((g) => g.userId).filter(Boolean))] as number[];
+    const userIds = [
+      ...new Set(grouped.map((g) => g.userId).filter(Boolean)),
+    ] as number[];
     const users = await this.prismaTenant.user.findMany({
       where: { id: { in: userIds } },
       select: { id: true, name: true },
@@ -100,9 +105,11 @@ export class OrderReportsService {
       const status = row.status?.toLowerCase();
       if (status === OrderStatus.confirmed) agg.confirmedCount += row._count.id;
       else if (status === OrderStatus.noPick) agg.noPickCount += row._count.id;
-      else if (status === OrderStatus.paymentPending) agg.paymentPendingCount += row._count.id;
+      else if (status === OrderStatus.paymentPending)
+        agg.paymentPendingCount += row._count.id;
       else if (status === OrderStatus.cancel) agg.cancelCount += row._count.id;
-      else if (status === OrderStatus.delivered) agg.deliveredCount += row._count.id;
+      else if (status === OrderStatus.delivered)
+        agg.deliveredCount += row._count.id;
     }
 
     return {
@@ -221,7 +228,8 @@ export class OrderReportsService {
 
       if (status === OrderStatus.confirmed) prod.confirmedUnits += qty;
       else if (status === OrderStatus.booked) prod.bookedUnits += qty;
-      else if (status === OrderStatus.bookingError) prod.bookingErrorUnits += qty;
+      else if (status === OrderStatus.bookingError)
+        prod.bookingErrorUnits += qty;
       else if (status === OrderStatus.delivered && item.order.courerService) {
         const courierKey = `${item.order.courerService.id}`;
         let courierEntry = prod.deliveredByCourier.find(
@@ -365,7 +373,10 @@ export class OrderReportsService {
       const agg = aggregateMap.get(key)!;
       agg.totalOrders += 1;
 
-      const productCount = order.items.reduce((sum, item) => sum + (item.quantity || 0), 0);
+      const productCount = order.items.reduce(
+        (sum, item) => sum + (item.quantity || 0),
+        0,
+      );
       agg.totalProductCount += productCount;
 
       const status = order.status?.toLowerCase();
@@ -429,7 +440,10 @@ export class OrderReportsService {
       const agg = channelMap.get(order.channelId)!;
       agg.totalOrders += 1;
 
-      const productCount = order.items.reduce((sum, item) => sum + (item.quantity || 0), 0);
+      const productCount = order.items.reduce(
+        (sum, item) => sum + (item.quantity || 0),
+        0,
+      );
       agg.totalProductCount += productCount;
 
       const status = order.status?.toLowerCase();
@@ -481,12 +495,18 @@ export class OrderReportsService {
     });
 
     // Get products with incentive field
-    const skus = [...new Set(orders.flatMap((o) => o.items.map((i) => i.sku).filter(Boolean)))];
+    const skus = [
+      ...new Set(
+        orders.flatMap((o) => o.items.map((i) => i.sku).filter(Boolean)),
+      ),
+    ];
     const products = await this.prismaTenant.product.findMany({
       where: { sku: { in: skus as string[] } },
       select: { sku: true, incentive: true },
     });
-    const incentiveMap = new Map(products.map((p) => [p.sku, p.incentive || 0]));
+    const incentiveMap = new Map(
+      products.map((p) => [p.sku, p.incentive || 0]),
+    );
 
     const resultMap = new Map<string, UserIncentiveReportRow>();
 
@@ -588,11 +608,16 @@ export class OrderReportsService {
       const status = row.status?.toLowerCase();
 
       if (status === OrderStatus.booked) agg.bookedCount += row._count.id;
-      else if (status === OrderStatus.delivered) agg.deliveredCount += row._count.id;
-      else if (status === OrderStatus.inTransit) agg.inTransitCount += row._count.id;
-      else if (status === OrderStatus.returned) agg.returnedCount += row._count.id;
-      else if (status === OrderStatus.bookingError) agg.bookingErrorCount += row._count.id;
-      else if (status === OrderStatus.bookingCanceled) agg.canceledCount += row._count.id;
+      else if (status === OrderStatus.delivered)
+        agg.deliveredCount += row._count.id;
+      else if (status === OrderStatus.inTransit)
+        agg.inTransitCount += row._count.id;
+      else if (status === OrderStatus.returned)
+        agg.returnedCount += row._count.id;
+      else if (status === OrderStatus.bookingError)
+        agg.bookingErrorCount += row._count.id;
+      else if (status === OrderStatus.bookingCanceled)
+        agg.canceledCount += row._count.id;
     }
 
     return {

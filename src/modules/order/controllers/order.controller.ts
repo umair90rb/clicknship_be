@@ -21,6 +21,8 @@ import {
 } from '@/src/modules/order/dto/order.dto';
 import { RequestUser } from '@/src/types/auth';
 import { RequestUser as RequestUserDeco } from '@/src/decorators/user.decorator';
+import { Tenant as TenantDeco } from '@/src/decorators/tenant.decorator';
+import { Tenant } from '@/src/types/tenant';
 import { AuthenticationGuard } from '@/src/guards/authentication.guard';
 import { OrderService } from '@/src/modules/order/services/order.service';
 import { OrderCommentService } from '@/src/modules/order/services/comment.service';
@@ -50,9 +52,10 @@ export class OrderController {
   @Post('create')
   async create(
     @RequestUserDeco() user: RequestUser,
+    @TenantDeco() tenant: Tenant,
     @Body() createDto: CreateOrderDto,
   ) {
-    return this.ordersService.create(user, createDto);
+    return this.ordersService.create(user, tenant.tenantId, createDto);
   }
 
   @Patch(':id')

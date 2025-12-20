@@ -163,7 +163,9 @@ export class PurchaseOrderService {
     }
 
     if (po.status !== PurchaseOrderStatus.DRAFT) {
-      throw new BadRequestException('Only draft orders can be marked as ordered');
+      throw new BadRequestException(
+        'Only draft orders can be marked as ordered',
+      );
     }
 
     return this.prismaTenant.purchaseOrder.update({
@@ -206,7 +208,8 @@ export class PurchaseOrderService {
         );
       }
 
-      const remainingToReceive = poItem.orderedQuantity - poItem.receivedQuantity;
+      const remainingToReceive =
+        poItem.orderedQuantity - poItem.receivedQuantity;
       if (receivedItem.receivedQuantity > remainingToReceive) {
         throw new BadRequestException(
           `Cannot receive more than ordered. Remaining: ${remainingToReceive}`,
@@ -217,7 +220,8 @@ export class PurchaseOrderService {
       await this.prismaTenant.purchaseOrderItem.update({
         where: { id: poItem.id },
         data: {
-          receivedQuantity: poItem.receivedQuantity + receivedItem.receivedQuantity,
+          receivedQuantity:
+            poItem.receivedQuantity + receivedItem.receivedQuantity,
         },
       });
 

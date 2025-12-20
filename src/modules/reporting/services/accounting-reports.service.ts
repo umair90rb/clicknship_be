@@ -49,7 +49,7 @@ export class AccountingReportsService {
 
     // Build where conditions
     const conditions: string[] = [
-      "deleted_at IS NULL",
+      'deleted_at IS NULL',
       `status IN ('${OrderStatus.confirmed}', '${OrderStatus.booked}', '${OrderStatus.delivered}', '${OrderStatus.inTransit}', '${OrderStatus.dispatched}')`,
     ];
     const params: any[] = [];
@@ -71,7 +71,9 @@ export class AccountingReportsService {
       conditions.push(`channel_id = $${params.length}`);
     }
     if (filters.status?.length) {
-      const statusPlaceholders = filters.status.map((_, i) => `$${params.length + i + 1}`).join(', ');
+      const statusPlaceholders = filters.status
+        .map((_, i) => `$${params.length + i + 1}`)
+        .join(', ');
       params.push(...filters.status);
       conditions.push(`status IN (${statusPlaceholders})`);
     }
@@ -93,7 +95,10 @@ export class AccountingReportsService {
       ORDER BY period DESC
     `;
 
-    const result = await this.prismaTenant.$queryRawUnsafe<any[]>(query, ...params);
+    const result = await this.prismaTenant.$queryRawUnsafe<any[]>(
+      query,
+      ...params,
+    );
 
     const data: RevenueReportRow[] = result.map((row) => ({
       period: row.period ? row.period.toISOString().split('T')[0] : 'Unknown',
@@ -213,7 +218,8 @@ export class AccountingReportsService {
   ): Promise<ReportResponse<CodRemittanceReportRow>> {
     const where: any = {};
 
-    if (filters.courierServiceId) where.courierServiceId = filters.courierServiceId;
+    if (filters.courierServiceId)
+      where.courierServiceId = filters.courierServiceId;
     if (filters.statuses?.length) where.status = { in: filters.statuses };
     if (filters.dateRange?.start || filters.dateRange?.end) {
       where.statementDate = {};
@@ -227,7 +233,12 @@ export class AccountingReportsService {
       by: ['courierServiceId', 'status'],
       where,
       _count: { id: true },
-      _sum: { totalOrders: true, grossAmount: true, courierCharges: true, netAmount: true },
+      _sum: {
+        totalOrders: true,
+        grossAmount: true,
+        courierCharges: true,
+        netAmount: true,
+      },
     });
 
     const serviceIds = [...new Set(remittances.map((r) => r.courierServiceId))];
@@ -268,7 +279,8 @@ export class AccountingReportsService {
 
       if (row.status === 'PENDING') agg.pendingCount += row._count.id;
       else if (row.status === 'RECEIVED') agg.receivedCount += row._count.id;
-      else if (row.status === 'RECONCILED') agg.reconciledCount += row._count.id;
+      else if (row.status === 'RECONCILED')
+        agg.reconciledCount += row._count.id;
       else if (row.status === 'DISPUTED') agg.disputedCount += row._count.id;
     }
 
@@ -292,8 +304,10 @@ export class AccountingReportsService {
     if (filters.methods?.length) where.method = { in: filters.methods };
     if (filters.dateRange?.start || filters.dateRange?.end) {
       where.date = {};
-      if (filters.dateRange.start) where.date.gte = new Date(filters.dateRange.start);
-      if (filters.dateRange.end) where.date.lte = new Date(filters.dateRange.end);
+      if (filters.dateRange.start)
+        where.date.gte = new Date(filters.dateRange.start);
+      if (filters.dateRange.end)
+        where.date.lte = new Date(filters.dateRange.end);
     }
 
     const payments = await this.prismaTenant.paymentRecord.findMany({
@@ -349,7 +363,7 @@ export class AccountingReportsService {
 
     // Build where conditions for orders
     const orderConditions: string[] = [
-      "deleted_at IS NULL",
+      'deleted_at IS NULL',
       `status IN ('${OrderStatus.delivered}')`, // Only count delivered orders for profit
     ];
     const params: any[] = [];
@@ -440,14 +454,17 @@ export class AccountingReportsService {
     const avgCourierCostPerPeriod = totalCourierCosts / totalPeriods;
 
     const data: ProfitSummaryReportRow[] = revenueResult.map((row) => {
-      const period = row.period ? row.period.toISOString().split('T')[0] : 'Unknown';
+      const period = row.period
+        ? row.period.toISOString().split('T')[0]
+        : 'Unknown';
       const grossRevenue = parseFloat(row.gross_revenue) || 0;
       const shippingIncome = parseFloat(row.shipping_income) || 0;
       const cogs = cogsMap.get(period) || 0;
       const courierCosts = avgCourierCostPerPeriod; // Distribute evenly (simplified)
       const grossProfit = grossRevenue - cogs;
       const netProfit = grossProfit + shippingIncome - courierCosts;
-      const profitMargin = grossRevenue > 0 ? (netProfit / grossRevenue) * 100 : 0;
+      const profitMargin =
+        grossRevenue > 0 ? (netProfit / grossRevenue) * 100 : 0;
 
       return {
         period,

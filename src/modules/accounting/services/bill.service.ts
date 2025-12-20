@@ -8,7 +8,11 @@ import {
 import { PrismaClient as PrismaTenantClient } from '@/prisma/tenant/client';
 import { nanoid } from 'nanoid';
 import { BillStatus } from '../accounting.types';
-import { CreateBillDto, UpdateBillDto, BillQueryDto } from '../dtos/accounting.dto';
+import {
+  CreateBillDto,
+  UpdateBillDto,
+  BillQueryDto,
+} from '../dtos/accounting.dto';
 
 @Injectable()
 export class BillService {
@@ -167,7 +171,8 @@ export class BillService {
       description: item.product?.name || 'Product',
       quantity: item.receivedQuantity || item.orderedQuantity,
       unitPrice: item.unitCost,
-      lineTotal: (item.receivedQuantity || item.orderedQuantity) * item.unitCost,
+      lineTotal:
+        (item.receivedQuantity || item.orderedQuantity) * item.unitCost,
     }));
 
     const subtotal = itemsData.reduce((sum, item) => sum + item.lineTotal, 0);

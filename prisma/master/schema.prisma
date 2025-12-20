@@ -14,6 +14,10 @@ model Tenant {
   dbName                   String?                    @unique @map("db_name")
   companyName              String?                    @map("company_name")
   shipmentTrackingMetadata ShipmentTrackingMetadata[]
+  feedback                 Feedback[]
+  supportCases             SupportCase[]
+  featureRequests          FeatureRequest[]
+  billing                  TenantBilling?
 
   @@map("tenants")
 }
@@ -51,4 +55,169 @@ model CourierMappedCity {
   city   City @relation(fields: [cityId], references: [id])
 
   @@map("courier_mapped_cities")
+}
+
+// ===== Support Module Models =====
+
+model Feedback {
+  id          String   @id @default(uuid())
+  tenantId    String   @map("tenant_id")
+  userId      Int      @map("user_id")
+  userEmail   String   @map("user_email")
+  userPhone   String?  @map("user_phone")
+  stars       Int
+  description String
+  category    String
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  tenant Tenant @relation(fields: [tenantId], references: [tenantId])
+
+  @@index([tenantId])
+  @@index([category])
+  @@index([stars])
+  @@map("feedback")
+}
+
+model SupportCase {
+  id          String    @id @default(uuid())
+  tenantId    String    @map("tenant_id")
+  userId      Int       @map("user_id")
+  userEmail   String    @map("user_email")
+  userPhone   String?   @map("user_phone")
+  title       String
+  description String
+  priority    String    @default("medium")
+  status      String    @default("open")
+  adminNotes  String?   @map("admin_notes")
+  resolvedAt  DateTime? @map("resolved_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [tenantId])
+  attachments Attachment[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@index([priority])
+  @@map("support_cases")
+}
+
+model FeatureRequest {
+  id          String   @id @default(uuid())
+  tenantId    String   @map("tenant_id")
+  userId      Int      @map("user_id")
+  userEmail   String   @map("user_email")
+  userPhone   String?  @map("user_phone")
+  title       String
+  description String
+  status      String   @default("submitted")
+  adminNotes  String?  @map("admin_notes")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  tenant      Tenant       @relation(fields: [tenantId], references: [tenantId])
+  attachments Attachment[]
+
+  @@index([tenantId])
+  @@index([status])
+  @@map("feature_requests")
+}
+
+model Attachment {
+  id               String  @id @default(uuid())
+  fileName         String  @map("file_name")
+  fileType         String  @map("file_type")
+  mimeType         String  @map("mime_type")
+  s3Key            String  @map("s3_key")
+  s3Bucket         String  @map("s3_bucket")
+  fileSize         Int     @map("file_size")
+  supportCaseId    String? @map("support_case_id")
+  featureRequestId String? @map("feature_request_id")
+
+  createdAt DateTime @default(now()) @map("created_at")
+
+  supportCase    SupportCase?    @relation(fields: [supportCaseId], references: [id], onDelete: Cascade)
+  featureRequest FeatureRequest? @relation(fields: [featureRequestId], references: [id], onDelete: Cascade)
+
+  @@index([supportCaseId])
+  @@index([featureRequestId])
+  @@map("attachments")
+}
+
+// ===== Billing Module Models =====
+
+model TenantBilling {
+  id             String   @id @default(uuid())
+  tenantId       String   @unique @map("tenant_id")
+  currentBalance Float    @default(0) @map("current_balance")
+  negativeLimit  Float    @default(-1000) @map("negative_limit")
+  totalCredits   Float    @default(0) @map("total_credits")
+  totalDebits    Float    @default(0) @map("total_debits")
+  isBlocked      Boolean  @default(false) @map("is_blocked")
+  createdAt      DateTime @default(now()) @map("created_at")
+  updatedAt      DateTime @updatedAt @map("updated_at")
+
+  tenant       Tenant               @relation(fields: [tenantId], references: [tenantId])
+  transactions BillingTransaction[]
+
+  @@map("tenant_billing")
+}
+
+model BillingTransaction {
+  id            String   @id @default(uuid())
+  tenantId      String   @map("tenant_id")
+  type          String
+  amount        Float
+  balanceBefore Float    @map("balance_before")
+  balanceAfter  Float    @map("balance_after")
+  reason        String
+  referenceType String?  @map("reference_type")
+  referenceId   String?  @map("reference_id")
+  paymentMethod String?  @map("payment_method")
+  paymentStatus String?  @map("payment_status")
+  metadata      Json?
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  billing TenantBilling @relation(fields: [tenantId], references: [tenantId])
+
+  @@index([tenantId])
+  @@index([type])
+  @@index([createdAt])
+  @@map("billing_transactions")
+}
+
+model BankDetail {
+  id            String   @id @default(uuid())
+  bankName      String   @map("bank_name")
+  accountName   String   @map("account_name")
+  accountNumber String   @map("account_number")
+  iban          String?
+  branchCode    String?  @map("branch_code")
+  branchName    String?  @map("branch_name")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  @@map("bank_details")
+}
+
+model PaymentRequest {
+  id              String    @id @default(uuid())
+  tenantId        String    @map("tenant_id")
+  amount          Float
+  paymentMethod   String    @map("payment_method")
+  status          String    @default("pending")
+  gatewayRef      String?   @map("gateway_ref")
+  gatewayResponse Json?     @map("gateway_response")
+  screenshotUrl   String?   @map("screenshot_url")
+  screenshotKey   String?   @map("screenshot_key")
+  adminNotes      String?   @map("admin_notes")
+  processedBy     String?   @map("processed_by")
+  processedAt     DateTime? @map("processed_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  @@index([tenantId])
+  @@index([status])
+  @@map("payment_requests")
 }

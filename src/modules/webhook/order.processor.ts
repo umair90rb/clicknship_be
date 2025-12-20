@@ -18,12 +18,13 @@ import { getTenantDbName } from '@/src/utils/tenant';
 import { OrderEvents, OrderStatus } from '@/src/types/order';
 import { getDbUrl } from '../onboard/utils';
 import { normalizeCustomerName } from '@/src/utils/order';
+import { CreditService } from '@/src/modules/billing/services/credit.service';
 
 @Processor(WEBHOOK_ORDER_CREATE_QUEUE, {})
 export class WebhookOrderCreateQueueConsumer extends WorkerHost {
   private prismaTenantConnection: PrismaClient = null;
 
-  constructor() {
+  constructor(private readonly creditService: CreditService) {
     super();
     this.prismaTenantConnection = null;
   }
@@ -67,7 +68,7 @@ export class WebhookOrderCreateQueueConsumer extends WorkerHost {
     //   return;
     // }
 
-    let chanel: { id: number; name: string; brandId: number } | null =
+    const chanel: { id: number; name: string; brandId: number } | null =
       await this.prismaTenantConnection.channel.findFirst({
         where: {
           source: domain,
@@ -199,7 +200,7 @@ export class WebhookOrderCreateQueueConsumer extends WorkerHost {
     //   },
     // });
 
-    await this.prismaTenantConnection.order.create({
+    const order = await this.prismaTenantConnection.order.create({
       select: { id: true },
       data: {
         orderNumber: orderData?.name,
@@ -270,6 +271,14 @@ export class WebhookOrderCreateQueueConsumer extends WorkerHost {
         },
       },
     });
+
+    // Deduct 1 credit for the order
+    await this.creditService.deductCredit(
+      tenantId,
+      1, // 1 credit per order
+      order.id.toString(),
+      'order',
+    );
 
     await this.prismaTenantConnection.shopifyWebhookLog.update({
       where: { id: logId },
