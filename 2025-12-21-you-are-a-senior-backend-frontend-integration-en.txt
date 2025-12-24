@@ -1,0 +1,416 @@
+                                                                                
+ * ▐▛███▜▌ *   Claude Code v2.0.72                                              
+* ▝▜█████▛▘ *  Opus 4.5 · Claude Pro                                            
+ *  ▘▘ ▝▝  *   ~/Dev/clicknship/server                                          
+                                                                                
+> You are a senior backend + frontend integration engineer.                     
+I have already built a backend using NestJS + PostgreSQL + Prisma that          
+includes the following modules:                                                 
+                                                                                
+Accounting                                                                      
+                                                                                
+Inventory                                                                       
+                                                                                
+Billing                                                                         
+                                                                                
+Reporting                                                                       
+                                                                                
+Your task is to extract and document EVERYTHING a frontend developer needs      
+to integrate with this backend correctly and safely.                            
+                                                                                
+🎯 Objective                                                                    
+                                                                                
+Produce frontend-consumable documentation so I can:                             
+                                                                                
+Build UI screens                                                                
+                                                                                
+Call APIs correctly                                                             
+                                                                                
+Handle states, errors, and edge cases                                           
+                                                                                
+Avoid backend assumptions                                                       
+                                                                                
+🔍 For EACH module (Accounting, Inventory, Billing, Reporting), provide:        
+1️⃣ API Contract                                                                 
+                                                                                
+List all API endpoints                                                          
+                                                                                
+HTTP method                                                                     
+                                                                                
+URL path                                                                        
+                                                                                
+Auth requirements (JWT / headers / roles)                                       
+                                                                                
+Required & optional query params                                                
+                                                                                
+Request body schema (JSON)                                                      
+                                                                                
+Response schema (success + error)                                               
+                                                                                
+Pagination / sorting / filtering rules (if any)                                 
+                                                                                
+2️⃣ Data Models (Frontend View)                                                  
+                                                                                
+Prisma model → frontend DTO                                                     
+                                                                                
+Field name                                                                      
+                                                                                
+Data type                                                                       
+                                                                                
+Nullable / required                                                             
+                                                                                
+Enum values (if any)                                                            
+                                                                                
+Relations (how frontend should join data)                                       
+                                                                                
+3️⃣ UI Mapping Guidance                                                          
+                                                                                
+For each API:                                                                   
+                                                                                
+Which screen/page should use it                                                 
+                                                                                
+Typical user flow                                                               
+                                                                                
+Create / Read / Update / Delete mapping                                         
+                                                                                
+Example UI actions → API calls                                                  
+                                                                                
+4️⃣ State Management Notes                                                       
+                                                                                
+What should be cached?                                                          
+                                                                                
+What must be refetched?                                                         
+                                                                                
+Optimistic updates?                                                             
+                                                                                
+Derived values frontend must calculate (totals, balances, stock, etc.)          
+                                                                                
+5️⃣ Validation & Constraints                                                     
+                                                                                
+Backend validations frontend must respect                                       
+                                                                                
+Numeric limits                                                                  
+                                                                                
+Date rules                                                                      
+                                                                                
+Referential integrity assumptions                                               
+                                                                                
+6️⃣ Error Handling Contract                                                      
+                                                                                
+Possible error codes                                                            
+                                                                                
+Error response format                                                           
+                                                                                
+User-friendly error mapping                                                     
+                                                                                
+Retry vs fail-fast cases                                                        
+                                                                                
+7️⃣ Auth & Authorization                                                         
+                                                                                
+JWT payload shape                                                               
+                                                                                
+Role-based access rules                                                         
+                                                                                
+Which APIs are role-protected                                                   
+                                                                                
+Token refresh behavior                                                          
+                                                                                
+8️⃣ Performance & UX Notes                                                       
+                                                                                
+Expensive endpoints                                                             
+                                                                                
+Batch APIs                                                                      
+                                                                                
+Debounce/throttle recommendations                                               
+                                                                                
+Reporting queries limitations                                                   
+                                                                                
+9️⃣ Example Frontend Usage                                                       
+                                                                                
+Sample fetch/axios calls                                                        
+                                                                                
+Expected request/response                                                       
+                                                                                
+Example TypeScript interfaces                                                   
+                                                                                
+🔟 Questions & Gaps                                                             
+                                                                                
+Call out any missing backend info                                               
+                                                                                
+Suggest backend changes if frontend will struggle                               
+                                                                                
+Highlight risky assumptions                                                     
+                                                                                
+📌 Output Rules                                                                 
+                                                                                
+Be explicit, not generic                                                        
+                                                                                
+Assume frontend is React/ TypeScript/ mai v7/ react hook form                   
+                                                                                
+Use tables + bullet points                                                      
+                                                                                
+No placeholders like “depends” — explain assumptions                            
+                                                                                
+Treat this as production-grade API documentation                                
+                                                                                
+Start module by module, clearly separated.                                      
+                                                                                
+⏺ I'll create comprehensive frontend integration documentation for all four     
+  modules. Let me start by exploring the codebase to understand the structure   
+  and extract all necessary details.                                            
+                                                                                
+⏺ Explore(Explore all module structures)                                        
+  ⎿  Done (43 tool uses · 74.3k tokens · 1m 17s)                                
+                                                                                
+⏺ Search(pattern: "prisma/**/*.prisma")                                         
+  ⎿  Found 8 files (ctrl+o to expand)                                           
+                                                                                
+⏺ Read(inventory-and-accounts.txt)                                              
+  ⎿  Read 1405 lines                                                            
+                                                                                
+⏺ I see the context from your previous session. Let me now read the actual      
+  source files to extract all the details needed for comprehensive frontend     
+  documentation.                                                                
+                                                                                
+⏺ Read(prisma/tenant/schema/accounting.prisma)                                  
+  ⎿  Read 260 lines                                                             
+                                                                                
+⏺ Read(prisma/tenant/schema/inventory.prisma)                                   
+  ⎿  Read 159 lines                                                             
+                                                                                
+⏺ Read(prisma/master/schema.prisma)                                             
+  ⎿  Read 224 lines                                                             
+                                                                                
+⏺ Read(src/modules/accounting/dtos/accounting.dto.ts)                           
+  ⎿  Read 558 lines                                                             
+                                                                                
+⏺ Read(src/modules/inventory/dtos/inventory.dto.ts)                             
+  ⎿  Read 436 lines                                                             
+                                                                                
+⏺ Read(src/modules/billing/dtos/billing.dto.ts)                                 
+  ⎿  Read 32 lines                                                              
+                                                                                
+⏺ Read(src/modules/billing/dtos/recharge.dto.ts)                                
+  ⎿  Read 65 lines                                                              
+                                                                                
+⏺ Read(src/modules/billing/dtos/transaction.dto.ts)                             
+  ⎿  Read 23 lines                                                              
+                                                                                
+⏺ Read(src/modules/accounting/accounting.types.ts)                              
+  ⎿  Read 131 lines                                                             
+                                                                                
+⏺ Read(src/modules/inventory/inventory.types.ts)                                
+  ⎿  Read 57 lines                                                              
+                                                                                
+⏺ Read(src/modules/billing/enums/transaction-type.enum.ts)                      
+  ⎿  Read 12 lines                                                              
+                                                                                
+⏺ Read(src/modules/billing/enums/payment-method.enum.ts)                        
+  ⎿  Read 7 lines                                                               
+                                                                                
+⏺ Read(src/modules/billing/enums/payment-status.enum.ts)                        
+  ⎿  Read 8 lines                                                               
+                                                                                
+⏺ Now let me read the controllers and reporting module files.                   
+                                                                                
+⏺ Read(src/modules/billing/controllers/billing.controller.ts)                   
+  ⎿  Read 36 lines                                                              
+                                                                                
+⏺ Read(src/modules/billing/controllers/recharge.controller.ts)                  
+  ⎿  Read 129 lines                                                             
+                                                                                
+⏺ Read(src/modules/billing/controllers/admin-billing.controller.ts)             
+  ⎿  Read 126 lines                                                             
+                                                                                
+⏺ Read(src/modules/reporting/dto/base-filter.dto.ts)                            
+  ⎿  Read 60 lines                                                              
+                                                                                
+⏺ Read(src/modules/reporting/dto/order-report-filters.dto.ts)                   
+  ⎿  Read 58 lines                                                              
+                                                                                
+⏺ Read(src/modules/reporting/dto/inventory-report-filters.dto.ts)               
+  ⎿  Read 98 lines                                                              
+                                                                                
+⏺ Read(src/modules/reporting/dto/accounting-report-filters.dto.ts)              
+  ⎿  Read 139 lines                                                             
+                                                                                
+⏺ Read(src/modules/reporting/types/report.types.ts)                             
+  ⎿  Read 312 lines                                                             
+                                                                                
+⏺ Read(src/modules/reporting/controllers/order-reports.controller.ts)           
+  ⎿  Read 134 lines                                                             
+                                                                                
+⏺ Read(src/types/auth.ts)                                                       
+  ⎿  Read 25 lines                                                              
+                                                                                
+⏺ Read(src/modules/reporting/controllers/inventory-reports.controller.ts)       
+  ⎿  Read 80 lines                                                              
+                                                                                
+⏺ Read(src/modules/reporting/controllers/accounting-reports.controller.ts)      
+  ⎿  Read 72 lines                                                              
+                                                                                
+⏺ Read(src/modules/billing/dtos/bank-detail.dto.ts)                             
+  ⎿  Read 58 lines                                                              
+                                                                                
+⏺ Read(src/dtos/pagination.dto.ts)                                              
+  ⎿  Read 12 lines                                                              
+                                                                                
+⏺ Read(src/guards/authentication.guard.ts)                                      
+  ⎿  Read 35 lines                                                              
+                                                                                
+⏺ Let me get the accounting and inventory controller details.                   
+                                                                                
+⏺ Read(src/modules/accounting/controllers/account.controller.ts)                
+  ⎿  Read 74 lines                                                              
+                                                                                
+⏺ Read(src/modules/accounting/controllers/invoice.controller.ts)                
+  ⎿  Read 71 lines                                                              
+                                                                                
+⏺ Read(src/modules/accounting/controllers/journal.controller.ts)                
+  ⎿  Read 82 lines                                                              
+                                                                                
+⏺ Read(src/modules/inventory/controllers/inventory.controller.ts)               
+  ⎿  Read 155 lines                                                             
+                                                                                
+⏺ Read(src/modules/inventory/controllers/purchase-order.controller.ts)          
+  ⎿  Read 81 lines                                                              
+                                                                                
+⏺ Read(src/modules/accounting/controllers/bill.controller.ts)                   
+  ⎿  Read 63 lines                                                              
+                                                                                
+⏺ Read(src/modules/accounting/controllers/payment.controller.ts)                
+  ⎿  Read 68 lines                                                              
+                                                                                
+⏺ Read(src/modules/accounting/controllers/cod-remittance.controller.ts)         
+  ⎿  Read 80 lines                                                              
+                                                                                
+⏺ Read(src/modules/inventory/controllers/location.controller.ts)                
+  ⎿  Read 61 lines                                                              
+                                                                                
+⏺ Read(src/modules/inventory/controllers/transfer.controller.ts)                
+  ⎿  Read 68 lines                                                              
+                                                                                
+⏺ Now I have all the necessary information. Let me compile the comprehensive    
+  frontend integration documentation.                                           
+                                                                                
+⏺ Write(FRONTEND_INTEGRATION.md)                                                
+  ⎿  Wrote 2160 lines to FRONTEND_INTEGRATION.md                                
+      1 # Frontend Integration Documentation                                    
+      2 > **Complete API Documentation for Accounting, Inventory, Billing       
+        , and Reporting Modules**                                               
+      3 >                                                                       
+      4 > Target Stack: React + TypeScript + TanStack Query v5 + React Ho       
+        ok Form                                                                 
+      5 ---                                                                     
+      6 ## Table of Contents                                                    
+     … +2150 lines (ctrl+o to expand)                                           
+                                                                                
+⏺ I've created comprehensive frontend integration documentation at              
+  /Users/mac/Dev/clicknship/server/FRONTEND_INTEGRATION.md. Here's a summary:   
+                                                                                
+  Documentation Contents                                                        
+                                                                                
+  1. Authentication & Authorization                                             
+                                                                                
+  - JWT token format and headers                                                
+  - Token payload shape ({ id: number })                                        
+  - Multi-tenant resolution via subdomain                                       
+                                                                                
+  2. Inventory Module (40+ endpoints)                                           
+                                                                                
+  | Controller       | Endpoints                                     |          
+  |------------------|-----------------------------------------------|          
+  | Locations        | 7 (CRUD + set-default)                        |          
+  | Suppliers        | 5 (CRUD)                                      |          
+  | Inventory Items  | 5 (list, low-stock, get, create, update)      |          
+  | Stock Operations | 5 (reserve, release, deduct, restock, adjust) |          
+  | Movements        | 3 (list, by-order, by-item)                   |          
+  | Purchase Orders  | 8 (CRUD + order, receive, cancel)             |          
+  | Transfers        | 7 (CRUD + in-transit, complete, cancel)       |          
+                                                                                
+  3. Accounting Module (50+ endpoints)                                          
+                                                                                
+  | Controller      | Endpoints                                                 
+    |                                                                           
+  |-----------------|-----------------------------------------------------------
+  --|                                                                           
+  | Accounts        | 7 (CRUD + initialize, balance)                            
+    |                                                                           
+  | Fiscal Periods  | 7 (CRUD + current, close, reopen)                         
+    |                                                                           
+  | Journal Entries | 7 (list, trial-balance, ledger, get, create, post,        
+  reverse) |                                                                    
+  | Invoices        | 8 (CRUD + from-order, send, cancel)                       
+    |                                                                           
+  | Bills           | 6 (CRUD + from-purchase-order)                            
+    |                                                                           
+  | Payments        | 7 (list, summary, by-invoice/bill/order, get, create)     
+    |                                                                           
+  | COD Remittance  | 7 (CRUD + summary, by-order, status)                      
+    |                                                                           
+  | Tax Rates       | 6 (CRUD + calculate)                                      
+    |                                                                           
+                                                                                
+  4. Billing Module (20+ endpoints)                                             
+                                                                                
+  | Controller     | Endpoints                                              |   
+  |----------------|--------------------------------------------------------|   
+  | Tenant Billing | 3 (balance, transactions, bank-details)                |   
+  | Recharge       | 3 (initiate, bank-transfer, upload-url)                |   
+  | Admin Billing  | 11 (tenant management, payment requests, bank details) |   
+                                                                                
+  5. Reporting Module (21 endpoints)                                            
+                                                                                
+  | Category   | Reports                                                        
+  |                                                                             
+  |------------|----------------------------------------------------------------
+  |                                                                             
+  | Orders     | 11 (agent, product, booking, FOC, channel, courier, incentive) 
+  |                                                                             
+  | Inventory  | 6 (stock, damaged, expired, movements, low-stock, PO)          
+  |                                                                             
+  | Accounting | 5 (revenue, invoice-aging, COD, payments, profit)              
+  |                                                                             
+                                                                                
+  6. TypeScript Interfaces                                                      
+                                                                                
+  - Complete type definitions for all entities                                  
+  - All enums documented                                                        
+  - Response wrapper types                                                      
+                                                                                
+  7. Error Handling                                                             
+                                                                                
+  - Error response format                                                       
+  - Status code mapping                                                         
+  - User-friendly error messages                                                
+                                                                                
+  8. State Management                                                           
+                                                                                
+  - Cache/stale times per entity                                                
+  - Invalidation rules                                                          
+  - Derived value calculations                                                  
+                                                                                
+  9. Example Code                                                               
+                                                                                
+  - TanStack Query hooks                                                        
+  - Axios setup with auth interceptor                                           
+  - Mutation examples with optimistic updates                                   
+                                                                                
+  10. Questions & Gaps                                                          
+                                                                                
+  - Missing RBAC on new modules                                                 
+  - No pagination on some list endpoints                                        
+  - Suggested backend improvements                                              
+                                                                                
+  Key Highlights for Frontend                                                   
+                                                                                
+  Stock Flow:                                                                   
+  Order Confirmed → POST /inventory/reserve                                     
+  Order Packed    → POST /inventory/deduct                                      
+  Order Cancelled → POST /inventory/release                                     
+  Return          → POST /inventory/restock                                     
+                                                                                
+  Journal Entry Rule: sum(debits) === sum(credits)                              
+                                                                                
+  Billing Guard: Operations blocked when currentBalance < negativeLimit         
+
