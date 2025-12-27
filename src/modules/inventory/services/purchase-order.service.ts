@@ -52,11 +52,16 @@ export class PurchaseOrderService {
         orderedQuantity: true,
         receivedQuantity: true,
         unitCost: true,
-        product: {
+        variant: {
           select: {
             id: true,
-            name: true,
             sku: true,
+            product: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
           },
         },
         location: {
@@ -109,7 +114,7 @@ export class PurchaseOrderService {
         userId,
         items: {
           create: body.items.map((item) => ({
-            productId: item.productId,
+            variantId: item.variantId,
             orderedQuantity: item.orderedQuantity,
             unitCost: item.unitCost,
             locationId: item.locationId,
@@ -227,7 +232,7 @@ export class PurchaseOrderService {
 
       // Add stock
       await this.inventoryService.addStockFromPurchase(
-        poItem.productId,
+        poItem.variantId,
         receivedItem.receivedQuantity,
         poItem.locationId,
         po.id,

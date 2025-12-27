@@ -48,11 +48,16 @@ export class TransferService {
       select: {
         id: true,
         quantity: true,
-        product: {
+        variant: {
           select: {
             id: true,
-            name: true,
             sku: true,
+            product: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
           },
         },
       },
@@ -106,13 +111,13 @@ export class TransferService {
     // Verify stock availability for all items at source location
     for (const item of body.items) {
       const stockLevel = await this.inventoryService.getStockLevel(
-        item.productId,
+        item.variantId,
         body.fromLocationId,
       );
       if (!stockLevel || stockLevel.availableQuantity < item.quantity) {
         const available = stockLevel?.availableQuantity || 0;
         throw new BadRequestException(
-          `Insufficient stock for product ${item.productId}. Available: ${available}, Requested: ${item.quantity}`,
+          `Insufficient stock for variant ${item.variantId}. Available: ${available}, Requested: ${item.quantity}`,
         );
       }
     }
@@ -128,7 +133,7 @@ export class TransferService {
         userId,
         items: {
           create: body.items.map((item) => ({
-            productId: item.productId,
+            variantId: item.variantId,
             quantity: item.quantity,
           })),
         },
@@ -185,7 +190,7 @@ export class TransferService {
     for (const item of transfer.items) {
       // Deduct from source location
       await this.inventoryService.transferOut(
-        item.productId,
+        item.variantId,
         item.quantity,
         transfer.fromLocationId,
         transfer.id,
@@ -194,7 +199,7 @@ export class TransferService {
 
       // Add to destination location
       await this.inventoryService.transferIn(
-        item.productId,
+        item.variantId,
         item.quantity,
         transfer.toLocationId,
         transfer.id,

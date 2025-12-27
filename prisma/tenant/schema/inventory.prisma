@@ -23,8 +23,8 @@ model InventoryItem {
   reorderQuantity  Int?   @map("reorder_quantity")
   costPrice        Float? @map("cost_price")
 
-  productId Int     @map("product_id")
-  product   Product @relation(fields: [productId], references: [id])
+  variantId Int            @map("variant_id")
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
 
   locationId Int?               @map("location_id")
   location   InventoryLocation? @relation(fields: [locationId], references: [id])
@@ -33,8 +33,8 @@ model InventoryItem {
 
   updatedAt DateTime @default(now()) @updatedAt @map("updated_at")
 
-  @@unique([productId, locationId])
-  @@index([productId])
+  @@unique([variantId, locationId])
+  @@index([variantId])
   @@map("inventory_items")
 }
 
@@ -112,8 +112,8 @@ model PurchaseOrderItem {
   purchaseOrderId Int           @map("purchase_order_id")
   purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
 
-  productId Int     @map("product_id")
-  product   Product @relation(fields: [productId], references: [id])
+  variantId Int            @map("variant_id")
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
 
   locationId Int?               @map("location_id")
   location   InventoryLocation? @relation(fields: [locationId], references: [id])
@@ -151,8 +151,8 @@ model StockTransferItem {
   stockTransferId Int           @map("stock_transfer_id")
   stockTransfer   StockTransfer @relation(fields: [stockTransferId], references: [id], onDelete: Cascade)
 
-  productId Int     @map("product_id")
-  product   Product @relation(fields: [productId], references: [id])
+  variantId Int            @map("variant_id")
+  variant   ProductVariant @relation(fields: [variantId], references: [id])
 
   @@map("stock_transfer_items")
 }

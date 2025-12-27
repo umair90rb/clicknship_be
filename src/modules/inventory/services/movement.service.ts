@@ -38,11 +38,16 @@ export class MovementService {
     inventoryItem: {
       select: {
         id: true,
-        product: {
+        variant: {
           select: {
             id: true,
-            name: true,
             sku: true,
+            product: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
           },
         },
         location: {
@@ -82,8 +87,8 @@ export class MovementService {
   async list(query: MovementQueryDto) {
     const where: any = {};
 
-    if (query.productId) {
-      where.inventoryItem = { productId: query.productId };
+    if (query.variantId) {
+      where.inventoryItem = { variantId: query.variantId };
     }
 
     if (query.orderId) {

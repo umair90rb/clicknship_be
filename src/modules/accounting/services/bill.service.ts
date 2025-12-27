@@ -155,7 +155,7 @@ export class BillService {
       where: { id: purchaseOrderId },
       include: {
         items: {
-          include: { product: true },
+          include: { variant: { include: { product: true } } },
         },
         supplier: true,
       },
@@ -168,7 +168,7 @@ export class BillService {
     const billNumber = `BILL-${nanoid(8).toUpperCase()}`;
 
     const itemsData = po.items.map((item) => ({
-      description: item.product?.name || 'Product',
+      description: item.variant?.product?.name || 'Product',
       quantity: item.receivedQuantity || item.orderedQuantity,
       unitPrice: item.unitCost,
       lineTotal:

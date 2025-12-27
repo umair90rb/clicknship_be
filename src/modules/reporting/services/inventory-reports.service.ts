@@ -30,18 +30,28 @@ export class InventoryReportsService {
     const where: any = {};
 
     if (filters.locationId) where.locationId = filters.locationId;
-    if (filters.productId) where.productId = filters.productId;
-    if (filters.brandId) where.product = { brandId: filters.brandId };
+    if (filters.variantId) where.variantId = filters.variantId;
+    if (filters.brandId)
+      where.variant = { product: { brandId: filters.brandId } };
     if (filters.categoryId) {
-      where.product = { ...where.product, categoryId: filters.categoryId };
+      where.variant = {
+        ...where.variant,
+        product: {
+          ...where.variant?.product,
+          categoryId: filters.categoryId,
+        },
+      };
     }
     if (filters.sku) {
-      where.product = { ...where.product, sku: filters.sku };
+      where.variant = { ...where.variant, sku: filters.sku };
     }
     if (filters.productName) {
-      where.product = {
-        ...where.product,
-        name: { contains: filters.productName, mode: 'insensitive' },
+      where.variant = {
+        ...where.variant,
+        product: {
+          ...where.variant?.product,
+          name: { contains: filters.productName, mode: 'insensitive' },
+        },
       };
     }
 
@@ -62,16 +72,23 @@ export class InventoryReportsService {
         reservedQuantity: true,
         reorderPoint: true,
         costPrice: true,
-        product: { select: { id: true, name: true, sku: true } },
+        variant: {
+          select: {
+            id: true,
+            sku: true,
+            product: { select: { id: true, name: true } },
+          },
+        },
         location: { select: { id: true, name: true } },
       },
-      orderBy: { product: { name: 'asc' } },
+      orderBy: { variant: { product: { name: 'asc' } } },
     });
 
     const result: StockReportRow[] = items.map((item) => ({
-      productId: item.product.id,
-      productName: item.product.name,
-      sku: item.product.sku,
+      variantId: item.variant.id,
+      productId: item.variant.product.id,
+      productName: item.variant.product.name,
+      sku: item.variant.sku,
       locationId: item.location?.id || null,
       locationName: item.location?.name || null,
       quantity: item.quantity,
@@ -107,10 +124,10 @@ export class InventoryReportsService {
     }
     if (filters.locationId)
       where.inventoryItem = { locationId: filters.locationId };
-    if (filters.productId) {
+    if (filters.variantId) {
       where.inventoryItem = {
         ...where.inventoryItem,
-        productId: filters.productId,
+        variantId: filters.variantId,
       };
     }
     if (filters.userId) where.userId = filters.userId;
@@ -126,7 +143,13 @@ export class InventoryReportsService {
         user: { select: { id: true, name: true } },
         inventoryItem: {
           select: {
-            product: { select: { id: true, name: true, sku: true } },
+            variant: {
+              select: {
+                id: true,
+                sku: true,
+                product: { select: { id: true, name: true } },
+              },
+            },
             location: { select: { id: true, name: true } },
           },
         },
@@ -134,19 +157,20 @@ export class InventoryReportsService {
       orderBy: { createdAt: 'desc' },
     });
 
-    // Aggregate by product/location
+    // Aggregate by variant/location
     const aggregateMap = new Map<string, StockDamagedReportRow>();
 
     for (const m of movements) {
-      const product = m.inventoryItem.product;
+      const variant = m.inventoryItem.variant;
       const location = m.inventoryItem.location;
-      const key = `${product.id}-${location?.id || 'null'}`;
+      const key = `${variant.id}-${location?.id || 'null'}`;
 
       if (!aggregateMap.has(key)) {
         aggregateMap.set(key, {
-          productId: product.id,
-          productName: product.name,
-          sku: product.sku,
+          variantId: variant.id,
+          productId: variant.product.id,
+          productName: variant.product.name,
+          sku: variant.sku,
           locationId: location?.id || null,
           locationName: location?.name || null,
           totalDamagedQuantity: 0,
@@ -193,10 +217,10 @@ export class InventoryReportsService {
     }
     if (filters.locationId)
       where.inventoryItem = { locationId: filters.locationId };
-    if (filters.productId) {
+    if (filters.variantId) {
       where.inventoryItem = {
         ...where.inventoryItem,
-        productId: filters.productId,
+        variantId: filters.variantId,
       };
     }
     if (filters.userId) where.userId = filters.userId;
@@ -212,7 +236,13 @@ export class InventoryReportsService {
         user: { select: { id: true, name: true } },
         inventoryItem: {
           select: {
-            product: { select: { id: true, name: true, sku: true } },
+            variant: {
+              select: {
+                id: true,
+                sku: true,
+                product: { select: { id: true, name: true } },
+              },
+            },
             location: { select: { id: true, name: true } },
           },
         },
@@ -223,15 +253,16 @@ export class InventoryReportsService {
     const aggregateMap = new Map<string, StockExpiredReportRow>();
 
     for (const m of movements) {
-      const product = m.inventoryItem.product;
+      const variant = m.inventoryItem.variant;
       const location = m.inventoryItem.location;
-      const key = `${product.id}-${location?.id || 'null'}`;
+      const key = `${variant.id}-${location?.id || 'null'}`;
 
       if (!aggregateMap.has(key)) {
         aggregateMap.set(key, {
-          productId: product.id,
-          productName: product.name,
-          sku: product.sku,
+          variantId: variant.id,
+          productId: variant.product.id,
+          productName: variant.product.name,
+          sku: variant.sku,
           locationId: location?.id || null,
           locationName: location?.name || null,
           totalExpiredQuantity: 0,
@@ -281,24 +312,26 @@ export class InventoryReportsService {
     }
     if (filters.locationId)
       where.inventoryItem = { locationId: filters.locationId };
-    if (filters.productId) {
+    if (filters.variantId) {
       where.inventoryItem = {
         ...where.inventoryItem,
-        productId: filters.productId,
+        variantId: filters.variantId,
       };
     }
     if (filters.sku) {
       where.inventoryItem = {
         ...where.inventoryItem,
-        product: { sku: filters.sku },
+        variant: { sku: filters.sku },
       };
     }
     if (filters.productName) {
       where.inventoryItem = {
         ...where.inventoryItem,
-        product: {
-          ...where.inventoryItem?.product,
-          name: { contains: filters.productName, mode: 'insensitive' },
+        variant: {
+          ...where.inventoryItem?.variant,
+          product: {
+            name: { contains: filters.productName, mode: 'insensitive' },
+          },
         },
       };
     }
@@ -319,7 +352,13 @@ export class InventoryReportsService {
         user: { select: { id: true, name: true } },
         inventoryItem: {
           select: {
-            product: { select: { id: true, name: true, sku: true } },
+            variant: {
+              select: {
+                id: true,
+                sku: true,
+                product: { select: { id: true, name: true } },
+              },
+            },
             location: { select: { id: true, name: true } },
           },
         },
@@ -330,9 +369,10 @@ export class InventoryReportsService {
     const result: StockMovementReportRow[] = movements.map((m) => ({
       movementId: m.id,
       date: m.createdAt.toISOString(),
-      productId: m.inventoryItem.product.id,
-      productName: m.inventoryItem.product.name,
-      sku: m.inventoryItem.product.sku,
+      variantId: m.inventoryItem.variant.id,
+      productId: m.inventoryItem.variant.product.id,
+      productName: m.inventoryItem.variant.product.name,
+      sku: m.inventoryItem.variant.sku,
       locationId: m.inventoryItem.location?.id || null,
       locationName: m.inventoryItem.location?.name || null,
       type: m.type,
@@ -371,7 +411,13 @@ export class InventoryReportsService {
         reservedQuantity: true,
         reorderPoint: true,
         reorderQuantity: true,
-        product: { select: { id: true, name: true, sku: true } },
+        variant: {
+          select: {
+            id: true,
+            sku: true,
+            product: { select: { id: true, name: true } },
+          },
+        },
         location: { select: { id: true, name: true } },
       },
     });
@@ -385,9 +431,10 @@ export class InventoryReportsService {
         return isLow && includeZero;
       })
       .map((item) => ({
-        productId: item.product.id,
-        productName: item.product.name,
-        sku: item.product.sku,
+        variantId: item.variant.id,
+        productId: item.variant.product.id,
+        productName: item.variant.product.name,
+        sku: item.variant.sku,
         locationId: item.location?.id || null,
         locationName: item.location?.name || null,
         currentQuantity: item.quantity,

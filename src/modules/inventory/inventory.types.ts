@@ -34,7 +34,7 @@ export enum TransferStatus {
 }
 
 export interface StockOperation {
-  productId: number;
+  variantId: number;
   quantity: number;
   locationId?: number;
   orderId?: number;
@@ -43,9 +43,10 @@ export interface StockOperation {
 }
 
 export interface StockLevel {
+  variantId: number;
+  variantSku: string;
   productId: number;
   productName: string;
-  sku: string;
   locationId?: number;
   locationName?: string;
   quantity: number;

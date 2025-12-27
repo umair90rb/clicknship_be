@@ -37,12 +37,18 @@ export class InventoryService {
     reorderQuantity: true,
     costPrice: true,
     updatedAt: true,
-    product: {
+    variant: {
       select: {
         id: true,
-        name: true,
         sku: true,
         unitPrice: true,
+        costPrice: true,
+        product: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
       },
     },
     location: {
@@ -56,30 +62,30 @@ export class InventoryService {
   // ============ Inventory Item CRUD ============
 
   async createInventoryItem(data: CreateInventoryItemDto) {
-    // Check if product exists
-    const product = await this.prismaTenant.product.findFirst({
-      where: { id: data.productId },
+    // Check if variant exists
+    const variant = await this.prismaTenant.productVariant.findFirst({
+      where: { id: data.variantId },
     });
-    if (!product) {
-      throw new NotFoundException('Product not found');
+    if (!variant) {
+      throw new NotFoundException('Product variant not found');
     }
 
-    // Check for existing inventory item for this product/location combo
+    // Check for existing inventory item for this variant/location combo
     const existing = await this.prismaTenant.inventoryItem.findFirst({
       where: {
-        productId: data.productId,
+        variantId: data.variantId,
         locationId: data.locationId || null,
       },
     });
     if (existing) {
       throw new BadRequestException(
-        'Inventory item already exists for this product/location',
+        'Inventory item already exists for this variant/location',
       );
     }
 
     return this.prismaTenant.inventoryItem.create({
       data: {
-        productId: data.productId,
+        variantId: data.variantId,
         locationId: data.locationId,
         quantity: data.quantity || 0,
         reorderPoint: data.reorderPoint,
@@ -122,14 +128,14 @@ export class InventoryService {
     if (query.locationId) {
       where.locationId = query.locationId;
     }
-    if (query.productId) {
-      where.productId = query.productId;
+    if (query.variantId) {
+      where.variantId = query.variantId;
     }
 
     const items = await this.prismaTenant.inventoryItem.findMany({
       where,
       select: this.inventoryItemSelect,
-      orderBy: { product: { name: 'asc' } },
+      orderBy: { variant: { product: { name: 'asc' } } },
     });
 
     let result = items.map((item) => ({
@@ -150,12 +156,12 @@ export class InventoryService {
   // ============ Stock Operations ============
 
   async getStockLevel(
-    productId: number,
+    variantId: number,
     locationId?: number,
   ): Promise<StockLevel | null> {
     const item = await this.prismaTenant.inventoryItem.findFirst({
       where: {
-        productId,
+        variantId,
         locationId: locationId || null,
       },
       select: this.inventoryItemSelect,
@@ -164,9 +170,10 @@ export class InventoryService {
     if (!item) return null;
 
     return {
-      productId: item.product.id,
-      productName: item.product.name,
-      sku: item.product.sku,
+      variantId: item.variant.id,
+      variantSku: item.variant.sku,
+      productId: item.variant.product.id,
+      productName: item.variant.product.name,
       locationId: item.location?.id,
       locationName: item.location?.name,
       quantity: item.quantity,
@@ -177,8 +184,8 @@ export class InventoryService {
     };
   }
 
-  async getAvailableStock(productId: number, locationId?: number) {
-    const stockLevel = await this.getStockLevel(productId, locationId);
+  async getAvailableStock(variantId: number, locationId?: number) {
+    const stockLevel = await this.getStockLevel(variantId, locationId);
     return stockLevel ? stockLevel.availableQuantity : 0;
   }
 
@@ -187,9 +194,9 @@ export class InventoryService {
    * Increments reservedQuantity, does not change quantity
    */
   async reserveStock(operation: StockOperation) {
-    const { productId, quantity, locationId, orderId, userId } = operation;
+    const { variantId, quantity, locationId, orderId, userId } = operation;
 
-    const item = await this.getOrCreateInventoryItem(productId, locationId);
+    const item = await this.getOrCreateInventoryItem(variantId, locationId);
     const availableStock = item.quantity - item.reservedQuantity;
 
     if (availableStock < quantity) {
@@ -231,11 +238,11 @@ export class InventoryService {
    * Decrements reservedQuantity, does not change quantity
    */
   async releaseReservation(operation: StockOperation) {
-    const { productId, quantity, locationId, orderId, userId } = operation;
+    const { variantId, quantity, locationId, orderId, userId } = operation;
 
     const item = await this.prismaTenant.inventoryItem.findFirst({
       where: {
-        productId,
+        variantId,
         locationId: locationId || null,
       },
     });
@@ -283,11 +290,11 @@ export class InventoryService {
    * Decrements both quantity and reservedQuantity
    */
   async deductStock(operation: StockOperation) {
-    const { productId, quantity, locationId, orderId, userId } = operation;
+    const { variantId, quantity, locationId, orderId, userId } = operation;
 
     const item = await this.prismaTenant.inventoryItem.findFirst({
       where: {
-        productId,
+        variantId,
         locationId: locationId || null,
       },
     });
@@ -343,10 +350,10 @@ export class InventoryService {
    * Increments quantity
    */
   async restockFromReturn(operation: StockOperation) {
-    const { productId, quantity, locationId, orderId, reason, userId } =
+    const { variantId, quantity, locationId, orderId, reason, userId } =
       operation;
 
-    const item = await this.getOrCreateInventoryItem(productId, locationId);
+    const item = await this.getOrCreateInventoryItem(variantId, locationId);
 
     const previousQuantity = item.quantity;
     const newQuantity = previousQuantity + quantity;
@@ -380,9 +387,9 @@ export class InventoryService {
    * Manual stock adjustment
    */
   async adjustStock(operation: StockOperation) {
-    const { productId, quantity, locationId, reason, userId } = operation;
+    const { variantId, quantity, locationId, reason, userId } = operation;
 
-    const item = await this.getOrCreateInventoryItem(productId, locationId);
+    const item = await this.getOrCreateInventoryItem(variantId, locationId);
 
     const previousQuantity = item.quantity;
     const newQuantity = previousQuantity + quantity;
@@ -421,14 +428,14 @@ export class InventoryService {
    * Add stock from purchase order
    */
   async addStockFromPurchase(
-    productId: number,
+    variantId: number,
     quantity: number,
     locationId: number | undefined,
     purchaseOrderId: number,
     costPrice: number,
     userId?: number,
   ) {
-    const item = await this.getOrCreateInventoryItem(productId, locationId);
+    const item = await this.getOrCreateInventoryItem(variantId, locationId);
 
     const previousQuantity = item.quantity;
     const newQuantity = previousQuantity + quantity;
@@ -465,14 +472,14 @@ export class InventoryService {
    * Transfer stock out from a location
    */
   async transferOut(
-    productId: number,
+    variantId: number,
     quantity: number,
     locationId: number,
     transferId: number,
     userId?: number,
   ) {
     const item = await this.prismaTenant.inventoryItem.findFirst({
-      where: { productId, locationId },
+      where: { variantId, locationId },
     });
 
     if (!item) {
@@ -517,13 +524,13 @@ export class InventoryService {
    * Transfer stock in to a location
    */
   async transferIn(
-    productId: number,
+    variantId: number,
     quantity: number,
     locationId: number,
     transferId: number,
     userId?: number,
   ) {
-    const item = await this.getOrCreateInventoryItem(productId, locationId);
+    const item = await this.getOrCreateInventoryItem(variantId, locationId);
 
     const previousQuantity = item.quantity;
     const newQuantity = previousQuantity + quantity;
@@ -580,12 +587,12 @@ export class InventoryService {
   // ============ Helpers ============
 
   private async getOrCreateInventoryItem(
-    productId: number,
+    variantId: number,
     locationId?: number,
   ) {
     let item = await this.prismaTenant.inventoryItem.findFirst({
       where: {
-        productId,
+        variantId,
         locationId: locationId || null,
       },
     });
@@ -594,7 +601,7 @@ export class InventoryService {
       // Auto-create inventory item
       item = await this.prismaTenant.inventoryItem.create({
         data: {
-          productId,
+          variantId,
           locationId: locationId || null,
           quantity: 0,
           reservedQuantity: 0,

@@ -53,7 +53,7 @@ export class AccountService {
       where.active = true;
     }
 
-    return this.prismaTenant.account.findMany({
+    const data = await this.prismaTenant.account.findMany({
       where,
       select: {
         ...this.select,
@@ -67,6 +67,8 @@ export class AccountService {
       },
       orderBy: { code: 'asc' },
     });
+
+    return { data, meta: { ...query } };
   }
 
   async get(id: number) {

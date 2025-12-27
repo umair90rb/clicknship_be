@@ -93,7 +93,7 @@ export class JournalService {
       where.referenceType = query.referenceType;
     }
 
-    const [items, total] = await Promise.all([
+    const [data, total] = await Promise.all([
       this.prismaTenant.journalEntry.findMany({
         where,
         select: this.select,
@@ -104,7 +104,7 @@ export class JournalService {
       this.prismaTenant.journalEntry.count({ where }),
     ]);
 
-    return { items, total };
+    return { data, total };
   }
 
   async get(id: number) {
@@ -115,7 +115,7 @@ export class JournalService {
     if (!entry) {
       throw new NotFoundException('Journal entry not found');
     }
-    return entry;
+    return {data: entry};
   }
 
   async getByReference(
@@ -353,7 +353,7 @@ export class JournalService {
       };
     });
 
-    return ledger;
+    return {data: ledger};
   }
 
   async getTrialBalance(asOfDate?: Date) {
@@ -416,11 +416,11 @@ export class JournalService {
       0,
     );
 
-    return {
+    return {data: {
       accounts: trialBalance,
       totalDebit,
       totalCredit,
       isBalanced: Math.abs(totalDebit - totalCredit) < 0.01,
-    };
+    }};
   }
 }

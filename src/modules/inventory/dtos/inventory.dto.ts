@@ -79,7 +79,7 @@ export class UpdateSupplierDto extends PartialType(CreateSupplierDto) {
 export class CreateInventoryItemDto {
   @ApiProperty()
   @IsNumber()
-  productId: number;
+  variantId: number;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -134,7 +134,7 @@ export class UpdateInventoryItemDto {
 export class ReserveStockDto {
   @ApiProperty()
   @IsNumber()
-  productId: number;
+  variantId: number;
 
   @ApiProperty()
   @IsNumber()
@@ -155,7 +155,7 @@ export class ReserveStockDto {
 export class DeductStockDto {
   @ApiProperty()
   @IsNumber()
-  productId: number;
+  variantId: number;
 
   @ApiProperty()
   @IsNumber()
@@ -176,7 +176,7 @@ export class DeductStockDto {
 export class RestockDto {
   @ApiProperty()
   @IsNumber()
-  productId: number;
+  variantId: number;
 
   @ApiProperty()
   @IsNumber()
@@ -202,7 +202,7 @@ export class RestockDto {
 export class AdjustStockDto {
   @ApiProperty()
   @IsNumber()
-  productId: number;
+  variantId: number;
 
   @ApiProperty({ description: 'Positive to add, negative to subtract' })
   @IsNumber()
@@ -221,7 +221,7 @@ export class AdjustStockDto {
 export class ReleaseReservationDto {
   @ApiProperty()
   @IsNumber()
-  productId: number;
+  variantId: number;
 
   @ApiProperty()
   @IsNumber()
@@ -244,7 +244,7 @@ export class ReleaseReservationDto {
 export class PurchaseOrderItemDto {
   @ApiProperty()
   @IsNumber()
-  productId: number;
+  variantId: number;
 
   @ApiProperty()
   @IsNumber()
@@ -341,7 +341,7 @@ export class ReceivePurchaseOrderDto {
 export class TransferItemDto {
   @ApiProperty()
   @IsNumber()
-  productId: number;
+  variantId: number;
 
   @ApiProperty()
   @IsNumber()
@@ -389,7 +389,7 @@ export class StockQueryDto {
   @IsOptional()
   @IsNumber()
   @Type(() => Number)
-  productId?: number;
+  variantId?: number;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -403,7 +403,7 @@ export class MovementQueryDto {
   @IsOptional()
   @IsNumber()
   @Type(() => Number)
-  productId?: number;
+  variantId?: number;
 
   @ApiPropertyOptional()
   @IsOptional()

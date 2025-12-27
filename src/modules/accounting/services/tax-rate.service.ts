@@ -27,8 +27,6 @@ export class TaxRateService {
         name: true,
       },
     },
-    createdAt: true,
-    updatedAt: true,
   };
 
   async list(activeOnly: boolean = false) {

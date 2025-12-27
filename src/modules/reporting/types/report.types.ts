@@ -130,6 +130,7 @@ export interface BookedProductValueReportRow {
 // ============ Inventory Report Types ============
 
 export interface StockReportRow {
+  variantId: number;
   productId: number;
   productName: string;
   sku: string;
@@ -144,6 +145,7 @@ export interface StockReportRow {
 }
 
 export interface StockDamagedReportRow {
+  variantId: number;
   productId: number;
   productName: string;
   sku: string;
@@ -161,6 +163,7 @@ export interface StockDamagedReportRow {
 }
 
 export interface StockExpiredReportRow {
+  variantId: number;
   productId: number;
   productName: string;
   sku: string;
@@ -180,6 +183,7 @@ export interface StockExpiredReportRow {
 export interface StockMovementReportRow {
   movementId: number;
   date: string;
+  variantId: number;
   productId: number;
   productName: string;
   sku: string;
@@ -198,6 +202,7 @@ export interface StockMovementReportRow {
 }
 
 export interface LowStockReportRow {
+  variantId: number;
   productId: number;
   productName: string;
   sku: string;

@@ -11,11 +11,11 @@ export class InventoryReportFilterDto {
   @Type(() => Number)
   locationId?: number;
 
-  @ApiPropertyOptional({ description: 'Filter by product ID' })
+  @ApiPropertyOptional({ description: 'Filter by variant ID' })
   @IsOptional()
   @IsNumber()
   @Type(() => Number)
-  productId?: number;
+  variantId?: number;
 
   @ApiPropertyOptional({ description: 'Filter by product category ID' })
   @IsOptional()
